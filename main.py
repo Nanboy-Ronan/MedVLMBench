@@ -8,6 +8,48 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import parse_args
+from utils import basics
+
+def create_exerpiment_setting(args):
+    # get hash
+    args.device = torch.device("cuda" if args.cuda else "cpu")
+    args.lr = args.blr
+
+    args.save_folder = os.path.join(
+        args.exp_path,
+        args.task,
+        args.usage,
+        args.method,
+        args.dataset,
+        args.model,
+        args.sensitive_name,
+        f"seed{args.random_seed}",
+    )
+
+    args.resume_path = args.save_folder
+    basics.creat_folder(args.save_folder)
+
+    # try:
+    #     with open(f"configs/datasets/{args.dataset}.json", "r") as f:
+    #         data_setting = json.load(f)
+    #         data_setting["augment"] = False
+    #         data_setting["test_meta_path"] = data_setting[
+    #             f"test_{str.lower(args.sensitive_name)}_meta_path"]
+    #         args.data_setting = data_setting
+
+    #         if args.pos_class is not None:
+    #             args.data_setting["pos_class"] = args.pos_class
+    # except:
+    #     args.data_setting = None
+
+    # try:
+    #     with open(f"configs/models/{args.model}.json", "r") as f:
+    #         args.model_setting = json.load(f)
+    # except:
+    #     args.model_setting = None
+
+    return args
+
 
 if __name__ == "__main__":
     args = parse_args.collect_args()
@@ -29,5 +71,5 @@ if __name__ == "__main__":
         torch.backends.cudnn.benchmark = False
     
 
-    train_data, train_dataloader, train_meta = get_dataset(args, split="train")
-    test_data, test_dataloader, test_meta = get_dataset(args, split="test")
+    # train_data, train_dataloader, train_meta = get_dataset(args, split="train")
+    # test_data, test_dataloader, test_meta = get_dataset(args, split="test")
