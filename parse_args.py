@@ -6,20 +6,20 @@ from ast import parse
 def collect_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--task", default="captioning", choices=["cls", "seg"])
-    parser.add_argument(
-        "--usage",
-        type=str,
-        default='original',
-        choices=["original"],
-    )
-    parser.add_argument(
-        "--method",
-        default="erm",
-        choices=[
-            "erm",
-            ]
-        )
+    parser.add_argument("--task", default="caption", choices=["qa", "caption"])
+    # parser.add_argument(
+    #     "--usage",
+    #     type=str,
+    #     default='original',
+    #     choices=["original"],
+    # )
+    # parser.add_argument(
+    #     "--method",
+    #     default="erm",
+    #     choices=[
+    #         "erm",
+    #         ]
+    #     )
     
     parser.add_argument(
         "--dataset",
@@ -40,9 +40,8 @@ def collect_args():
             "TUSC"
         ],
     )
-    parser.add_argument("--sensitive_name", default="Sex",
-                        choices=["Sex", "Age", "Race", "Language"])
-    parser.add_argument("--augment", action="store_true")
+
+    # parser.add_argument("--augment", action="store_true")
 
     parser.add_argument("--experiment_name", type=str, default="test")
     parser.add_argument("--wandb_name", type=str, default="baseline")
@@ -79,7 +78,7 @@ def collect_args():
     # network
     parser.add_argument(
         "--model",
-        default="BiomedCLIP",
+        default="BLIP",
         choices=[
             "BLIP",
         ],

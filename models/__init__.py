@@ -1,1 +1,1 @@
-from models.blip import blip
+from models.blip import BLIP

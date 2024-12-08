@@ -2,7 +2,7 @@ import torch
 from PIL import Image
 from transformers import BlipForConditionalGeneration, BlipProcessor
 
-from base import BaseModel
+from models.base import BaseModel
 
 
 class BLIP(BaseModel):

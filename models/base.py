@@ -1,7 +1,7 @@
 import abc
 import torch.nn as nn
 
-class BaseModel(abc.ABC, nn.Module):
+class BaseModel(abc.ABC):
     def __init__(self):
         super().__init__()
 

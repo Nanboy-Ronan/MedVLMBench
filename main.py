@@ -9,6 +9,8 @@ import torch.nn.functional as F
 
 import parse_args
 from utils import basics
+from models.utils import get_model
+
 
 def create_exerpiment_setting(args):
     # get hash
@@ -18,11 +20,8 @@ def create_exerpiment_setting(args):
     args.save_folder = os.path.join(
         args.exp_path,
         args.task,
-        args.usage,
-        args.method,
         args.dataset,
         args.model,
-        args.sensitive_name,
         f"seed{args.random_seed}",
     )
 
@@ -69,6 +68,8 @@ if __name__ == "__main__":
         torch.cuda.manual_seed_all(args.random_seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+    model = get_model(args)
     
 
     # train_data, train_dataloader, train_meta = get_dataset(args, split="train")
