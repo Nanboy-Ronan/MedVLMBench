@@ -1,0 +1,18 @@
+import torch.nn as nn
+from .base import BaseModel
+from easydict import EasyDict as edict
+
+
+class ChatMetaModel(BaseModel):
+    def __init__(self):
+        super().__init__()
+
+        self.model_args = edict(
+            IGNORE_INDEX=-100,
+            IMAGE_TOKEN_INDEX=-200,
+            DEFAULT_IMAGE_TOKEN="<image>",
+            DEFAULT_IMAGE_PATCH_TOKEN="<im_patch>",
+            DEFAULT_IM_START_TOKEN="<im_start>",
+            DEFAULT_IM_END_TOKEN="<im_end>",
+            IMAGE_PLACEHOLDER="<image-placeholder>",
+        )
