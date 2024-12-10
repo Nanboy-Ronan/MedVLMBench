@@ -4,10 +4,10 @@ from easydict import EasyDict as edict
 
 
 class ChatMetaModel(BaseModel):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, model_args):
+        super().__init__(model_args)
 
-        self.model_args = edict(
+        self.constants = edict(
             IGNORE_INDEX=-100,
             IMAGE_TOKEN_INDEX=-200,
             DEFAULT_IMAGE_TOKEN="<image>",
@@ -16,3 +16,15 @@ class ChatMetaModel(BaseModel):
             DEFAULT_IM_END_TOKEN="<im_end>",
             IMAGE_PLACEHOLDER="<image-placeholder>",
         )
+
+    def infer_vision_language(self, image, qs):
+        pass
+
+    def infer_language(self, qs):
+        pass
+
+    def init_for_training(self):
+        pass
+
+    def save(self, output_folder):
+        pass

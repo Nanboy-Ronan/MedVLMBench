@@ -4,12 +4,13 @@ from easydict import EasyDict as edict
 
 
 class BaseModel(abc.ABC):
-    def __init__(self):
+    def __init__(self, model_args):
         super().__init__()
 
         self.model = None
         self.tokenizer = None
-        self.model_args = edict()
+        self.model_args = model_args
+        self.constants = edict()
 
     @abc.abstractmethod
     def load_from_pretrained(self):
@@ -17,6 +18,10 @@ class BaseModel(abc.ABC):
 
     @abc.abstractmethod
     def init_for_training(self):
+        pass
+
+    @abc.abstractmethod
+    def save(self, output_folder):
         pass
 
     # @abc.abstractmethod
