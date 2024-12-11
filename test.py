@@ -8,7 +8,7 @@ if __name__ == "__main__":
     model_path = "/mnt/hdd/weights/llava-v1.5-7b"
 
     prompt = """
-    Please caption the image with findings for medical report.
+    Answer the following question about the image with yes or no: Does the abdominopelvic CT scan indicate a chronic obstructive process in the gastrointestinal tract?
     """
 
     image_file = "/media/yesindeed/DATADRIVE1/mount/remote_cse/datasets/LLaVA-Med/data/images/34630837_F2.jpg"
