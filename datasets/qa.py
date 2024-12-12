@@ -1,7 +1,8 @@
 from torchmetrics.text import BLEUScore
 from datasets.benchmark import clean_str, BatcherInput
 
-class QA(Benchmark):
+
+class QA:
     """A benchmark for Question Answering tasks."""
 
     def __init__(self, **kwargs):
@@ -82,9 +83,7 @@ class MedQA(QA):
         cache_dir = self.engine.get_config()["medqa_dir"]
 
         if cache_dir is None:
-            raise ValueError(
-                "No path for MedQA dataset provided in the config file. Skipping the task."
-            )
+            raise ValueError("No path for MedQA dataset provided in the config file. Skipping the task.")
 
         self.dataset = load_dataset(
             "bigbio/med_qa",
@@ -117,20 +116,18 @@ class MedQA(QA):
 
         formatted_question = f"{question}\n"
         formatted_question += (
-            "Options:\n"
-            + "\n".join([f'{option["key"]}: {option["value"]}.' for option in options])
-            + "\n"
+            "Options:\n" + "\n".join([f'{option["key"]}: {option["value"]}.' for option in options]) + "\n"
         )
         formatted_question += "What is the correct answer?"
         batcher_input = BatcherInput()
 
-        batcher_input._add_text_prompt('user',formatted_question)
+        batcher_input._add_text_prompt("user", formatted_question)
 
         # question = [{"role": "user", "content": formatted_question}]
         if prompt:
             formatted_answer = "The answer is " + sample["answer_idx"] + "."
             # question.append({"role": "assistant", "content": formatted_answer})
-            batcher_input._add_text_prompt('assistant', formatted_answer)
+            batcher_input._add_text_prompt("assistant", formatted_answer)
         return batcher_input
 
     def get_correct_answer(self, sample, full_text=False):
@@ -162,10 +159,7 @@ class MedQA(QA):
         if len(pred) == 0:
             return "Invalid answer"
 
-        options = [
-            clean_str(f'{option["key"]} {option["value"]}')
-            for option in sample["options"]
-        ]
+        options = [clean_str(f'{option["key"]} {option["value"]}') for option in sample["options"]]
         # Compute the BLEU score for each option
         scores = [self.bleu_scorer([pred], [[option]]) for option in options]
 
