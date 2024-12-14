@@ -14,3 +14,6 @@ class BaseDataset(Dataset):
 
     def __getitem__(self, index):
         return super().__getitem__(index)
+
+    def get_modality(self):
+        return self.data_args.modality

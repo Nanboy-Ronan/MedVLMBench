@@ -27,13 +27,14 @@ class SLAKE(VQADataset):
         image_path = os.path.join(self.data_args.image_path, self.ds[index]["img_name"])
         qs = self.ds[index]["question"]
         answer = self.ds[index]["answer"]
+        is_open = self.ds[index]["answer_type"] == "OPEN"
 
         image = Image.open(image_path).convert("RGB")
 
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, qs, answer, image_path
+        return image, qs, answer, image_path, is_open
 
 
 if __name__ == "__main__":
