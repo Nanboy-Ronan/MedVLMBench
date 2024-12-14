@@ -44,9 +44,10 @@ if __name__ == "__main__":
     from easydict import EasyDict as edict
     from torch.utils.data import DataLoader
 
-    dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    # dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    dataset = SLAKE(edict(image_path="./data/SLAKE/imgs"), split="test", transform=PILToTensor())
 
-    image, qs, answer, image_path = dataset[0]
+    image, qs, answer, image_path, is_open = dataset[0]
 
     dataloader = DataLoader(dataset, batch_size=2)
 

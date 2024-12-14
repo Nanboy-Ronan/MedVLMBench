@@ -7,37 +7,12 @@ def collect_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--task", default="caption", choices=["qa", "caption"])
-    # parser.add_argument(
-    #     "--usage",
-    #     type=str,
-    #     default='original',
-    #     choices=["original"],
-    # )
-    # parser.add_argument(
-    #     "--method",
-    #     default="erm",
-    #     choices=[
-    #         "erm",
-    #         ]
-    #     )
     
     parser.add_argument(
         "--dataset",
-        default="CXP",
+        default="slake",
         choices=[
-            "CXP",
-            "MIMIC_CXR",
-            "HAM10000",
-            "PAPILA",
-            "ADNI",
-            "COVID_CT_MD",
-            "FairVLMed10k",
-            "BREST",
-            "GF3300",
-            "HAM10000-Seg",
-            "FairSeg",
-            "montgomery",
-            "TUSC"
+            "slake",
         ],
     )
 
@@ -61,10 +36,10 @@ def collect_args():
     parser.add_argument("--fixed_lr", action="store_true")
     parser.add_argument("--weight_decay", type=float,
                         default=1e-4, help="weight decay for optimizer")
-    parser.add_argument("--lr_decay_rate", type=float,
-                        default=0.1, help="decay rate of the learning rate")
-    parser.add_argument("--lr_decay_period", type=float,
-                        default=10, help="decay period of the learning rate")
+    # parser.add_argument("--lr_decay_rate", type=float,
+    #                     default=0.1, help="decay rate of the learning rate")
+    # parser.add_argument("--lr_decay_period", type=float,
+    #                     default=10, help="decay period of the learning rate")
     parser.add_argument("--total_epochs", type=int,
                         default=100, help="total training epochs")
     parser.add_argument("--early_stopping", type=int,
@@ -81,6 +56,7 @@ def collect_args():
         default="BLIP",
         choices=[
             "BLIP",
+            "LLaVa-1.5"
         ],
     )
     parser.add_argument("--context_length", default=77)
@@ -89,13 +65,13 @@ def collect_args():
     parser.add_argument("--hash_id", type=str, default="")
 
     # strategy for validation
-    parser.add_argument(
-        "--val_strategy",
-        type=str,
-        default="loss",
-        choices=["loss", "worst_auc"],
-        help="strategy for selecting val model",
-    )
+    # parser.add_argument(
+    #     "--val_strategy",
+    #     type=str,
+    #     default="loss",
+    #     choices=["loss", "worst_auc"],
+    #     help="strategy for selecting val model",
+    # )
 
     parser.set_defaults(cuda=True)
 
