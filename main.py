@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import parse_args
 from utils import basics
 from models.utils import get_model
+from dataset.utils import get_dataset
 
 
 def create_exerpiment_setting(args):
@@ -72,5 +73,6 @@ if __name__ == "__main__":
     model = get_model(args)
     
 
-    # train_data, train_dataloader, train_meta = get_dataset(args, split="train")
-    # test_data, test_dataloader, test_meta = get_dataset(args, split="test")
+    train_data, train_dataloader = get_dataset(args, split="all")
+    # train_data, train_dataloader = get_dataset(args, split="train")
+    # test_data, test_dataloader = get_dataset(args, split="test")

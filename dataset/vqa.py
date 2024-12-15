@@ -4,7 +4,7 @@ import pandas as pd
 from PIL import Image
 
 from datasets import load_dataset
-from base import BaseDataset
+from dataset.base import BaseDataset
 
 
 class VQADataset(BaseDataset):
@@ -14,11 +14,14 @@ class VQADataset(BaseDataset):
         self.transform = transform
 
 
-class SLAKE(VQADataset):
+class Slake(VQADataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split, transform)
 
-        self.ds = load_dataset("BoKelvin/SLAKE", split=split)
+        if split == "all":
+            self.ds = load_dataset("BoKelvin/SLAKE", split=split)
+        else:
+            self.ds = load_dataset("BoKelvin/SLAKE", split=split)
 
     def __len__(self):
         return len(self.ds)
