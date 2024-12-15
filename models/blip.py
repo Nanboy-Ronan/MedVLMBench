@@ -5,7 +5,7 @@ from transformers import BlipForConditionalGeneration, BlipProcessor
 from models.base import BaseModel
 
 
-class BLIP(BaseModel):
+class BLIP(ChatMetaModel):
     def __init__(self, mode=None, device='cuda' if torch.cuda.is_available() else 'cpu'):
         self.device = device
 

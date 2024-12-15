@@ -3,11 +3,11 @@ import shutil
 import warnings
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig
-from .release.llava.model import LlavaLlamaForCausalLM, LlavaMptForCausalLM, LlavaMistralForCausalLM
-from .release.llava.conversation import conv_templates, default_conversation
-from .release.llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
+from release.llava.model import LlavaLlamaForCausalLM, LlavaMptForCausalLM, LlavaMistralForCausalLM
+from release.llava.conversation import conv_templates, default_conversation
+from release.llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
 
-from .chat import ChatMetaModel
+from chat import ChatMetaModel
 
 
 class LLaVA(ChatMetaModel):
@@ -273,13 +273,15 @@ if __name__ == "__main__":
     from PIL import Image
 
     # model download command: git clone https://huggingface.co/liuhaotian/llava-v1.5-7b
-    model_path = "/mnt/hdd/weights/llava-v1.5-7b"
+    # model_path = "/mnt/hdd/weights/llava-v1.5-7b"
+    model_path = "./pretrained_models/llava-v1.5-7b"
 
     prompt = """
     Please caption the image with findings for medical report.
     """
 
-    image_file = "/media/yesindeed/DATADRIVE1/mount/remote_cse/datasets/LLaVA-Med/data/images/34630837_F2.jpg"
+    # image_file = "/media/yesindeed/DATADRIVE1/mount/remote_cse/datasets/LLaVA-Med/data/images/34630837_F2.jpg"
+    image_file = "/fast/rjin02/MedVLMBench/data/SLAKE/imgs/xmlab0/source.jpg"
     img = Image.open(image_file).convert("RGB")
 
     """

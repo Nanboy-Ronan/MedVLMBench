@@ -1,5 +1,19 @@
 # MedVLMBench
 
+## Pretrained VLMs
+All pretrained models will be stored under `MedVLMBench/pretrained_models`.
+
+```bash
+mkdir pretrained_models
+```
+
+LLaVa
+```bash
+cd pretrained_models
+git clone https://huggingface.co/liuhaotian/llava-v1.5-7b
+cd ..
+```
+
 ## Dataset
 | Dataset   | Download Link   |
 |------------|------------|
