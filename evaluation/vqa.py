@@ -17,7 +17,6 @@ class VQABenchmark(Benchmark):
     def evaluate_batch(self, batch, model):
         image, qs, answer, image_path, is_open = batch
         device = self.args.device
-        breakpoint()
         
         image = image.to(device, non_blocking=True)
 
@@ -27,11 +26,11 @@ class VQABenchmark(Benchmark):
 
         batch_size = len(qs)
 
-        if is_open:
-            # evaluation of open questions
-            pass
-        else:
-            # evaluation of closed questions
-            pass
+        # if is_open:
+        #     # evaluation of open questions
+        #     pass
+        # else:
+        #     # evaluation of closed questions
+        #     pass
 
         self.metric_logger.meters["xxx"].update(len(prompt), n=batch_size)

@@ -27,7 +27,7 @@ def collect_args():
 
     # training
     parser.add_argument("--random_seed", type=int, default=0)
-    parser.add_argument("--batch_size", type=int, default=1024)
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--optimizer", default="adamw",
                         choices=["sgd", "adam", "adamw"])
