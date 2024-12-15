@@ -12,5 +12,5 @@ from evaluation.vqa import VQABenchmark
 
 
 def get_benchmark(args, dataset=None):
-    benchmark = VQABenchmark(dataset=args.dataset, logger=args.logger)
+    benchmark = VQABenchmark(args=args, dataset=dataset, logger=args.logger)
     return benchmark

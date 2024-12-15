@@ -15,15 +15,17 @@ from evaluation.metrics import MetricLogger
 
 
 class Benchmark:
-    def __init__(self, dataset, logger):
+    def __init__(self, args, dataset, logger):
         """Initialize the benchmark.
 
         Args:
             logger: A logger object.
         """
+        # TODO: can replace logger with args.logger
         self.task: str = "None"
         self.prompt_template = "{}"
         self.dataset = dataset
+        self.args = args
         # self.modality = self.dataset.get_modality()
 
         self.metric_logger = MetricLogger(delimiter=" ")

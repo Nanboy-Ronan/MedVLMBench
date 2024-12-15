@@ -74,10 +74,18 @@ if __name__ == "__main__":
         torch.backends.cudnn.benchmark = False
 
     model = get_model(args)
+
+    if model.image_processor is None:
+        all_data, all_dataloader = get_dataset(args, split="all")
+    else:
+        all_data, all_dataloader = get_dataset(args, split="all", image_processor=model.image_processor)
     
 
-    all_data, alls_dataloader = get_dataset(args, split="all")
+    all_data, all_dataloader = get_dataset(args, split="all")
     # train_data, train_dataloader = get_dataset(args, split="train")
     # test_data, test_dataloader = get_dataset(args, split="test")
 
     benchmark = get_benchmark(args=args, dataset=all_data)
+    benchmark.evaluate(eval_args=args, model=model)
+
+    args.logger.info("End of the Program")

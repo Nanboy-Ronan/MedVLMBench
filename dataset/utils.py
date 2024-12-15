@@ -16,8 +16,14 @@ from easydict import EasyDict as edict
 
 import dataset
 
+def get_transform(args):
+    transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+    ])
+    return transform
 
-def get_dataset(args, split):
+def get_dataset(args, split, image_processor=None):
 
     g = torch.Generator()
     g.manual_seed(args.random_seed)
@@ -30,12 +36,14 @@ def get_dataset(args, split):
     # data = dataset_name(meta, args.sensitive_name,
     #                     transform, path_to_images=image_path)
 
+    # TODO: refactor transform within the class.
     if args.dataset == "Slake":
         assert split in ["train", "validation", "test", "all"]
-        # if split == "all":
-            # data = dataset_name(edict(image_path="./data/SLAKE/imgs"), transform=transforms.PILToTensor())
-        # else:
-        data = dataset_name(edict(image_path="./data/SLAKE/imgs"), split=split, transform=transforms.PILToTensor())
+        if image_processor is not None:
+            transform = image_processor
+        else:
+            transform = get_transform(args)
+        data = dataset_name(edict(image_path="./data/SLAKE/imgs"), split=split, transform=transform)
     else:
         raise NotImplementedError()
 

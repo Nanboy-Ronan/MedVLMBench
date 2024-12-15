@@ -47,9 +47,10 @@ def collect_args():
                         default=1, help="early stopping epochs")
     parser.add_argument("--test_mode", type=bool,
                         default=False, help="if using test mode")
+    parser.add_argument("--print_freq", type=int,
+                        default=10, help="logging frequency during evaluation")
     parser.add_argument("--warmup_epochs", type=int, default=5)
     parser.add_argument("--no_cuda", dest="cuda", action="store_false")
-    parser.add_argument("--no_cls_balance", dest="cls_balance", action="store_false")
 
     # network
     parser.add_argument(
