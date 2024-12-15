@@ -72,5 +72,5 @@ if __name__ == "__main__":
     model = get_model(args)
     
 
-    train_data, train_dataloader, train_meta = get_dataset(args, split="train")
-    test_data, test_dataloader, test_meta = get_dataset(args, split="test")
+    # train_data, train_dataloader, train_meta = get_dataset(args, split="train")
+    # test_data, test_dataloader, test_meta = get_dataset(args, split="test")

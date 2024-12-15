@@ -6,7 +6,7 @@ from ast import parse
 def collect_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--task", default="caption", choices=["qa", "caption"])
+    parser.add_argument("--task", default="caption", choices=["vqa", "caption"])
     
     parser.add_argument(
         "--dataset",

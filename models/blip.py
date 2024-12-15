@@ -3,6 +3,7 @@ from PIL import Image
 from transformers import BlipForConditionalGeneration, BlipProcessor
 
 from models.base import BaseModel
+from models.chat import ChatMetaModel
 
 
 class BLIP(ChatMetaModel):
