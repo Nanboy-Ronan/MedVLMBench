@@ -1,4 +1,4 @@
-from .benchmark import Benchmark
+from evaluation.benchmark import Benchmark
 from torchvision.transforms.functional import to_pil_image
 
 

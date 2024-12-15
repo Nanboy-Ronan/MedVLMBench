@@ -11,7 +11,7 @@ import requests
 import torch
 from torch.utils.data import DataLoader
 
-from .utils import MetricLogger
+from evaluation.metrics import MetricLogger
 
 
 class Benchmark:
@@ -24,7 +24,7 @@ class Benchmark:
         self.task: str = "None"
         self.prompt_template = "{}"
         self.dataset = dataset
-        self.modality = self.dataset.get_modality()
+        # self.modality = self.dataset.get_modality()
 
         self.metric_logger = MetricLogger(delimiter=" ")
         self.logger = logger

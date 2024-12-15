@@ -7,8 +7,7 @@ import numpy as np
 
 import torch
 import torch.distributed as dist
-from torch._six import inf
-
+from torch import inf
 
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a
@@ -67,8 +66,7 @@ class SmoothedValue(object):
         return self.fmt.format(
             median=self.median, avg=self.avg, global_avg=self.global_avg, max=self.max, value=self.value
         )
-
-
+        
 class MetricLogger(object):
     def __init__(self, delimiter="\t"):
         self.meters = defaultdict(SmoothedValue)
