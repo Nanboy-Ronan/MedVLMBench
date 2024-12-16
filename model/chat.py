@@ -1,11 +1,11 @@
 import torch.nn as nn
-from models.base import BaseModel
+from model.base import BaseModel
 from easydict import EasyDict as edict
 
 
 class ChatMetaModel(BaseModel):
-    def __init__(self, model_args):
-        super().__init__(model_args)
+    def __init__(self, args):
+        super().__init__(args)
 
         self.constants = edict(
             IGNORE_INDEX=-100,
@@ -17,7 +17,8 @@ class ChatMetaModel(BaseModel):
             IMAGE_PLACEHOLDER="<image-placeholder>",
         )
 
-    def infer_vision_language(self, image, qs):
+    def infer_vision_language(self, image, qs, image_size=None):
+        # input image should be type of Tensor
         pass
 
     def infer_language(self, qs):

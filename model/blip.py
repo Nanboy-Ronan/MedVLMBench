@@ -2,13 +2,13 @@ import torch
 from PIL import Image
 from transformers import BlipForConditionalGeneration, BlipProcessor
 
-from models.base import BaseModel
-from models.chat import ChatMetaModel
+from model.base import BaseModel
+from model.chat import ChatMetaModel
 
 
 class BLIP(ChatMetaModel):
-    def __init__(self, model_args=None):
-        super().__init__(model_args)
+    def __init__(self, args=None):
+        super().__init__(args)
         # if mode == "vqa":
         self.model_name = "Salesforce/blip-vqa-base"
         # elif mode == "caption":
@@ -16,10 +16,10 @@ class BLIP(ChatMetaModel):
         # else:
         #     raise NotImplementedError()
         self.processor = BlipProcessor.from_pretrained(self.model_name)
-        self.model = BlipForConditionalGeneration.from_pretrained(self.model_name).to(self.model_args.device)
+        self.model = BlipForConditionalGeneration.from_pretrained(self.model_name).to(self.args.device)
         self.image_processor = self.processor.image_processor
         self.tokenizer = self.processor.tokenizer
-    
+
     def load_from_pretrained(self):
         pass
 
@@ -34,17 +34,12 @@ class BLIP(ChatMetaModel):
     # def infer_vision_language(self, image_path, question):
     def infer_vision_language(self, image, qs):
         # Tokenize the question
-        text_inputs = self.tokenizer(
-            qs, 
-            return_tensors="pt", 
-            padding=True,
-            truncation=True
-        )
-    
+        text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
+
         inputs = {
-            "input_ids": text_inputs["input_ids"].to(self.model_args.device),
-            "attention_mask": text_inputs["attention_mask"].to(self.model_args.device),
-            "pixel_values": image.to(self.model_args.device)
+            "input_ids": text_inputs["input_ids"].to(self.args.device),
+            "attention_mask": text_inputs["attention_mask"].to(self.args.device),
+            "pixel_values": image.to(self.args.device),
         }
 
         outputs = self.model.generate(**inputs, max_length=50)

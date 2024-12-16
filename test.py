@@ -1,6 +1,6 @@
 from easydict import EasyDict as edict
 from PIL import Image
-from models.llava import LLaVA
+from model.llava import LLaVA
 
 if __name__ == "__main__":
 
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     Abdominopelvic CT scan in axial view indicates significant distension of the stomach and intestines with marked luminal dilatation observed in the oesophagus, stomach, small, and large bowel, accompanied by faecal loading. Notably, the distended large bowel is positioned anterior to the liver, causing medial displacement of the liver, which suggests a possible chronic underlying condition. This constellation of findings points to a long-standing obstructive process in the gastrointestinal tract, necessitating further clinical correlation and potential intervention.
     """
 
-    llava_model = LLaVA(model_args=edict(model_path=model_path, model_base=None))
+    llava_model = LLaVA(args=edict(model_path=model_path, model_base=None))
     llava_model.load_from_pretrained(model_path=model_path)
 
     output = llava_model.infer_vision_language(img, prompt)

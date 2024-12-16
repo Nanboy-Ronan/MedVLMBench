@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 import parse_args
 from utils import basics
-from models.utils import get_model
+from model.utils import get_model
 from dataset.utils import get_dataset
 from eval.utils import get_benchmark
 
@@ -84,6 +84,6 @@ if __name__ == "__main__":
     # test_data, test_dataloader = get_dataset(args, split="test")
 
     benchmark = get_benchmark(args=args, dataset=all_data)
-    benchmark.evaluate(eval_args=args, model=model)
+    benchmark.evaluate(args=args, model=model)
 
     args.logger.info("End of the Program")

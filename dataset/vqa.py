@@ -4,7 +4,7 @@ import pandas as pd
 from PIL import Image
 
 from datasets import load_dataset
-from dataset.base import BaseDataset
+from base import BaseDataset
 
 
 class VQADataset(BaseDataset):
@@ -14,9 +14,12 @@ class VQADataset(BaseDataset):
         self.transform = transform
 
 
-class Slake(VQADataset):
+class SLAKE(VQADataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split, transform)
+
+        self.name = "SLAKE"
+        self.modality = "general"
 
         if split == "all":
             self.ds = load_dataset("BoKelvin/SLAKE", split=split)
@@ -33,11 +36,12 @@ class Slake(VQADataset):
         is_open = self.ds[index]["answer_type"] == "OPEN"
 
         image = Image.open(image_path).convert("RGB")
+        image_size = image.size
 
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, qs, answer, image_path, is_open
+        return image, qs, answer, is_open, image_size, image_path
 
 
 if __name__ == "__main__":
@@ -47,8 +51,8 @@ if __name__ == "__main__":
     from easydict import EasyDict as edict
     from torch.utils.data import DataLoader
 
-    # dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
-    dataset = SLAKE(edict(image_path="./data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    # dataset = SLAKE(edict(image_path="./data/SLAKE/imgs"), split="test", transform=PILToTensor())
 
     image, qs, answer, image_path, is_open = dataset[0]
 
