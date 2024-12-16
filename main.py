@@ -11,7 +11,7 @@ import parse_args
 from utils import basics
 from models.utils import get_model
 from dataset.utils import get_dataset
-from evaluation.utils import get_benchmark
+from eval.utils import get_benchmark
 
 
 def create_exerpiment_setting(args):
@@ -56,8 +56,7 @@ if __name__ == "__main__":
     args = parse_args.collect_args()
     args = create_exerpiment_setting(args)
 
-    logger = basics.setup_logger(
-        "train", args.save_folder, "history.log", screen=True, tofile=True)
+    logger = basics.setup_logger("train", args.save_folder, "history.log", screen=True, tofile=True)
     logger.info("Using following arguments for training.")
     logger.info(args)
 
@@ -79,7 +78,6 @@ if __name__ == "__main__":
         all_data, all_dataloader = get_dataset(args, split="all")
     else:
         all_data, all_dataloader = get_dataset(args, split="all", image_processor=model.image_processor)
-    
 
     all_data, all_dataloader = get_dataset(args, split="all")
     # train_data, train_dataloader = get_dataset(args, split="train")
