@@ -10,6 +10,8 @@ import torch.nn.functional as F
 import parse_args
 from utils import basics
 from models.utils import get_model
+from dataset.utils import get_dataset
+from evaluation.utils import get_benchmark
 
 
 def create_exerpiment_setting(args):
@@ -59,6 +61,8 @@ if __name__ == "__main__":
     logger.info("Using following arguments for training.")
     logger.info(args)
 
+    args.logger = logger
+
     torch.manual_seed(args.random_seed)
     np.random.seed(args.random_seed)
     random.seed(args.random_seed)
@@ -70,7 +74,18 @@ if __name__ == "__main__":
         torch.backends.cudnn.benchmark = False
 
     model = get_model(args)
+
+    if model.image_processor is None:
+        all_data, all_dataloader = get_dataset(args, split="all")
+    else:
+        all_data, all_dataloader = get_dataset(args, split="all", image_processor=model.image_processor)
     
 
-    # train_data, train_dataloader, train_meta = get_dataset(args, split="train")
-    # test_data, test_dataloader, test_meta = get_dataset(args, split="test")
+    all_data, all_dataloader = get_dataset(args, split="all")
+    # train_data, train_dataloader = get_dataset(args, split="train")
+    # test_data, test_dataloader = get_dataset(args, split="test")
+
+    benchmark = get_benchmark(args=args, dataset=all_data)
+    benchmark.evaluate(eval_args=args, model=model)
+
+    args.logger.info("End of the Program")

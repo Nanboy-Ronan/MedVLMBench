@@ -6,38 +6,13 @@ from ast import parse
 def collect_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--task", default="caption", choices=["qa", "caption"])
-    # parser.add_argument(
-    #     "--usage",
-    #     type=str,
-    #     default='original',
-    #     choices=["original"],
-    # )
-    # parser.add_argument(
-    #     "--method",
-    #     default="erm",
-    #     choices=[
-    #         "erm",
-    #         ]
-    #     )
+    parser.add_argument("--task", default="caption", choices=["vqa", "caption"])
     
     parser.add_argument(
         "--dataset",
-        default="CXP",
+        default="slake",
         choices=[
-            "CXP",
-            "MIMIC_CXR",
-            "HAM10000",
-            "PAPILA",
-            "ADNI",
-            "COVID_CT_MD",
-            "FairVLMed10k",
-            "BREST",
-            "GF3300",
-            "HAM10000-Seg",
-            "FairSeg",
-            "montgomery",
-            "TUSC"
+            "Slake",
         ],
     )
 
@@ -52,7 +27,8 @@ def collect_args():
 
     # training
     parser.add_argument("--random_seed", type=int, default=0)
-    parser.add_argument("--batch_size", type=int, default=1024)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--optimizer", default="adamw",
                         choices=["sgd", "adam", "adamw"])
     parser.add_argument("--blr", type=float, default=1e-4,
@@ -61,19 +37,20 @@ def collect_args():
     parser.add_argument("--fixed_lr", action="store_true")
     parser.add_argument("--weight_decay", type=float,
                         default=1e-4, help="weight decay for optimizer")
-    parser.add_argument("--lr_decay_rate", type=float,
-                        default=0.1, help="decay rate of the learning rate")
-    parser.add_argument("--lr_decay_period", type=float,
-                        default=10, help="decay period of the learning rate")
+    # parser.add_argument("--lr_decay_rate", type=float,
+    #                     default=0.1, help="decay rate of the learning rate")
+    # parser.add_argument("--lr_decay_period", type=float,
+    #                     default=10, help="decay period of the learning rate")
     parser.add_argument("--total_epochs", type=int,
                         default=100, help="total training epochs")
     parser.add_argument("--early_stopping", type=int,
                         default=1, help="early stopping epochs")
     parser.add_argument("--test_mode", type=bool,
                         default=False, help="if using test mode")
+    parser.add_argument("--print_freq", type=int,
+                        default=10, help="logging frequency during evaluation")
     parser.add_argument("--warmup_epochs", type=int, default=5)
     parser.add_argument("--no_cuda", dest="cuda", action="store_false")
-    parser.add_argument("--no_cls_balance", dest="cls_balance", action="store_false")
 
     # network
     parser.add_argument(
@@ -81,6 +58,7 @@ def collect_args():
         default="BLIP",
         choices=[
             "BLIP",
+            "LLaVa-1.5"
         ],
     )
     parser.add_argument("--context_length", default=77)
@@ -89,13 +67,13 @@ def collect_args():
     parser.add_argument("--hash_id", type=str, default="")
 
     # strategy for validation
-    parser.add_argument(
-        "--val_strategy",
-        type=str,
-        default="loss",
-        choices=["loss", "worst_auc"],
-        help="strategy for selecting val model",
-    )
+    # parser.add_argument(
+    #     "--val_strategy",
+    #     type=str,
+    #     default="loss",
+    #     choices=["loss", "worst_auc"],
+    #     help="strategy for selecting val model",
+    # )
 
     parser.set_defaults(cuda=True)
 

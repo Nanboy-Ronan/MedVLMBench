@@ -1,5 +1,5 @@
 import torch.nn as nn
-from .base import BaseModel
+from models.base import BaseModel
 from easydict import EasyDict as edict
 
 

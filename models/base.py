@@ -3,7 +3,7 @@ import torch.nn as nn
 from easydict import EasyDict as edict
 
 
-class BaseModel(nn.Module):
+class BaseModel():
     def __init__(self, model_args):
         super().__init__()
 

@@ -4,7 +4,7 @@ import pandas as pd
 from PIL import Image
 
 from datasets import load_dataset
-from base import BaseDataset
+from dataset.base import BaseDataset
 
 
 class VQADataset(BaseDataset):
@@ -14,11 +14,14 @@ class VQADataset(BaseDataset):
         self.transform = transform
 
 
-class SLAKE(VQADataset):
+class Slake(VQADataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split, transform)
 
-        self.ds = load_dataset("BoKelvin/SLAKE", split=split)
+        if split == "all":
+            self.ds = load_dataset("BoKelvin/SLAKE", split=split)
+        else:
+            self.ds = load_dataset("BoKelvin/SLAKE", split=split)
 
     def __len__(self):
         return len(self.ds)
@@ -44,9 +47,10 @@ if __name__ == "__main__":
     from easydict import EasyDict as edict
     from torch.utils.data import DataLoader
 
-    dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    # dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    dataset = SLAKE(edict(image_path="./data/SLAKE/imgs"), split="test", transform=PILToTensor())
 
-    image, qs, answer, image_path = dataset[0]
+    image, qs, answer, image_path, is_open = dataset[0]
 
     dataloader = DataLoader(dataset, batch_size=2)
 
