@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from .utils import MetricLogger
 
 
-class Benchmark:
+class EvalEngine:
     def __init__(self, dataset, logger):
         """Initialize the benchmark.
 

@@ -1,8 +1,10 @@
-from .benchmark import Benchmark
+from .base import EvalEngine
 from torchvision.transforms.functional import to_pil_image
 
+from torchmetrics.functional.text import bleu_score, rouge_score
 
-class VQABenchmark(Benchmark):
+
+class VQAEvalEngine(EvalEngine):
     def __init__(self, dataset, logger):
         super().__init__(dataset, logger)
 
@@ -11,7 +13,7 @@ class VQABenchmark(Benchmark):
         # 0 for closed question, 1 for open question
         self.prompt_template = [
             "Answer the following question about the image with yes or no. {}",
-            "Answer the following question about the image. {}",
+            "{}",
         ]
 
     def evaluate_batch(self, batch, model):
