@@ -10,6 +10,7 @@ class BLIP(ChatMetaModel):
     def __init__(self, args=None):
         super().__init__(args)
         # if mode == "vqa":
+        self.name = "BLIP"
         self.model_name = "Salesforce/blip-vqa-base"
         # elif mode == "caption":
         #     self.model_name = "Salesforce/blip-image-captioning-base"

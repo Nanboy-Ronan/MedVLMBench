@@ -2,7 +2,7 @@ import json
 import os
 import random
 import argparse
-from utils.constants import *
+from utils import constants
 
 import numpy as np
 import torch
@@ -19,11 +19,11 @@ def collect_args():
     parser = argparse.ArgumentParser()
 
     # data
-    parser.add_argument("--task", default="vqa", choices=TASKS)
+    parser.add_argument("--task", default="vqa", choices=constants.TASKS)
     parser.add_argument(
         "--dataset",
         default="SLAKE",
-        choices=DATASETS,
+        choices=constants.DATASETS,
     )
     parser.add_argument("--image_path", type=str, help="local path to images")
     parser.add_argument("--split", type=str, default="all", help="dataset split for evaluation")
@@ -39,19 +39,24 @@ def collect_args():
     parser.add_argument(
         "--model",
         default="BLIP",
-        choices=MODELS,
+        choices=constants.MODELS,
     )
     parser.add_argument("--context_length", default=77)
     parser.add_argument("--model_path", type=str, default="", help="explicitly indentify checkpoint path to resume.")
 
     # misc
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--cache_dir", default=None)
     parser.add_argument("--eval_print_freq", type=int, default=100, help="logging frequency (step)")
     parser.add_argument("--exp_path", type=str, default="./output")
     parser.add_argument("--wandb_name", type=str, default="baseline")
     parser.add_argument("--if_wandb", type=bool, default=False)
 
     args = parser.parse_args()
+
+    assert args.dataset in getattr(
+        constants, f"{str.upper(args.task)}_DATASETS"
+    ), f"dataset {args.dataset} is not supported for task {args.task}"
 
     args.save_folder = os.path.join(
         args.exp_path,
@@ -62,6 +67,9 @@ def collect_args():
     )
 
     basics.creat_folder(args.save_folder)
+
+    if args.cache_dir is not None:
+        os.environ["HF_HOME"] = args.cache_dir
 
     return args
 
