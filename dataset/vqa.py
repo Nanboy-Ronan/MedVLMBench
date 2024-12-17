@@ -3,7 +3,7 @@ import pandas as pd
 
 from PIL import Image
 
-from datasets import load_dataset
+from datasets import load_dataset, concatenate_datasets
 from base import BaseDataset
 
 
@@ -22,7 +22,11 @@ class SLAKE(VQADataset):
         self.modality = "general"
 
         if split == "all":
-            self.ds = load_dataset("BoKelvin/SLAKE", split=split)
+            df_train = load_dataset("BoKelvin/SLAKE", split="train")
+            df_val = load_dataset("BoKelvin/SLAKE", split="validation")
+            df_test = load_dataset("BoKelvin/SLAKE", split="test")
+
+            self.ds = concatenate_datasets([df_train, df_val, df_test])
         else:
             self.ds = load_dataset("BoKelvin/SLAKE", split=split)
 
