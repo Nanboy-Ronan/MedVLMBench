@@ -2,8 +2,8 @@ import torch
 from PIL import Image
 from transformers import BlipForConditionalGeneration, BlipProcessor
 
-from model.base import BaseModel
-from model.chat import ChatMetaModel
+from models.base import BaseModel
+from models.chat import ChatMetaModel
 
 
 class BLIP(ChatMetaModel):

@@ -11,7 +11,7 @@ import requests
 import torch
 from torch.utils.data import DataLoader
 
-from .utils import MetricLogger
+from .metrics import MetricLogger
 
 
 class EvalEngine:

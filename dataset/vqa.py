@@ -4,7 +4,7 @@ import pandas as pd
 from PIL import Image
 
 from datasets import load_dataset, concatenate_datasets
-from base import BaseDataset
+from .base import BaseDataset
 
 
 class VQADataset(BaseDataset):

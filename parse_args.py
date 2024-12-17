@@ -54,6 +54,7 @@ def collect_args_train():
 
     # testing
     parser.add_argument("--hash_id", type=str, default="")
+    parser.add_argument("--eval_batch_size", type=int, default=1)
 
     # strategy for validation
     # parser.add_argument(
@@ -71,6 +72,8 @@ def collect_args_train():
     parser.add_argument("--exp_path", type=str, default="./output")
 
     args = parser.parse_args()
+
+    assert args.eval_batch_size == 1
 
     return args
 
@@ -90,7 +93,7 @@ def collect_args_eval():
 
     # evaluation
     parser.add_argument("--random_seed", type=int, default=0)
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--eval_batch_size", type=int, default=1)
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--optimizer", default="adamw", choices=["sgd", "adam", "adamw"])
     parser.add_argument("--blr", type=float, default=1e-4, help="learning rate")
@@ -126,5 +129,7 @@ def collect_args_eval():
     parser.add_argument("--if_wandb", type=bool, default=False)
 
     args = parser.parse_args()
+
+    assert args.eval_batch_size == 1
 
     return args

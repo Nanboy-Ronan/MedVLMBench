@@ -9,9 +9,9 @@ import torch.nn.functional as F
 
 from parse_args import collect_args_eval
 from utils import basics
-from model.utils import get_model
+from models.utils import get_model
 from dataset.utils import get_dataset
-from eval.utils import get_benchmark
+from eval import get_benchmark
 
 
 def create_exerpiment_setting(args):

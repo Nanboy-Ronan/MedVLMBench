@@ -66,7 +66,7 @@ def get_dataset(args, split, image_processor=None):
     elif split == "test":
         data_loader = torch.utils.data.DataLoader(
             data,
-            batch_size=args.batch_size,
+            batch_size=args.eval_batch_size,
             shuffle=False,
             num_workers=args.num_workers,
             worker_init_fn=seed_worker,
@@ -77,7 +77,7 @@ def get_dataset(args, split, image_processor=None):
         # currently same as test as "all" is designed to zero-shot the model on the entire dataset
         data_loader = torch.utils.data.DataLoader(
             data,
-            batch_size=args.batch_size,
+            batch_size=args.eval_batch_size,
             shuffle=False,
             num_workers=args.num_workers,
             worker_init_fn=seed_worker,
