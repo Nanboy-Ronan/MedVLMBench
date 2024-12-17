@@ -1,1 +1,1 @@
-from dataset.vqa import Slake
+from dataset.vqa import SLAKE

@@ -10,18 +10,21 @@ import torchvision.transforms as transforms
 from albumentations.augmentations import transforms as atransforms
 from albumentations.core.composition import Compose
 from einops import rearrange
-from matplotlib import pyplot as plt
 from torch.utils.data import Dataset, WeightedRandomSampler
 from easydict import EasyDict as edict
 
 import dataset
 
+
 def get_transform(args):
-    transform = transforms.Compose([
-        transforms.Resize((256, 256)),
-        transforms.ToTensor(),
-    ])
+    transform = transforms.Compose(
+        [
+            transforms.Resize((256, 256)),
+            transforms.ToTensor(),
+        ]
+    )
     return transform
+
 
 def get_dataset(args, split, image_processor=None):
 
@@ -37,7 +40,7 @@ def get_dataset(args, split, image_processor=None):
     #                     transform, path_to_images=image_path)
 
     # TODO: refactor transform within the class.
-    if args.dataset == "Slake":
+    if args.dataset == "SLAKE":
         assert split in ["train", "validation", "test", "all"]
         if image_processor is not None:
             transform = image_processor
@@ -83,7 +86,7 @@ def get_dataset(args, split, image_processor=None):
         )
     else:
         raise NotImplementedError()
-    
+
     print("loaded dataset ", args.dataset)
 
     return data, data_loader

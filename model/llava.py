@@ -3,18 +3,29 @@ import shutil
 import warnings
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig
-from models.release.llava.model import LlavaLlamaForCausalLM, LlavaMptForCausalLM, LlavaMistralForCausalLM
-from models.release.llava.conversation import conv_templates, default_conversation
-from models.release.llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
+from model.release.llava.model import LlavaLlamaForCausalLM, LlavaMptForCausalLM, LlavaMistralForCausalLM
+from model.release.llava.conversation import conv_templates, default_conversation
+from model.release.llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
 
-from models.chat import ChatMetaModel
+from model.chat import ChatMetaModel
+from PIL import Image
+
+
+class ImageProcessorCallable:
+    def __init__(self, image_processor, model_cfg):
+        self.image_processor = image_processor
+        self.model_cfg = model_cfg
+
+    def __call__(self, image):
+        return process_images([image], self.image_processor, self.model_cfg)[0]
 
 
 class LLaVA(ChatMetaModel):
-    def __init__(self, model_args):
-        super().__init__(model_args)
+    def __init__(self, args):
+        super().__init__(args)
 
         self.conv_mode = "vicuna_v1"
+        self.name = "LLaVA-1.5"
 
     def load_from_pretrained(
         self,
@@ -27,7 +38,7 @@ class LLaVA(ChatMetaModel):
         **kwargs,
     ):
         # Load models from pretrained weights. For inference only.
-        model_base = self.model_args.model_base
+        model_base = self.args.model_base
 
         model_name = get_model_name_from_path(model_path)
 
@@ -194,9 +205,10 @@ class LLaVA(ChatMetaModel):
         self.model = model
         self.tokenizer = tokenizer
         self.image_processor = image_processor
+        self.image_processor_callable = ImageProcessorCallable(image_processor, model.config)
         self.context_len = context_len
 
-    def infer_vision_language(self, image, qs, temperature=0):
+    def infer_vision_language(self, image, qs, temperature=0, image_size=None):
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
         if self.model.config.mm_use_im_start_end:
@@ -218,16 +230,20 @@ class LLaVA(ChatMetaModel):
         input_ids = (
             tokenizer_image_token(prompt, self.tokenizer, self.constants.IMAGE_TOKEN_INDEX, return_tensors="pt")
             .unsqueeze(0)
-            .cuda()
+            .to(self.model.device)
         )
 
-        image_tensor = process_images([image], self.image_processor, self.model.config)[0]
+        if type(image) is Image.Image:
+            image_tensor = process_images([image], self.image_processor, self.model.config)[0]
+            image_size = image.size
+        else:
+            image_tensor = image
 
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids,
                 images=image_tensor.unsqueeze(0).half().cuda(),
-                image_sizes=[image.size],
+                image_sizes=[image_size],
                 do_sample=True if temperature > 0 else False,
                 temperature=temperature,
                 top_p=None,
@@ -290,7 +306,7 @@ if __name__ == "__main__":
     Abdominopelvic CT scan in axial view indicates significant distension of the stomach and intestines with marked luminal dilatation observed in the oesophagus, stomach, small, and large bowel, accompanied by faecal loading. Notably, the distended large bowel is positioned anterior to the liver, causing medial displacement of the liver, which suggests a possible chronic underlying condition. This constellation of findings points to a long-standing obstructive process in the gastrointestinal tract, necessitating further clinical correlation and potential intervention.
     """
 
-    llava_model = LLaVA(model_args=edict(model_path=model_path, model_base=None))
+    llava_model = LLaVA(args=edict(model_path=model_path, model_base=None))
     llava_model.load_from_pretrained(model_path=model_path)
 
     output = llava_model.infer_vision_language(img, prompt)
