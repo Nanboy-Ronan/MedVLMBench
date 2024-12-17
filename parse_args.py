@@ -56,6 +56,7 @@ def collect_args_train():
 
     # testing
     parser.add_argument("--hash_id", type=str, default="")
+    parser.add_argument("--eval_batch_size", type=int, default=1)
 
     # strategy for validation
     # parser.add_argument(
@@ -74,6 +75,58 @@ def collect_args_train():
 
     args = parser.parse_args()
 
+    assert args.eval_batch_size == 1
+
     return args
 
 
+
+    # data
+    parser.add_argument("--task", default="vqa", choices=["vqa", "caption"])
+    parser.add_argument(
+        "--dataset",
+        default="SLAKE",
+        choices=[
+            "SLAKE",
+        ],
+    )
+
+    # evaluation
+    parser.add_argument("--random_seed", type=int, default=0)
+    parser.add_argument("--eval_batch_size", type=int, default=1)
+    parser.add_argument("--num_workers", type=int, default=8)
+    parser.add_argument("--optimizer", default="adamw", choices=["sgd", "adam", "adamw"])
+    parser.add_argument("--blr", type=float, default=1e-4, help="learning rate")
+    parser.add_argument("--min_lr", type=float, default=1e-5)
+    parser.add_argument("--fixed_lr", action="store_true")
+    parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight decay for optimizer")
+    parser.add_argument("--total_epochs", type=int, default=100, help="total training epochs")
+    parser.add_argument("--early_stopping", type=int, default=1, help="early stopping epochs")
+    parser.add_argument("--test_mode", type=bool, default=False, help="if using test mode")
+    parser.add_argument("--print_freq", type=int, default=10, help="logging frequency during evaluation")
+    parser.add_argument("--warmup_epochs", type=int, default=5)
+
+    parser.add_argument("--hash_id", type=str, default="")
+
+    # network
+    parser.add_argument(
+        "--model",
+        default="BLIP",
+        choices=["BLIP", "LLaVA-1.5"],
+    )
+    parser.add_argument("--context_length", default=77)
+    parser.add_argument("--model_path", type=str, default="", help="explicitly indentify checkpoint path to resume.")
+
+    # misc
+    parser.add_argument("--device", default="cuda")
+    parser.add_argument("--eval_print_freq", type=int, default=1000, help="logging frequency (step)")
+    parser.add_argument("--exp_path", type=str, default="./output")
+    parser.add_argument("--wandb_name", type=str, default="baseline")
+    parser.add_argument("--if_wandb", type=bool, default=False)
+    parser.add_argument("--save_pred", type=bool, default=True)
+
+    args = parser.parse_args()
+
+    assert args.eval_batch_size == 1
+
+    return args

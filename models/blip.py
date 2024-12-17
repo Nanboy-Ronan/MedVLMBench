@@ -2,8 +2,8 @@ import torch
 from PIL import Image
 from transformers import BlipForConditionalGeneration, BlipProcessor
 
-from model.base import BaseModel
-from model.chat import ChatMetaModel
+from models.base import BaseModel
+from models.chat import ChatMetaModel
 
 
 class BLIP(ChatMetaModel):
@@ -29,7 +29,7 @@ class BLIP(ChatMetaModel):
     #     return caption
 
     # def infer_vision_language(self, image_path, question):
-    def infer_vision_language(self, image, qs):
+    def infer_vision_language(self, image, qs, image_size):
         # Tokenize the question
         text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
 

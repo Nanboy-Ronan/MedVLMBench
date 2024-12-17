@@ -10,7 +10,6 @@ import re
 import torch
 import torch.distributed as dist
 from torch import inf
-from .vqa import VQAEvalEngine
 
 
 task_engines = {"vqa": VQAEvalEngine}

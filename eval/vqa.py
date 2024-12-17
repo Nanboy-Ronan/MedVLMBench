@@ -1,8 +1,8 @@
 from torchvision.transforms.functional import to_pil_image
 from torchmetrics.functional.text import bleu_score, rouge_score
 
-from eval.base import EvalEngine
-from eval.utils import clean_str
+from .base import EvalEngine
+from .utils import clean_str
 
 
 def process_tokens(text):
@@ -25,13 +25,14 @@ class VQAEvalEngine(EvalEngine):
 
     def evaluate_subject(self, subject, model):
         image, qs, answer, is_open, image_size, image_path = subject
+        qs, answer = qs[0], answer[0] # evaluation batch size is 1
 
         device = self.args.device
         image = image.to(device, non_blocking=True)
 
         is_binary = str.lower(answer) in ["yes", "no"]
 
-        prompt = self.prompt_template(int(is_binary)).format(qs)
+        prompt = self.prompt_template[int(is_binary)].format(qs)
         output = model.infer_vision_language(image, prompt, image_size=image_size)
 
         clean_output = clean_str(output)
@@ -84,7 +85,7 @@ class VQAEvalEngine(EvalEngine):
             ]
             accuracy = 1 if recall >= 0.4 else 0
 
-            for metric in open_metrics:
+            for metric in closed_metrics:
                 self.metric_logger.meters[f"{metric}_closed"].update(eval(metric), n=1)
 
         self.metric_logger.meters["recall_overall"].update(recall, n=1)

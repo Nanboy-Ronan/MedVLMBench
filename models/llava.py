@@ -3,11 +3,11 @@ import shutil
 import warnings
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig
-from model.release.llava.model import LlavaLlamaForCausalLM, LlavaMptForCausalLM, LlavaMistralForCausalLM
-from model.release.llava.conversation import conv_templates, default_conversation
-from model.release.llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
+from models.release.llava.model import LlavaLlamaForCausalLM, LlavaMptForCausalLM, LlavaMistralForCausalLM
+from models.release.llava.conversation import conv_templates, default_conversation
+from models.release.llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
 
-from model.chat import ChatMetaModel
+from models.chat import ChatMetaModel
 from PIL import Image
 
 
