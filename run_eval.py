@@ -10,8 +10,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from utils import basics
-from models import get_model
-from data import get_dataset
+from model import get_model
+from dataset import get_dataset
 from eval import get_eval_engine
 
 

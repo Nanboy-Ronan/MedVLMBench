@@ -9,8 +9,8 @@ import torch.nn.functional as F
 
 import parse_args
 from utils import basics
-from models.utils import get_model
-from data.utils import get_dataset
+from model.utils import get_model
+from dataset.utils import get_dataset
 from eval.utils import get_eval_engine
 
 

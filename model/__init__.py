@@ -1,5 +1,5 @@
-from models.blip import BLIP
-from models.llava import LLaVA
+from model.blip import BLIP
+from model.llava import LLaVA
 
 from easydict import EasyDict as edict
 
