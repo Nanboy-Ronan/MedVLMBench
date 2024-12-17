@@ -10,6 +10,7 @@ class BLIP(ChatMetaModel):
     def __init__(self, args=None):
         super().__init__(args)
         # if mode == "vqa":
+        self.name = "BLIP"
         self.model_name = "Salesforce/blip-vqa-base"
         # elif mode == "caption":
         #     self.model_name = "Salesforce/blip-image-captioning-base"
@@ -19,9 +20,6 @@ class BLIP(ChatMetaModel):
         self.model = BlipForConditionalGeneration.from_pretrained(self.model_name).to(self.args.device)
         self.image_processor = self.processor.image_processor
         self.tokenizer = self.processor.tokenizer
-
-    def load_from_pretrained(self):
-        pass
 
     # def caption(self, image_path):
     #     raw_image = Image.open(image_path).convert("RGB")

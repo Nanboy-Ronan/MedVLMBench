@@ -10,8 +10,8 @@ import torch.nn.functional as F
 import parse_args
 from utils import basics
 from models.utils import get_model
-from dataset.utils import get_dataset
-from eval.utils import get_benchmark
+from data.utils import get_dataset
+from eval.utils import get_eval_engine
 
 
 def create_exerpiment_setting(args):
@@ -77,13 +77,13 @@ if __name__ == "__main__":
     if model.image_processor is None:
         all_data, all_dataloader = get_dataset(args, split="all")
     else:
-        all_data, all_dataloader = get_dataset(args, split="all", image_processor=model.image_processor)
+        all_data, all_dataloader = get_dataset(args, split="all", image_processor_callable=model.image_processor)
 
     all_data, all_dataloader = get_dataset(args, split="all")
     # train_data, train_dataloader = get_dataset(args, split="train")
     # test_data, test_dataloader = get_dataset(args, split="test")
 
-    benchmark = get_benchmark(args=args, dataset=all_data)
+    benchmark = get_eval_engine(args=args, dataset=all_data)
     benchmark.evaluate(args=args, model=model)
 
     args.logger.info("End of the Program")

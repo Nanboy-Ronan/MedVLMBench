@@ -17,11 +17,9 @@ class BaseModel:
 
         self.constants = edict()
 
-    @abc.abstractmethod
-    def load_from_pretrained(self):
+    def load_from_pretrained(self, model_path, **kwargs):
         pass
 
-    @abc.abstractmethod
     def init_for_training(self):
         pass
 

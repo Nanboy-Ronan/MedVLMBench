@@ -11,7 +11,7 @@ import requests
 import torch
 from torch.utils.data import DataLoader
 
-from .metrics import MetricLogger
+from eval.metrics import MetricLogger
 
 
 class EvalEngine:
@@ -31,7 +31,7 @@ class EvalEngine:
         self.logger = logger
 
     def evaluate(self, args, model):
-        data_loader = DataLoader(self.dataset, batch_size=args.eval_batch_size)
+        data_loader = DataLoader(self.dataset, batch_size=1)
 
         self.init_metric_logger()
 
@@ -43,7 +43,11 @@ class EvalEngine:
 
         self.save(self.args.save_folder, model.name)
 
-        return {k: meter.global_avg for k, meter in self.metric_logger.meters.items()}
+        results = {k: meter.global_avg for k, meter in self.metric_logger.meters.items()}
+
+        self.logger.info("\nEvaluation results:\n" + "\n".join("{} {:.3f}".format(k, v) for k, v in results.items()))
+
+        return results
 
     def evaluate_subject(self, subject, model):
         pass

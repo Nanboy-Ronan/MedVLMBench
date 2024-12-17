@@ -2,6 +2,8 @@ import argparse
 import os
 from ast import parse
 
+from utils.constants import *
+
 
 def collect_args_train():
     parser = argparse.ArgumentParser()
@@ -48,7 +50,7 @@ def collect_args_train():
     parser.add_argument(
         "--model",
         default="BLIP",
-        choices=["BLIP", "LLaVa-1.5"],
+        choices=MODELS,
     )
     parser.add_argument("--context_length", default=77)
 
@@ -78,8 +80,6 @@ def collect_args_train():
     return args
 
 
-def collect_args_eval():
-    parser = argparse.ArgumentParser()
 
     # data
     parser.add_argument("--task", default="vqa", choices=["vqa", "caption"])

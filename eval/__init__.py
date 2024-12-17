@@ -1,6 +1,9 @@
-from .vqa import VQAEvalEngine
+from eval.vqa import VQAEvalEngine
 
 
-def get_benchmark(args, dataset=None):
-    benchmark = VQAEvalEngine(args=args, dataset=dataset, logger=args.logger)
-    return benchmark
+task_engines = {"vqa": VQAEvalEngine}
+
+
+def get_eval_engine(args, dataset):
+    engine = task_engines[args.task](args=args, dataset=dataset, logger=args.logger)
+    return engine
