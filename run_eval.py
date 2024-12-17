@@ -10,9 +10,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from utils import basics
-from model.utils import get_model
-from dataset.utils import get_dataset
-from eval.utils import get_eval_engine
+from models import get_model
+from data import get_dataset
+from eval import get_eval_engine
 
 
 def collect_args():
@@ -26,10 +26,12 @@ def collect_args():
         choices=DATASETS,
     )
     parser.add_argument("--image_path", type=str, help="local path to images")
+    parser.add_argument("--split", type=str, default="all", help="dataset split for evaluation")
 
     # evaluation
     parser.add_argument("--random_seed", type=int, default=0)
     parser.add_argument("--print_freq", type=int, default=10, help="logging frequency during evaluation")
+    parser.add_argument("--save_pred", action="store_true", help="whether save predictions during evaluation")
 
     parser.add_argument("--hash_id", type=str, default="")
 
@@ -44,7 +46,7 @@ def collect_args():
 
     # misc
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--eval_print_freq", type=int, default=1000, help="logging frequency (step)")
+    parser.add_argument("--eval_print_freq", type=int, default=100, help="logging frequency (step)")
     parser.add_argument("--exp_path", type=str, default="./output")
     parser.add_argument("--wandb_name", type=str, default="baseline")
     parser.add_argument("--if_wandb", type=bool, default=False)
@@ -84,9 +86,9 @@ if __name__ == "__main__":
         torch.backends.cudnn.benchmark = False
 
     model = get_model(args=args, device=args.device)
-    dataset = get_dataset(args, split="test", image_processor_callable=model.image_processor_callable)
+    dataset = get_dataset(args, image_processor_callable=model.image_processor_callable)
 
-    benchmark = get_eval_engine(args=args)
-    benchmark.evaluate(args=args, model=model)
+    eval_engine = get_eval_engine(args=args, dataset=dataset)
+    eval_engine.evaluate(args=args, model=model)
 
     args.logger.info("End of the evaluation")

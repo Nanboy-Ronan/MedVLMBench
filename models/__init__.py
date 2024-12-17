@@ -1,12 +1,14 @@
-import model
+from models.blip import BLIP
+from models.llava import LLaVA
+
 from easydict import EasyDict as edict
 
 
 def get_model(args, **kwargs):
     if args.model == "BLIP":
-        model = model.BLIP(model_args=args)
+        model = BLIP(model_args=args)
     elif args.model == "LLaVA-1.5":
-        model = model.LLaVA(model_args=edict(model_path=args.model_path, model_base=None))
+        model = LLaVA(args=edict(model_path=args.model_path, model_base=None))
 
     else:
         raise NotImplementedError()

@@ -12,12 +12,7 @@ import torch.distributed as dist
 from torch import inf
 
 
-task_engines = {"vqa": VQAEvalEngine}
 
-
-def get_eval_engine(args, dataset=None):
-    engine = task_engines[args.task](args=args, dataset=dataset, logger=args.logger)
-    return engine
 
 
 contractions = {

@@ -1,8 +1,8 @@
 from torchvision.transforms.functional import to_pil_image
 from torchmetrics.functional.text import bleu_score, rouge_score
 
-from .base import EvalEngine
-from .utils import clean_str
+from eval.base import EvalEngine
+from eval.utils import clean_str
 
 
 def process_tokens(text):
@@ -25,7 +25,7 @@ class VQAEvalEngine(EvalEngine):
 
     def evaluate_subject(self, subject, model):
         image, qs, answer, is_open, image_size, image_path = subject
-        qs, answer = qs[0], answer[0] # evaluation batch size is 1
+        qs, answer = qs[0], answer[0]  # evaluation batch size is 1
 
         device = self.args.device
         image = image.to(device, non_blocking=True)
