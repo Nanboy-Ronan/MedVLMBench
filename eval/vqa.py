@@ -12,10 +12,10 @@ def process_tokens(text):
 
 
 class VQAEvalEngine(EvalEngine):
-    def __init__(self, dataset, logger):
-        super().__init__(dataset, logger)
+    def __init__(self, args, dataset, logger):
+        super().__init__(args, dataset, logger)
 
-        self.task = "VQA"
+        self.task = "vqa"
 
         # 0 for closed question, 1 for open question
         self.prompt_template = [

@@ -1,15 +1,16 @@
 import os
 import random
 
-import albumentations as albu
-import cv2
+# import albumentations as albu
+# import cv2
 import numpy as np
 import pandas as pd
 import torch
 import torchvision.transforms as transforms
-from albumentations.augmentations import transforms as atransforms
-from albumentations.core.composition import Compose
-from einops import rearrange
+
+# from albumentations.augmentations import transforms as atransforms
+# from albumentations.core.composition import Compose
+# from einops import rearrange
 from torch.utils.data import Dataset, WeightedRandomSampler
 from easydict import EasyDict as edict
 
@@ -26,7 +27,7 @@ def get_transform(args):
     return transform
 
 
-def get_dataset(args, split, image_processor=None):
+def get_dataset(args, split, image_processor_callable=None):
 
     g = torch.Generator()
     g.manual_seed(args.random_seed)
@@ -36,57 +37,16 @@ def get_dataset(args, split, image_processor=None):
         random.seed(args.random_seed)
 
     dataset_name = getattr(dataset, args.dataset)
-    # data = dataset_name(meta, args.sensitive_name,
-    #                     transform, path_to_images=image_path)
 
-    # TODO: refactor transform within the class.
-    if args.dataset == "SLAKE":
-        assert split in ["train", "validation", "test", "all"]
-        if image_processor is not None:
-            transform = image_processor
-        else:
-            transform = get_transform(args)
-        data = dataset_name(edict(image_path="./data/SLAKE/imgs"), split=split, transform=transform)
+    assert split in ["train", "validation", "test", "all"]
+
+    if image_processor_callable is not None:
+        transform = image_processor_callable
     else:
-        raise NotImplementedError()
+        transform = get_transform(args)
 
-    if split == "train":
-        sampler = None
+    dataset = dataset_name(data_args=edict(image_path=args.image_path), split=split, transform=transform)
 
-        data_loader = torch.utils.data.DataLoader(
-            data,
-            batch_size=args.batch_size,
-            sampler=sampler,
-            shuffle=(args.method != "resampling"),
-            num_workers=args.num_workers,
-            worker_init_fn=seed_worker,
-            generator=g,
-            pin_memory=True,
-        )
-    elif split == "test":
-        data_loader = torch.utils.data.DataLoader(
-            data,
-            batch_size=args.batch_size,
-            shuffle=False,
-            num_workers=args.num_workers,
-            worker_init_fn=seed_worker,
-            generator=g,
-            pin_memory=True,
-        )
-    elif split == "all":
-        # currently same as test as "all" is designed to zero-shot the model on the entire dataset
-        data_loader = torch.utils.data.DataLoader(
-            data,
-            batch_size=args.batch_size,
-            shuffle=False,
-            num_workers=args.num_workers,
-            worker_init_fn=seed_worker,
-            generator=g,
-            pin_memory=True,
-        )
-    else:
-        raise NotImplementedError()
+    print("Loaded dataset: " + dataset.name)
 
-    print("loaded dataset ", args.dataset)
-
-    return data, data_loader
+    return dataset

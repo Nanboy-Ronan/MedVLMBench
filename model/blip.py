@@ -20,9 +20,6 @@ class BLIP(ChatMetaModel):
         self.image_processor = self.processor.image_processor
         self.tokenizer = self.processor.tokenizer
 
-    def load_from_pretrained(self):
-        pass
-
     # def caption(self, image_path):
     #     raw_image = Image.open(image_path).convert("RGB")
     #     inputs = self.processor(raw_image, return_tensors="pt").to(self.device)

@@ -1,3 +1,8 @@
+# tasks
+TASKS = ["vqa", "caption"]
+
+
+# models
 CLIP_MODELS = [
     "BiomedCLIP",
     "PubMedCLIP",
@@ -7,8 +12,12 @@ CLIP_MODELS = [
     "BLIP2",
 ]
 
-TASKS = ["VQA", "caption"]
+LANGUAGE_MODELS = ["LLaVA-1.5"]
 
+MODELS = CLIP_MODELS + LANGUAGE_MODELS
+
+
+# ddddddddatasets
 VQA_DATASETS = ["SLAKE"]
 
-MODELS = ["LLaVA-1.5"]
+DATASETS = VQA_DATASETS

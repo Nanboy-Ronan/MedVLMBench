@@ -1,14 +1,16 @@
 import model
 from easydict import EasyDict as edict
 
-def get_model(args):
+
+def get_model(args, **kwargs):
     if args.model == "BLIP":
         model = model.BLIP(model_args=args)
     elif args.model == "LLaVa-1.5":
-        model_path = "./pretrained_models/llava-v1.5-7b"
-        model = model.LLaVA(model_args=edict(model_path=model_path, model_base=None))
-        model.load_from_pretrained(model_path=model_path)
+        model = model.LLaVA(model_args=edict(model_path=args.model_path, model_base=None))
+
     else:
         raise NotImplementedError()
+
+    model.load_from_pretrained(model_path=args.model_path, **kwargs)
 
     return model
