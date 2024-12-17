@@ -100,10 +100,6 @@ def collect_args_eval():
     parser.add_argument("--min_lr", type=float, default=1e-5)
     parser.add_argument("--fixed_lr", action="store_true")
     parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight decay for optimizer")
-    # parser.add_argument("--lr_decay_rate", type=float,
-    #                     default=0.1, help="decay rate of the learning rate")
-    # parser.add_argument("--lr_decay_period", type=float,
-    #                     default=10, help="decay period of the learning rate")
     parser.add_argument("--total_epochs", type=int, default=100, help="total training epochs")
     parser.add_argument("--early_stopping", type=int, default=1, help="early stopping epochs")
     parser.add_argument("--test_mode", type=bool, default=False, help="if using test mode")
@@ -127,6 +123,7 @@ def collect_args_eval():
     parser.add_argument("--exp_path", type=str, default="./output")
     parser.add_argument("--wandb_name", type=str, default="baseline")
     parser.add_argument("--if_wandb", type=bool, default=False)
+    parser.add_argument("--save_pred", type=bool, default=True)
 
     args = parser.parse_args()
 

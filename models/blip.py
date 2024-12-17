@@ -32,7 +32,7 @@ class BLIP(ChatMetaModel):
     #     return caption
 
     # def infer_vision_language(self, image_path, question):
-    def infer_vision_language(self, image, qs):
+    def infer_vision_language(self, image, qs, image_size):
         # Tokenize the question
         text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
 

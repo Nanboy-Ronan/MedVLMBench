@@ -29,10 +29,10 @@ class VQAEvalEngine(EvalEngine):
 
         device = self.args.device
         image = image.to(device, non_blocking=True)
-        breakpoint()
+
         is_binary = str.lower(answer) in ["yes", "no"]
 
-        prompt = self.prompt_template(int(is_binary)).format(qs)
+        prompt = self.prompt_template[int(is_binary)].format(qs)
         output = model.infer_vision_language(image, prompt, image_size=image_size)
 
         clean_output = clean_str(output)
@@ -85,7 +85,7 @@ class VQAEvalEngine(EvalEngine):
             ]
             accuracy = 1 if recall >= 0.4 else 0
 
-            for metric in open_metrics:
+            for metric in closed_metrics:
                 self.metric_logger.meters[f"{metric}_closed"].update(eval(metric), n=1)
 
         self.metric_logger.meters["recall_overall"].update(recall, n=1)
