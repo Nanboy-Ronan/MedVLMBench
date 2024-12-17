@@ -1,6 +1,6 @@
 from easydict import EasyDict as edict
 from PIL import Image
-from models.llava import LLaVA
+from model.llava import LLaVA
 
 if __name__ == "__main__":
 
