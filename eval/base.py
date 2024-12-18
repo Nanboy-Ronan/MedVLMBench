@@ -77,7 +77,11 @@ class EvalEngine:
             "dataset": [self.dataset.name],
             "modality": [self.dataset.modality],
             "size": [len(self.dataset)],
-        } | {k: [meter.global_avg] for k, meter in self.metric_logger.meters.items()}
+        }
+        info = {
+            **info,
+            **{k: [meter.global_avg] for k, meter in self.metric_logger.meters.items()}
+        }
 
         df = pd.DataFrame(info)
         df.to_csv(os.path.join(path, "results.csv"), index=False)

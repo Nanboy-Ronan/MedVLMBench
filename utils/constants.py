@@ -9,7 +9,7 @@ CLIP_MODELS = [
     "MedCLIP",
     "CLIP",
     "BLIP",
-    "BLIP2",
+    "BLIP2-2.7b",
 ]
 
 LANGUAGE_MODELS = ["LLaVA-1.5"]

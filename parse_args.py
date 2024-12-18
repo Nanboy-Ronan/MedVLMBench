@@ -112,7 +112,7 @@ def collect_args_train():
     parser.add_argument(
         "--model",
         default="BLIP",
-        choices=["BLIP", "LLaVA-1.5"],
+        choices=["BLIP", "LLaVA-1.5", "BLIP2-2.7b"],
     )
     parser.add_argument("--context_length", default=77)
     parser.add_argument("--model_path", type=str, default="", help="explicitly indentify checkpoint path to resume.")
