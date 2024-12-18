@@ -4,7 +4,7 @@ import pandas as pd
 from PIL import Image
 
 from datasets import load_dataset, concatenate_datasets
-from dataset.base import BaseDataset
+from base import BaseDataset
 
 
 class VQADataset(BaseDataset):
@@ -49,6 +49,41 @@ class SLAKE(VQADataset):
         return image, qs, answer, is_open, image_size, image_path
 
 
+class PathVQA(VQADataset):
+    def __init__(self, data_args, split, transform=None):
+        super().__init__(data_args, split, transform)
+
+        self.name = "PathVQA"
+        self.modality = "general"
+
+        if split == "all":
+            df_train = load_dataset("flaviagiammarino/path-vqa", split="train")
+            df_val = load_dataset("flaviagiammarino/path-vqa", split="validation")
+            df_test = load_dataset("flaviagiammarino/path-vqa", split="test")
+
+            self.ds = concatenate_datasets([df_train, df_val, df_test])
+        else:
+            self.ds = load_dataset("flaviagiammarino/path-vqa", split=split)
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, index):
+        qs = self.ds[index]["question"]
+        answer = self.ds[index]["answer"]
+
+        is_open = self.ds[index]["answer"] in ["yes", "no"]
+        image_path = [None]
+
+        image = self.ds[index]["image"]
+        image_size = image.size
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, qs, answer, is_open, image_size, image_path
+
+
 if __name__ == "__main__":
     import torch
     from torchvision.transforms import PILToTensor
@@ -56,10 +91,11 @@ if __name__ == "__main__":
     from easydict import EasyDict as edict
     from torch.utils.data import DataLoader
 
-    dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    # dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
     # dataset = SLAKE(edict(image_path="./data/SLAKE/imgs"), split="test", transform=PILToTensor())
+    dataset = PathVQA(edict(image_path="./data/PathVQA/imgs"), split="test", transform=PILToTensor())
 
-    image, qs, answer, image_path, is_open = dataset[0]
+    image, qs, answer, is_open, image_size, image_path = dataset[0]
 
     dataloader = DataLoader(dataset, batch_size=2)
 
