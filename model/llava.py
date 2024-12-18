@@ -211,6 +211,7 @@ class LLaVA(ChatMetaModel):
     def infer_vision_language(self, image, qs, temperature=0, image_size=None):
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
+        qs = qs.replace(self.constants.DEFAULT_IMAGE_TOKEN, "").strip()
         if self.model.config.mm_use_im_start_end:
             qs = (
                 self.constants.DEFAULT_IM_START_TOKEN

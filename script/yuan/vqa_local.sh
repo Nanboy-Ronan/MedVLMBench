@@ -18,3 +18,12 @@ python run_eval.py \
     --exp_path /research/d5/gds/yzhong22/experiments/med_vlm_benchmark \
     --cache_dir /research/d5/gds/yzhong22/misc/cache \
     --save_pred
+
+
+# SLAKE, LLaVA-Med
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path /mnt/hdd/data/SLAKE/imgs \
+    --model LLaVA-Med --model_path /mnt/hdd/weights/llava-med-v1.5-mistral-7b \
+    --exp_path /mnt/hdd/experiments/med_vlm_benchmark \
+    --save_pred
