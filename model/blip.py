@@ -16,29 +16,22 @@ def visualize_tensor_image(tensor, unnormalize=True):
         tensor (torch.Tensor): Image tensor of shape [1, 3, H, W].
         unnormalize (bool): Whether to unnormalize the tensor.
     """
-    # Check if tensor has the correct dimensions
     if tensor.dim() != 4 or tensor.size(0) != 1 or tensor.size(1) != 3:
         raise ValueError("Input tensor must have shape [1, 3, H, W]")
-    
-    # Remove the batch dimension
-    img = tensor.squeeze(0)  # Shape: [3, H, W]
-    
-    # Optionally unnormalize the image
+
+    img = tensor.squeeze(0)
+
     if unnormalize:
-        # Define your normalization mean and std (example with ImageNet)
         mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
-        img = img * std + mean  # Unnormalize
+        img = img * std + mean
     
-    # Clamp the values to [0, 1] range
     img = torch.clamp(img, 0, 1)
     
-    # Convert to NumPy and permute to [H, W, C]
     img_np = img.permute(1, 2, 0).cpu().numpy()
     
-    # Plot using Matplotlib
     plt.imshow(img_np)
-    plt.axis('off')  # Hide axis
+    plt.axis('off')
     plt.savefig("./demo.png")
 
 
@@ -86,7 +79,7 @@ class BLIP(ChatMetaModel):
         }
 
         outputs = self.model.generate(**inputs, max_length=50)
-        answer = self.processor.decode(outputs[0], skip_special_tokens=True)
+        answer = self.processor.decode(outputs[0], skip_special_tokens=True).strip()
         return answer
 
 
