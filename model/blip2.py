@@ -5,6 +5,14 @@ from transformers import Blip2ForConditionalGeneration, Blip2Processor
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 
+class ImageProcessorCallable:
+    def __init__(self, image_processor):
+        self.image_processor = image_processor
+
+    def __call__(self, image):
+        # TODO: check for batch > 1
+        return self.image_processor(image)["pixel_values"][0]
+
 
 class BLIP2(ChatMetaModel):
     def __init__(self, args=None):
@@ -13,7 +21,7 @@ class BLIP2(ChatMetaModel):
         self.model_name = "Salesforce/blip2-opt-2.7b"
         self.processor = Blip2Processor.from_pretrained(self.model_name)
         self.model = Blip2ForConditionalGeneration.from_pretrained(self.model_name).to(self.args.device)
-        self.image_processor = self.processor.image_processor
+        # self.image_processor_callable = ImageProcessorCallable(self.processor.image_processor)
         self.tokenizer = self.processor.tokenizer
 
     def infer_vision_language(self, image, qs, image_size=None):
@@ -28,11 +36,12 @@ class BLIP2(ChatMetaModel):
 
         text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
         breakpoint()
-        inputs = {
-            "input_ids": text_inputs["input_ids"].to(self.args.device),
-            "attention_mask": text_inputs["attention_mask"].to(self.args.device),
-            "pixel_values": image.to(self.args.device),
-        }
+        # inputs = {
+        #     "input_ids": text_inputs["input_ids"].to(self.args.device),
+        #     "attention_mask": text_inputs["attention_mask"].to(self.args.device),
+        #     "pixel_values": image.to(self.args.device),
+        # }
         outputs = self.model.generate(**inputs, max_length=50)
         answer = self.processor.decode(outputs[0], skip_special_tokens=True)
+        print(answer)
         return answer

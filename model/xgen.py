@@ -5,6 +5,16 @@ from transformers import AutoModelForVision2Seq, AutoTokenizer, AutoImageProcess
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 
+class ImageProcessorCallable:
+    def __init__(self, image_processor):
+        self.image_processor = image_processor
+
+    def __call__(self, image):
+        # TODO: check for batch > 1
+        breakpoint()
+        self.image_processor(image)
+        return self.image_processor(image)["pixel_values"][0]
+
 
 class XGenMiniV1(ChatMetaModel):
     def __init__(self, args=None):
@@ -15,7 +25,8 @@ class XGenMiniV1(ChatMetaModel):
         self.hf_path = "Salesforce/xgen-mm-phi3-mini-instruct-r-v1"
         self.model = AutoModelForVision2Seq.from_pretrained(self.hf_path, trust_remote_code=True).to(self.args.device)
         self.tokenizer = AutoTokenizer.from_pretrained(self.hf_path, trust_remote_code=True, use_fast=False, legacy=False)
-        self.image_processor = AutoImageProcessor.from_pretrained(self.hf_path, trust_remote_code=True)
+        self.img_processor = AutoImageProcessor.from_pretrained(self.hf_path, trust_remote_code=True)
+        self.image_processor_callable = ImageProcessorCallable(self.img_processor)
         self.tokenizer = self.model.update_special_tokens(self.tokenizer)
 
     def infer_vision_language(self, image, qs, image_size=None):

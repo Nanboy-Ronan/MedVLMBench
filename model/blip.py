@@ -1,9 +1,54 @@
 import torch
 from PIL import Image
-from transformers import BlipForConditionalGeneration, BlipProcessor
+import matplotlib.pyplot as plt
+from easydict import EasyDict as edict
+from transformers import BlipForConditionalGeneration, BlipProcessor, BlipForQuestionAnswering
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
+
+
+def visualize_tensor_image(tensor, unnormalize=True):
+    """
+    Visualizes a single image tensor.
+
+    Args:
+        tensor (torch.Tensor): Image tensor of shape [1, 3, H, W].
+        unnormalize (bool): Whether to unnormalize the tensor.
+    """
+    # Check if tensor has the correct dimensions
+    if tensor.dim() != 4 or tensor.size(0) != 1 or tensor.size(1) != 3:
+        raise ValueError("Input tensor must have shape [1, 3, H, W]")
+    
+    # Remove the batch dimension
+    img = tensor.squeeze(0)  # Shape: [3, H, W]
+    
+    # Optionally unnormalize the image
+    if unnormalize:
+        # Define your normalization mean and std (example with ImageNet)
+        mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
+        std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
+        img = img * std + mean  # Unnormalize
+    
+    # Clamp the values to [0, 1] range
+    img = torch.clamp(img, 0, 1)
+    
+    # Convert to NumPy and permute to [H, W, C]
+    img_np = img.permute(1, 2, 0).cpu().numpy()
+    
+    # Plot using Matplotlib
+    plt.imshow(img_np)
+    plt.axis('off')  # Hide axis
+    plt.savefig("./demo.png")
+
+
+class ImageProcessorCallable:
+    def __init__(self, image_processor):
+        self.image_processor = image_processor
+
+    def __call__(self, image):
+        # TODO: check for batch > 1
+        return self.image_processor(image)["pixel_values"][0]
 
 
 class BLIP(ChatMetaModel):
@@ -17,8 +62,9 @@ class BLIP(ChatMetaModel):
         # else:
         #     raise NotImplementedError()
         self.processor = BlipProcessor.from_pretrained(self.model_name)
-        self.model = BlipForConditionalGeneration.from_pretrained(self.model_name).to(self.args.device)
-        self.image_processor = self.processor.image_processor
+        # self.model = BlipForConditionalGeneration.from_pretrained(self.model_name).to(self.args.device) # for captioning
+        self.model = BlipForQuestionAnswering.from_pretrained(self.model_name).to(self.args.device)
+        self.image_processor_callable = ImageProcessorCallable(self.processor.image_processor)
         self.tokenizer = self.processor.tokenizer
 
     # def caption(self, image_path):
@@ -29,10 +75,10 @@ class BLIP(ChatMetaModel):
     #     caption = self.processor.decode(outputs[0], skip_special_tokens=True)
     #     return caption
 
-    def infer_vision_language(self, image, qs, image_size):
-        # Tokenize the question
+    def infer_vision_language(self, image, qs, image_size=None):
         text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
 
+        # inputs = self.processor(images=image, text=qs, return_tensors="pt")
         inputs = {
             "input_ids": text_inputs["input_ids"].to(self.args.device),
             "attention_mask": text_inputs["attention_mask"].to(self.args.device),
@@ -46,13 +92,16 @@ class BLIP(ChatMetaModel):
 
 if __name__ == "__main__":
     # blip_caption = BLIP(mode="caption")
-    blip_vqa = BLIP(mode="vqa")
+    blip_vqa = BLIP(args=edict(device="cuda"))
 
     image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"
+    image_path = "/fast/rjin02/DataSets/COCO/2014/val2014/COCO_val2014_000000000042.jpg"
 
     # caption = blip_caption.caption(image_path)
     # print("Generated Caption:", caption)
 
+    image = Image.open(image_path).convert("RGB")
+
     question = "What is in the image?"
-    answer = blip_vqa.infer_vision_language(image_path, question)
+    answer = blip_vqa.infer_vision_language(image, question, image_size=None)
     print("VQA Answer:", answer)
