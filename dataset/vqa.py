@@ -29,6 +29,7 @@ class SLAKE(VQADataset):
             self.ds = concatenate_datasets([df_train, df_val, df_test])
         else:
             self.ds = load_dataset("BoKelvin/SLAKE", split=split)
+            # self.ds = load_dataset("BoKelvin/SLAKE", split=split).select(range(200)) # for debug only
 
     def __len__(self):
         return len(self.ds)

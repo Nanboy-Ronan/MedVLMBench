@@ -70,6 +70,7 @@ def collect_args():
 
     if args.cache_dir is not None:
         os.environ["HF_HOME"] = args.cache_dir
+        os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
 
     return args
 

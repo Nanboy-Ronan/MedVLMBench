@@ -26,7 +26,7 @@ class EvalEngine:
         self.prompt_template = "{}"
         self.dataset = dataset
 
-        self.metric_logger = MetricLogger(delimiter=" ")
+        self.metric_logger = MetricLogger(logger=logger, delimiter=" ")
         self.records = []
         self.logger = logger
 
@@ -53,7 +53,7 @@ class EvalEngine:
         pass
 
     def init_metric_logger(self):
-        self.metric_logger = MetricLogger(delimiter=" ")
+        self.metric_logger = MetricLogger(logger=self.logger, delimiter=" ")
 
     def __len__(self):
         """Get the length of the dataset."""
@@ -84,4 +84,4 @@ class EvalEngine:
 
         if self.args.save_pred:
             with open(os.path.join(path, "predictions.json"), "w") as fp:
-                json.dump(self.records, fp)
+                json.dump(self.records, fp, indent=4)

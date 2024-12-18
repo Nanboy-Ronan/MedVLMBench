@@ -19,8 +19,8 @@ class VQAEvalEngine(EvalEngine):
 
         # 0 for closed question, 1 for open question
         self.prompt_template = [
-            "Answer the following question about the image with yes or no. {}",
             "{}",
+            "Answer the following question about the image with yes or no. {}",
         ]
 
     def evaluate_subject(self, subject, model):
@@ -30,16 +30,16 @@ class VQAEvalEngine(EvalEngine):
         device = self.args.device
         image = image.to(device, non_blocking=True)
 
-        is_binary = str.lower(answer) in ["yes", "no"]
+        clean_answer = clean_str(answer)
+        answer_tokens = process_tokens(clean_answer)
+
+        is_binary = clean_answer in ["yes", "no"]
 
         prompt = self.prompt_template[int(is_binary)].format(qs)
         output = model.infer_vision_language(image, prompt, image_size=image_size)
 
         clean_output = clean_str(output)
-        clean_answer = clean_str(answer)
-
         output_tokens = process_tokens(clean_output)
-        answer_tokens = process_tokens(clean_answer)
 
         precision = (
             len(output_tokens.intersection(answer_tokens)) / len(output_tokens) if len(output_tokens) > 0 else 0
