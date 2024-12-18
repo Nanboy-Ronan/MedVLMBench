@@ -9,7 +9,7 @@ from model.chat import ChatMetaModel
 class BLIP2(ChatMetaModel):
     def __init__(self, args=None):
         super().__init__(args)
-        self.name = "BLIP2"
+        self.name = "BLIP2-2.7b"
         self.model_name = "Salesforce/blip2-opt-2.7b"
         self.processor = Blip2Processor.from_pretrained(self.model_name)
         self.model = Blip2ForConditionalGeneration.from_pretrained(self.model_name).to(self.args.device)
@@ -24,24 +24,15 @@ class BLIP2(ChatMetaModel):
         :param image_size: Optional parameter for image size
         :return: Generated text output
         """
-        # Preprocess inputs
         inputs = self.processor(images=image, text=qs, return_tensors="pt", padding=True, truncation=True).to(self.args.device)
 
-        # Generate response
-        outputs = self.model.generate(**inputs, max_new_tokens=50)
+        text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
+        breakpoint()
+        inputs = {
+            "input_ids": text_inputs["input_ids"].to(self.args.device),
+            "attention_mask": text_inputs["attention_mask"].to(self.args.device),
+            "pixel_values": image.to(self.args.device),
+        }
+        outputs = self.model.generate(**inputs, max_length=50)
         answer = self.processor.decode(outputs[0], skip_special_tokens=True)
         return answer
-
-
-if __name__ == "__main__":
-    # blip_caption = BLIP(mode="caption")
-    blip_vqa = BLIP(mode="vqa")
-
-    image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"
-
-    # caption = blip_caption.caption(image_path)
-    # print("Generated Caption:", caption)
-
-    question = "What is in the image?"
-    answer = blip_vqa.infer_vision_language(image_path, question)
-    print("VQA Answer:", answer)
