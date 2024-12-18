@@ -47,6 +47,7 @@ mkdir data
 | LLaVa | Done |
 | LLaVaMed | Done |
 | PMC-CLIP | TODO |
+| PMC-VQA | TODO |
 | CTCLIP | TODO |
 | Med-Flamingo | TODO |
 | XrayGPT | TODO |
