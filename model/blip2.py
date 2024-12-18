@@ -45,14 +45,11 @@ class BLIP2(ChatMetaModel):
         #     "pixel_values": image.to(self.args.device),
         # }
         # breakpoint()
-        outputs = self.model.generate(**inputs, max_new_tokens=50)
+        outputs = self.model.generate(**inputs, max_new_tokens=768)
         answer = self.processor.decode(outputs[0], skip_special_tokens=True).strip()
-        print(answer)
         return answer
 
 if __name__ == "__main__":
-    check_preprocess()
-    breakpoint()
     # blip_vqa = BLIP2(args=edict(device="cuda"))
 
     # image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"

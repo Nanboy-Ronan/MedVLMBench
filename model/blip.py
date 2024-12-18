@@ -78,7 +78,7 @@ class BLIP(ChatMetaModel):
             "pixel_values": image.to(self.args.device),
         }
 
-        outputs = self.model.generate(**inputs, max_length=50)
+        outputs = self.model.generate(**inputs, max_length=768)
         answer = self.processor.decode(outputs[0], skip_special_tokens=True).strip()
         return answer
 

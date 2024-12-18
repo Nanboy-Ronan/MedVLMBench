@@ -1,9 +1,20 @@
 import torch
 from PIL import Image
+from torchvision.transforms.functional import to_pil_image
 from transformers import AutoModelForVision2Seq, AutoTokenizer, AutoImageProcessor, StoppingCriteria
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
+
+
+def apply_prompt_template(prompt):
+    s = (
+            '<|system|>\nA chat between a curious user and an artificial intelligence assistant. '
+            "The assistant gives helpful, detailed, and polite answers to the user's questions.<|end|>\n"
+            f'<|user|>\n<image>\n{prompt}<|end|>\n<|assistant|>\n'
+        )
+    return s 
+
 
 class ImageProcessorCallable:
     def __init__(self, image_processor):
@@ -26,7 +37,7 @@ class XGenMiniV1(ChatMetaModel):
         self.model = AutoModelForVision2Seq.from_pretrained(self.hf_path, trust_remote_code=True).to(self.args.device)
         self.tokenizer = AutoTokenizer.from_pretrained(self.hf_path, trust_remote_code=True, use_fast=False, legacy=False)
         self.img_processor = AutoImageProcessor.from_pretrained(self.hf_path, trust_remote_code=True)
-        self.image_processor_callable = ImageProcessorCallable(self.img_processor)
+        # self.image_processor_callable = ImageProcessorCallable(self.img_processor)
         self.tokenizer = self.model.update_special_tokens(self.tokenizer)
 
     def infer_vision_language(self, image, qs, image_size=None):
@@ -39,21 +50,17 @@ class XGenMiniV1(ChatMetaModel):
         
         :return: Generated text output.
         """
-        # Preprocess the image
-        if not isinstance(image, Image.Image):
-            pass
-        # breakpoint()
-        # pixel_values = self.image_processor(images=image, return_tensors="pt")["pixel_values"].to(self.args.device)
-        
-        text_inputs = self.tokenizer(qs, return_tensors="pt")
 
-        outputs = self.model.generate(
-            pixel_values=image.to(self.args.device),
-            input_ids=text_inputs["input_ids"].to(self.args.device), 
-            attention_mask=text_inputs["attention_mask"].to(self.args.device), 
-            max_new_tokens=50
-        )
+        inputs = self.img_processor([to_pil_image(img_tensor) for img_tensor in image], return_tensors="pt")
+        prompt = apply_prompt_template(qs)
+        language_inputs = self.tokenizer(prompt, return_tensors="pt")
+        inputs.update(language_inputs)
+        inputs = {k: v.to(self.args.device) for k, v in inputs.items()}
+
+        outputs = self.model.generate(**inputs, image_size=[image[0].size],
+                                pad_token_id=self.tokenizer.pad_token_id,
+                                do_sample=False, max_new_tokens=768, top_p=None, num_beams=1
+                                )
         
-        # Decode the model output to text
-        answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True).split("<|end|>")[0]
         return answer
