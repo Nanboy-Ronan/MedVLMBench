@@ -74,7 +74,7 @@ class PathVQA(VQADataset):
         qs = self.ds[index]["question"]
         answer = self.ds[index]["answer"]
 
-        is_open = answer in ["yes", "no"]
+        is_open = answer.lower() in ["yes", "no"]
         image_path = "NA"
 
         image = self.ds[index]["image"].convert("RGB")
