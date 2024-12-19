@@ -19,7 +19,7 @@ class SLAKE(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "SLAKE"
-        self.modality = "general"
+        self.modality = "medical"
 
         if split == "all":
             df_train = load_dataset("BoKelvin/SLAKE", split="train")
@@ -56,7 +56,7 @@ class PathVQA(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "PathVQA"
-        self.modality = "general"
+        self.modality = "medical"
 
         if split == "all":
             df_train = load_dataset("flaviagiammarino/path-vqa", split="train")
@@ -96,7 +96,6 @@ class VQARAD(VQADataset):
 
         if split == "all":
             df_train = load_dataset("flaviagiammarino/vqa-rad", split="train")
-            df_val = load_dataset("flaviagiammarino/vqa-rad", split="validation")
             df_test = load_dataset("flaviagiammarino/vqa-rad", split="test")
             self.ds = concatenate_datasets([df_train, df_val, df_test])
         else:
