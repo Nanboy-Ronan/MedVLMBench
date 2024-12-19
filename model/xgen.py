@@ -50,6 +50,10 @@ class XGenMiniV1(ChatMetaModel):
         
         :return: Generated text output.
         """
+        if image.dim() == 3:
+            image = image.unsqueeze(0)
+        else:
+            assert image.dim() == 4
 
         inputs = self.img_processor([to_pil_image(img_tensor) for img_tensor in image], return_tensors="pt")
         prompt = apply_prompt_template(qs)

@@ -166,3 +166,4 @@ cython_debug/
 output/
 data/
 pretrained_models/
+log/

@@ -9,7 +9,7 @@ from torch.nn import CrossEntropyLoss
 from einops import rearrange
 import transformers
 from transformers import CLIPVisionConfig
-from .blocks import ModifiedResNet,PMC_CLIP_cfg
+from .block import ModifiedResNet,PMC_CLIP_cfg
 import torchvision.models as models
 import json
 from peft import (

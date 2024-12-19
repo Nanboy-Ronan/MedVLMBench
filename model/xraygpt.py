@@ -1,31 +1,35 @@
 import torch
 from PIL import Image
 from easydict import EasyDict as edict
-from transformers import Blip2ForConditionalGeneration, Blip2Processor, Blip2Model, BatchEncoding
-from transformers.tokenization_utils import AddedToken
+from model.release.xraygpt.models.mini_gpt4 import MiniGPT4
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 
-class ImageProcessorCallable:
-    def __init__(self, image_processor):
-        self.image_processor = image_processor
 
-    def __call__(self, image):
-        # TODO: check for batch > 1
-        return self.image_processor(image)["pixel_values"][0]
-
-
-class BLIP2(ChatMetaModel):
+class XrayGPT(ChatMetaModel):
     def __init__(self, args=None):
         super().__init__(args)
-        self.name = "BLIP2-2.7b"
-        self.model_name = "Salesforce/blip2-opt-2.7b"
-        self.processor = Blip2Processor.from_pretrained(self.model_name)
-        self.model = Blip2ForConditionalGeneration.from_pretrained(self.model_name).to(self.args.device)
-        # self.model = Blip2Model.from_pretrained(self.model_name).to(self.args.device)
-        # self.image_processor_callable = ImageProcessorCallable(self.processor.image_processor)
-        # self.tokenizer = self.processor.tokenizer
+        self.name = "XrayGPT-mini"
+        # self.processor = Blip2Processor.from_pretrained(self.model_name)
+        self.model = MiniGPT4(
+            vit_model='eva_clip_g',
+            q_former_model='https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth',
+            img_size=224,
+            drop_path_rate=0,
+            use_grad_checkpoint=False,
+            vit_precision='fp16',
+            freeze_vit=True,
+            freeze_qformer=True,
+            num_query_token=32,
+            llama_model='./Vicuna_Radiology_fp16/',
+            prompt_path='prompts/alignment.txt',
+            prompt_template='###Patient: {} ###Doctor: ',
+            max_txt_len=160,
+            low_resource=True,
+            end_sym='###'
+        )
+
 
     def infer_vision_language(self, image, qs, image_size=None):
         """
@@ -43,24 +47,6 @@ class BLIP2(ChatMetaModel):
         return answer
 
 if __name__ == "__main__":
-    # blip_vqa = BLIP2(args=edict(device="cuda"))
-
-    # image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"
-    # # image_path = "/fast/rjin02/DataSets/COCO/2014/val2014/COCO_val2014_000000000042.jpg"
-
-    # image = Image.open(image_path).convert("RGB")
-
-    # question = "What is in the image?"
-    # answer = blip_vqa.infer_vision_language(image, question, image_size=None)
-    # print("VQA Answer:", answer)
-
-
-    # Official example
-    from PIL import Image
-    import requests
-    from transformers import Blip2Processor, Blip2ForConditionalGeneration
-    import torch
-
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
