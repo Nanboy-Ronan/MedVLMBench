@@ -29,7 +29,7 @@ def get_dataset(args, image_processor_callable=None):
     dataset_name = datasets[args.dataset]
 
     assert args.split in ["train", "validation", "test", "all"]
-    
+
     if image_processor_callable is not None:
         transform = image_processor_callable
     else:
