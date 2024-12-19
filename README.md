@@ -46,9 +46,8 @@ mkdir data
 | XGen | Done |
 | LLaVa | Done |
 | LLaVaMed | Done |
-| PMC-CLIP | TODO |
 | PMC-VQA | TODO |
-| CTCLIP | TODO |
+| CTCLIP | No generation supported |
 | Med-Flamingo | TODO |
 | XrayGPT | TODO |
 | RedFM | TODO |

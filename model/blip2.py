@@ -38,13 +38,6 @@ class BLIP2(ChatMetaModel):
         qs = "Question: {} Answer:".format(qs)
         inputs = self.processor(images=image, text=qs, return_tensors="pt", padding=True, truncation=True).to(self.args.device)
         
-        # text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
-        # inputs = {
-        #     "input_ids": text_inputs["input_ids"].to(self.args.device),
-        #     "attention_mask": text_inputs["attention_mask"].to(self.args.device),
-        #     "pixel_values": image.to(self.args.device),
-        # }
-        # breakpoint()
         outputs = self.model.generate(**inputs, max_new_tokens=768)
         answer = self.processor.decode(outputs[0], skip_special_tokens=True).strip()
         return answer

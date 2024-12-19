@@ -19,7 +19,7 @@ class SLAKE(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "SLAKE"
-        self.modality = "general"
+        self.modality = "medical"
 
         if split == "all":
             df_train = load_dataset("BoKelvin/SLAKE", split="train")
@@ -56,7 +56,7 @@ class PathVQA(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "PathVQA"
-        self.modality = "general"
+        self.modality = "medical"
 
         if split == "all":
             df_train = load_dataset("flaviagiammarino/path-vqa", split="train")
@@ -86,6 +86,41 @@ class PathVQA(VQADataset):
         return image, qs, answer, is_open, image_size, image_path
 
 
+
+class VQARAD(VQADataset):
+    def __init__(self, data_args, split, transform=None):
+        super().__init__(data_args, split, transform)
+
+        self.name = "VQA-RAD"
+        self.modality = "medical"
+
+        if split == "all":
+            df_train = load_dataset("flaviagiammarino/vqa-rad", split="train")
+            df_test = load_dataset("flaviagiammarino/vqa-rad", split="test")
+            self.ds = concatenate_datasets([df_train, df_val, df_test])
+        else:
+            self.ds = load_dataset("flaviagiammarino/vqa-rad", split=split)
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, index):
+        qs = self.ds[index]["question"]
+        answer = self.ds[index]["answer"]
+        image = self.ds[index]["image"]
+
+        is_open = answer in ["yes", "no"]
+
+        image_size = image.size if hasattr(image, 'size') else (None, None)
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        image_path = "No exist in this implementation"
+
+        return image, qs, answer, is_open, image_size, image_path
+
+
 if __name__ == "__main__":
     import torch
     from torchvision.transforms import PILToTensor
@@ -95,7 +130,8 @@ if __name__ == "__main__":
 
     # dataset = SLAKE(edict(image_path="/mnt/hdd/data/SLAKE/imgs"), split="test", transform=PILToTensor())
     # dataset = SLAKE(edict(image_path="./data/SLAKE/imgs"), split="test", transform=PILToTensor())
-    dataset = PathVQA(edict(image_path="./data/PathVQA/imgs"), split="test", transform=PILToTensor())
+    # dataset = PathVQA(edict(image_path="./data/PathVQA/imgs"), split="test", transform=PILToTensor())
+    dataset = VQARAD(edict(image_path="./data/VQARAD/imgs"), split="test", transform=PILToTensor())
 
     image, qs, answer, is_open, image_size, image_path = dataset[0]
 
