@@ -39,7 +39,6 @@ class LLaVA(ChatMetaModel):
     ):
         # Load models from pretrained weights. For inference only.
         model_base = self.args.model_base
-
         model_name = get_model_name_from_path(model_path)
 
         kwargs = {"device_map": device_map, **kwargs}
