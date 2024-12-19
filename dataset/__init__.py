@@ -6,9 +6,9 @@ import torch
 from easydict import EasyDict as edict
 
 from dataset.utils import get_transform
-from dataset.vqa import SLAKE
+from dataset.vqa import SLAKE, PathVQA
 
-datasets = {"SLAKE": SLAKE}
+datasets = {"SLAKE": SLAKE, "PathVQA": PathVQA}
 
 
 def get_dataset(args, image_processor_callable=None):
@@ -23,7 +23,7 @@ def get_dataset(args, image_processor_callable=None):
     dataset_name = datasets[args.dataset]
 
     assert args.split in ["train", "validation", "test", "all"]
-    
+
     if image_processor_callable is not None:
         transform = image_processor_callable
     else:
