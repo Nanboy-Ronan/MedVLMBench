@@ -8,10 +8,12 @@ from easydict import EasyDict as edict
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE
 from dataset.vqa import PathVQA
+from dataset.vqa import VQARAD
 
 datasets = {
         "SLAKE": SLAKE,
-        "PathVQA": PathVQA
+        "PathVQA": PathVQA,
+        "VQARAD": VQARAD
      }
 
 
