@@ -40,8 +40,7 @@ class ImageProcessorCallable:
         self.image_processor = image_processor
 
     def __call__(self, image):
-        # TODO: check for batch > 1
-        return self.image_processor(image)["pixel_values"][0]
+        return self.image_processor(image)["pixel_values"]
 
 
 class BLIP(ChatMetaModel):
