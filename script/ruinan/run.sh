@@ -53,3 +53,12 @@ python run_eval.py \
     --exp_path ./log \
     --cache_dir ./cache \
     --save_pred 
+
+# SLAKE, XrayGPT
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model XrayGPT --model_path not_given \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred 
