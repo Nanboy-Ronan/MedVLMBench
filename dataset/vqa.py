@@ -74,7 +74,7 @@ class PathVQA(VQADataset):
         qs = self.ds[index]["question"]
         answer = self.ds[index]["answer"]
 
-        is_open = answer.lower() in ["yes", "no"]
+        is_open = answer.lower() not in ["yes", "no"]
         image_path = "NA"
 
         image = self.ds[index]["image"].convert("RGB")
@@ -108,7 +108,7 @@ class VQARAD(VQADataset):
         answer = self.ds[index]["answer"]
         image = self.ds[index]["image"]
 
-        is_open = answer.lower() in ["yes", "no"]
+        is_open = answer.lower() not in ["yes", "no"]
 
         image_size = image.size if hasattr(image, "size") else (None, None)
 
