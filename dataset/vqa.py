@@ -75,7 +75,7 @@ class PathVQA(VQADataset):
         answer = self.ds[index]["answer"]
 
         is_open = self.ds[index]["answer"] in ["yes", "no"]
-        image_path = [None]
+        image_path = "No exist in this implementation"
 
         image = self.ds[index]["image"]
         image_size = image.size

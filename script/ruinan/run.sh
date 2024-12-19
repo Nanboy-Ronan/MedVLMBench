@@ -9,6 +9,14 @@ python run_eval.py \
     --cache_dir ./cache \
     --save_pred
 
+# PathVQA, LLaVA-1.5
+python run_eval.py \
+    --task vqa --dataset PathVQA --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model LLaVA-1.5 --model_path ./pretrained_models/llava-v1.5-7b \
+    --exp_path ./med_vlm_benchmark \
+    --cache_dir ./cache \
+    --save_pred
 
 # SLAKE, BLIP
 python run_eval.py \
