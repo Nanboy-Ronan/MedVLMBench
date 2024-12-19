@@ -4,7 +4,7 @@ import pandas as pd
 from PIL import Image
 
 from datasets import load_dataset, concatenate_datasets
-from base import BaseDataset
+from dataset.base import BaseDataset
 
 
 class VQADataset(BaseDataset):
@@ -30,6 +30,8 @@ class SLAKE(VQADataset):
         else:
             self.ds = load_dataset("BoKelvin/SLAKE", split=split)
             # self.ds = load_dataset("BoKelvin/SLAKE", split=split).select(range(200))  # for debug only
+
+        self.ds = self.ds.filter(lambda x: x["q_lang"].startswith("en"))
 
     def __len__(self):
         return len(self.ds)
