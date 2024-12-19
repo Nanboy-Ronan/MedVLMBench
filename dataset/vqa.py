@@ -74,10 +74,10 @@ class PathVQA(VQADataset):
         qs = self.ds[index]["question"]
         answer = self.ds[index]["answer"]
 
-        is_open = self.ds[index]["answer"] in ["yes", "no"]
-        image_path = [None]
+        is_open = answer in ["yes", "no"]
+        image_path = "NA"
 
-        image = self.ds[index]["image"]
+        image = self.ds[index]["image"].convert("RGB")
         image_size = image.size
 
         if self.transform is not None:
