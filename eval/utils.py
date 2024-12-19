@@ -1,18 +1,7 @@
-import os
-import math
-import time
-from collections import defaultdict, deque
-import datetime
-import numpy as np
-
 import re
-
-import torch
-import torch.distributed as dist
-from torch import inf
-
-
-
+from collections import defaultdict
+import re
+import math
 
 
 contractions = {
@@ -153,8 +142,8 @@ manual_map = {
     "ten": "10",
 }
 articles = ["a", "an", "the"]
-period_strip = re.compile(r"(?!<=\d)(\.)(?!\d)")  # noqa
-comma_strip = re.compile(r"(\d)(\,)(\d)")  # noqa
+period_strip = re.compile("(?!<=\d)(\.)(?!\d)")
+comma_strip = re.compile("(\d)(\,)(\d)")
 punct = [
     ";",
     r"/",
@@ -180,19 +169,10 @@ punct = [
 ]
 
 
-def clean_str(token):
-    """Cleans a string (removes punctuation, lowers...).
-
-    Args:
-        token: The string to clean.
-
-    Returns:
-        The cleaned string.
-    """
-    token = token.lower()
+def normalize_word(token):
     _token = token
     for p in punct:
-        if (p + " " in token or " " + p in token) or (re.search(comma_strip, token) is not None):
+        if (p + " " in token or " " + p in token) or (re.search(comma_strip, token) != None):
             _token = _token.replace(p, "")
         else:
             _token = _token.replace(p, " ")
@@ -210,3 +190,59 @@ def clean_str(token):
     token = " ".join(_token)
     token = token.replace(",", "")
     return token
+
+
+def brevity_penalty(candidate, references):
+    c = len(candidate)
+    ref_lens = (len(reference) for reference in references)
+    r = min(ref_lens, key=lambda ref_len: (abs(ref_len - c), ref_len))
+
+    if c > r:
+        return 1
+    else:
+        return math.exp(1 - r / c)
+
+
+def modified_precision(candidate, references, n):
+    max_frequency = defaultdict(int)
+    min_frequency = defaultdict(int)
+
+    candidate_words = split_sentence(candidate, n)
+
+    for reference in references:
+        reference_words = split_sentence(reference, n)
+        for word in candidate_words:
+            max_frequency[word] = max(max_frequency[word], reference_words[word])
+    for word in candidate_words:
+        min_frequency[word] = min(max_frequency[word], candidate_words[word])
+    P = sum(min_frequency.values()) / sum(candidate_words.values())
+    return P
+
+
+def split_sentence(sentence, n):
+    words = defaultdict(int)
+    # tmp_sentence = re.sub("[^a-zA-Z ]", "", sentence)
+    tmp_sentence = sentence
+    tmp_sentence = tmp_sentence.lower()
+    tmp_sentence = tmp_sentence.strip().split()
+    length = len(tmp_sentence)
+    for i in range(length - n + 1):
+        tmp_words = " ".join(tmp_sentence[i : i + n])
+        if tmp_words:
+            words[tmp_words] += 1
+    return words
+
+
+if __name__ == "__main__":
+
+    def process_tokens(text):
+        tokenized_text = set(text.split())
+        tokenized_text.discard("")
+        return tokenized_text
+
+    sentence = "a man's bag, dont hello"
+
+    sentence = normalize_word(sentence)
+
+    print(sentence)
+    print(process_tokens(sentence))

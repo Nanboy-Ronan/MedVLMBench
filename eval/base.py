@@ -37,7 +37,8 @@ class EvalEngine:
 
         with torch.inference_mode():
             for batch in self.metric_logger.log_every(data_loader, args.eval_print_freq, header="Test:"):
-                self.evaluate_subject(batch, model)
+                subject = [x[0] for x in batch]
+                self.evaluate_subject(subject, model)
 
         self.metric_logger.synchronize_between_processes()
 
@@ -78,10 +79,7 @@ class EvalEngine:
             "modality": [self.dataset.modality],
             "size": [len(self.dataset)],
         }
-        info = {
-            **info,
-            **{k: [meter.global_avg] for k, meter in self.metric_logger.meters.items()}
-        }
+        info = {**info, **{k: [meter.global_avg] for k, meter in self.metric_logger.meters.items()}}
 
         df = pd.DataFrame(info)
         df.to_csv(os.path.join(path, "results.csv"), index=False)

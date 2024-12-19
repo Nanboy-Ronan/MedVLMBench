@@ -31,7 +31,8 @@ def collect_args():
     # evaluation
     parser.add_argument("--random_seed", type=int, default=0)
     parser.add_argument("--print_freq", type=int, default=10, help="logging frequency during evaluation")
-    parser.add_argument("--save_pred", action="store_true", help="whether save predictions during evaluation")
+    parser.add_argument("--save_pred", action="store_true", help="whether to save predictions during evaluation")
+    parser.add_argument("--gpt_eval", action="store_true", help="whether to use GPT for evaluation")
 
     parser.add_argument("--hash_id", type=str, default="")
 

@@ -255,7 +255,6 @@ class LLaVA(ChatMetaModel):
             )
 
         outputs = self.tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-        print(outputs)
         return outputs
 
     def infer_language(self, qs, temperature=0):
