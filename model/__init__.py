@@ -2,6 +2,7 @@ from model.blip import BLIP
 from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
+from model.xgen import XGenMiniV1
 
 from easydict import EasyDict as edict
 
@@ -15,6 +16,8 @@ def get_model(args, **kwargs):
         model = BLIP2(args=args)
     elif args.model == "LLaVA-Med":
         model = LLaVAMed(args=edict(model_path=args.model_path, model_base=None))
+    elif args.model == "XGenMiniV1":
+        model = XGenMiniV1(args=args)
     else:
         raise NotImplementedError()
 
