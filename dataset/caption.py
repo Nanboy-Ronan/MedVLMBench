@@ -12,3 +12,16 @@ class CaptionDataset(BaseDataset):
         super().__init__(data_args, split)
 
         self.transform = transform
+
+
+class HarvardFairVLMed10k(CaptionDataset):
+    def __init__(self, data_args, split, transform=None):
+        super().__init__(data_args, split, transform)
+
+        self.name = "Harvard-FairVLMed10k"
+        self.modality = "SLO Fundus"
+
+        if split == "all":
+            pass
+        else:
+            pass

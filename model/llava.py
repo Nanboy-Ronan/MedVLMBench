@@ -26,6 +26,7 @@ class LLaVA(ChatMetaModel):
 
         self.conv_mode = "vicuna_v1"
         self.name = "LLaVA-1.5"
+        self.model_type = "medical"
 
     def load_from_pretrained(
         self,

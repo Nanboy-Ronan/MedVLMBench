@@ -3,7 +3,7 @@ from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
-from model.xraygpt import XrayGPT
+
 
 from easydict import EasyDict as edict
 
@@ -20,6 +20,8 @@ def get_model(args, **kwargs):
     elif args.model == "XGenMiniV1":
         model = XGenMiniV1(args=args)
     elif args.model == "XrayGPT":
+        from model.xraygpt import XrayGPT
+
         model = XrayGPT(args=args)
     else:
         raise NotImplementedError()
