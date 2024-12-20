@@ -12,7 +12,7 @@ class CaptionDataset(BaseDataset):
         super().__init__(data_args, split)
 
         self.transform = transform
-        self.prompt_template = "{}"
+        self.prompt_template = "Can you provide a medical report for this image? {}"
 
 
 class HarvardFairVLMed10k(CaptionDataset):
