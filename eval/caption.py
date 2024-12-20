@@ -1,3 +1,7 @@
+import nltk
+
+nltk.download("wordnet")
+
 from torchvision.transforms.functional import to_pil_image
 from torchmetrics.functional.text import bleu_score, rouge_score, bert_score
 from nltk.translate.meteor_score import meteor_score
@@ -41,7 +45,8 @@ class CaptionEvalEngine(EvalEngine):
             "rougeL_fmeasure",
             "rougeL_precision",
             "rougeL_recall",
-            "methor" "exact_match",
+            "methor",
+            "exact_match",
             "bert_score_precision",
             "bert_score_recall",
             "bert_score_f1",
@@ -54,7 +59,7 @@ class CaptionEvalEngine(EvalEngine):
         bleu3 = bleu_score([output_normed], [[caption_normed]], n_gram=3).item()
         bleu4 = bleu_score([output_normed], [[caption_normed]], n_gram=4).item()
         rouge_scores = rouge_score(output_normed, caption_normed)
-        methor = meteor_score([caption_normed], output_normed)
+        methor = meteor_score([caption_normed.split()], output_normed.split())
         bert_scores = bert_score([output_normed], [caption_normed])
 
         for metric in metrics:
