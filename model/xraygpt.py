@@ -1,7 +1,10 @@
 import torch
 from PIL import Image
 from easydict import EasyDict as edict
+from torchvision.transforms.functional import to_pil_image
 from model.release.xraygpt.models.mini_gpt4 import MiniGPT4
+from model.release.xraygpt.processors.blip_processors import Blip2ImageEvalProcessor
+
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
@@ -23,13 +26,28 @@ class XrayGPT(ChatMetaModel):
             freeze_vit=True,
             freeze_qformer=True,
             num_query_token=32,
-            llama_model="./Vicuna_Radiology_fp16/",
-            prompt_path="prompts/alignment.txt",
-            prompt_template="###Patient: {} ###Doctor: ",
+            llama_model='./pretrained_models/Vicuna_Radiology_fp16/',
+            prompt_path='./model/release/xraygpt/prompts/alignment.txt',
+            prompt_template='###Patient: {} ###Doctor: ',
             max_txt_len=160,
             low_resource=True,
             end_sym="###",
         )
+
+        ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
+        msg = self.model.load_state_dict(ckpt['model'], strict=False)
+        all_ckpt_keys = set(ckpt['model'].keys())
+        missing_keys = set(msg.missing_keys)
+        unexpected_keys = set(msg.unexpected_keys)
+        loaded_keys = all_ckpt_keys - unexpected_keys  # keys from checkpoint that aren't unexpected
+        loaded_keys = loaded_keys - missing_keys
+        self.model.to(self.args.device)
+
+        print(f"Number of keys successfully loaded: {len(loaded_keys)}")
+        assert len(loaded_keys) == len(all_ckpt_keys)
+
+        self.processor = Blip2ImageEvalProcessor() # TODO: wrap it. Tried wrap it on 1220 but get size issue due to loader.
+
 
     def infer_vision_language(self, image, qs, image_size=None):
         """
@@ -39,53 +57,53 @@ class XrayGPT(ChatMetaModel):
         :param image_size: Optional parameter for image size
         :return: Generated text output
         """
-        qs = "Question: {} Answer:".format(qs)
-        inputs = self.processor(images=image, text=qs, return_tensors="pt", padding=True, truncation=True).to(
-            self.args.device
+        if image.dim() == 3:
+            image = image.unsqueeze(0)
+        else:
+            assert image.dim() == 4
+
+        image = torch.stack([self.processor(to_pil_image(img_tensor)) for img_tensor in image], dim=0).to(self.args.device)
+        img_embeds, atts_img = self.model.encode_img(image)
+        
+        prompt = f"###Patient: <Img><ImageHere></Img> {qs}###Doctor:"
+
+        # Wrap the image embeddings with the prompt text
+        img_embeds, atts_img = self.model.prompt_wrap(img_embeds, atts_img, prompt)
+
+        # Prepare the model inputs for generation
+        # Add a BOS token at the beginning
+        bos = torch.ones((img_embeds.size(0), 1), dtype=torch.long, device=self.args.device) * self.model.llama_tokenizer.bos_token_id
+        bos_embeds = self.model.llama_model.model.embed_tokens(bos)
+
+        # Concatenate BOS embedding with image+prompt embeddings
+        inputs_embeds = torch.cat([bos_embeds, img_embeds], dim=1)
+        attention_mask = torch.ones(inputs_embeds.size()[:-1], dtype=torch.long, device=self.args.device)
+
+        # Generate the output from the model
+        # You can adjust parameters like max_new_tokens, top_p, temperature, etc. as needed.
+        outputs = self.model.llama_model.generate(
+            inputs_embeds=inputs_embeds,
+            attention_mask=attention_mask,
+            max_new_tokens=300,
+            num_beams=1,
+            do_sample=True,
+            top_p=0.9,
+            repetition_penalty=1.0,
+            length_penalty=1,
+            temperature=1.0,
+            eos_token_id=self.model.llama_tokenizer.eos_token_id,
+            pad_token_id=self.model.llama_tokenizer.eos_token_id
         )
-
-        outputs = self.model.generate(**inputs, max_new_tokens=768)
-        answer = self.processor.decode(outputs[0], skip_special_tokens=True).strip()
+        
+        output_token = outputs[0]
+        if output_token[0] == 0:  # Remove initial <unk> token if present
+            output_token = output_token[1:]
+        if output_token[0] == 1:  # Remove <s> token if present
+            output_token = output_token[1:]
+        
+        output_text = self.model.llama_tokenizer.decode(output_token, add_special_tokens=False)
+        # The prompt uses '###' as a separator and 'Doctor:' to initiate the response.
+        # We remove any trailing segments after '###' and strip extra whitespace.
+        output_text = output_text.split('###')[0]
+        answer = output_text.split('Doctor:')[-1].strip()
         return answer
-
-
-if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    processor = Blip2Processor.from_pretrained("Salesforce/blip2-opt-2.7b")
-    model = Blip2ForConditionalGeneration.from_pretrained("Salesforce/blip2-opt-2.7b", torch_dtype=torch.float16).to(
-        device
-    )
-
-    image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"
-    # image_path = "/fast/rjin02/DataSets/COCO/2014/val2014/COCO_val2014_000000000042.jpg"
-
-    image = Image.open(image_path).convert("RGB")
-    # prompt = "Question: how many cats are there? Answer:"
-    prompt = "Question: What's in the image? Answer:"
-    breakpoint()
-    inputs = processor(images=image, text=prompt, return_tensors="pt").to(device="cuda", dtype=torch.float16)
-
-    image = processor.image_processor(image)["pixel_values"]
-
-    tokenizer_args = {
-        "add_special_tokens": True,
-        "padding": False,
-        "stride": 0,
-        "return_overflowing_tokens": False,
-        "return_special_tokens_mask": False,
-        "return_offsets_mapping": False,
-        "return_token_type_ids": False,
-        "return_length": False,
-        "verbose": True,
-    }
-    text_inputs = processor.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
-    inputs = {
-        "input_ids": text_inputs["input_ids"].to(device),
-        "attention_mask": text_inputs["attention_mask"].to(device),
-        "pixel_values": torch.tensor(image).unsqueeze(0).to(device),
-    }
-
-    generated_ids = model.generate(**inputs, max_new_tokens=50)
-    generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
-    print(generated_text)
