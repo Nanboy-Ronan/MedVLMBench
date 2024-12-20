@@ -12,6 +12,7 @@ class CaptionDataset(BaseDataset):
         super().__init__(data_args, split)
 
         self.transform = transform
+        self.prompt_template = "{}"
 
 
 class HarvardFairVLMed10k(CaptionDataset):
@@ -21,7 +22,23 @@ class HarvardFairVLMed10k(CaptionDataset):
         self.name = "Harvard-FairVLMed10k"
         self.modality = "SLO Fundus"
 
-        if split == "all":
-            pass
-        else:
-            pass
+        self.image_path = data_args.image_path
+        self.ds = pd.read_csv(os.path.join(self.image_path, f"caption_{split}.csv"))
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, index):
+        item = self.ds.iloc[index]
+
+        image_path = os.path.join(self.image_path, item["image_path"])
+        image = Image.fromarray(image_path).convert("RGB")
+        image_size = image.size
+
+        caption = item["gpt_summary"]
+        prompt_template = self.prompt_template
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, caption, prompt_template, image_size, image_path

@@ -74,9 +74,9 @@ class EvalEngine:
     def save(self, path, model):
         info = {
             "model": [model.name],
-            "model_type": [model.model_type],
             "task": [self.task],
             "dataset": [self.dataset.name],
+            "model_type": [model.model_type],
             "modality": [self.dataset.modality],
             "size": [len(self.dataset)],
         }

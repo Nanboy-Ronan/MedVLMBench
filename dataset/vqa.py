@@ -16,7 +16,6 @@ class VQADataset(BaseDataset):
         # 0 for open question, 1 for yes/no question
         self.prompt_templates = ["{}", "Answer the following question about the image with yes or no. {}"]
 
-
 class SLAKE(VQADataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split, transform)
@@ -62,7 +61,7 @@ class PathVQA(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "PathVQA"
-        self.modality = "medical"
+        self.modality = "pathology"
 
         if split == "all":
             df_train = load_dataset("flaviagiammarino/path-vqa", split="train")
@@ -100,7 +99,7 @@ class VQARAD(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "VQA-RAD"
-        self.modality = "medical"
+        self.modality = "radiology"
 
         if split == "all":
             df_train = load_dataset("flaviagiammarino/vqa-rad", split="train")
