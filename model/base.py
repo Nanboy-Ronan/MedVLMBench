@@ -9,6 +9,7 @@ class BaseModel:
 
         self.args = args
         self.name = ""
+        self.model_type = ""
 
         self.model = None
         self.tokenizer = None

@@ -31,7 +31,6 @@ python run_eval.py \
 # PathVQA, LLaVA-1.5
 python run_eval.py \
     --task vqa --dataset PathVQA --split test \
-    --image_path /mnt/hdd/data/SLAKE/imgs \
     --model LLaVA-1.5 --model_path /mnt/hdd/weights/llava-v1.5-7b \
     --exp_path /mnt/hdd/experiments/med_vlm_benchmark \
     --save_pred
@@ -39,7 +38,21 @@ python run_eval.py \
 # PathVQA, LLaVA-Med
 python run_eval.py \
     --task vqa --dataset PathVQA --split test \
-    --image_path /mnt/hdd/data/SLAKE/imgs \
+    --model LLaVA-Med --model_path /mnt/hdd/weights/llava-med-v1.5-mistral-7b \
+    --exp_path /mnt/hdd/experiments/med_vlm_benchmark \
+    --save_pred
+
+
+# VQA-RAD, LLaVA-1.5
+python run_eval.py \
+    --task vqa --dataset VQA-RAD --split test \
+    --model LLaVA-1.5 --model_path /mnt/hdd/weights/llava-v1.5-7b \
+    --exp_path /mnt/hdd/experiments/med_vlm_benchmark \
+    --save_pred
+
+# VQA-RAD, LLaVA-Med
+python run_eval.py \
+    --task vqa --dataset VQA-RAD --split test \
     --model LLaVA-Med --model_path /mnt/hdd/weights/llava-med-v1.5-mistral-7b \
     --exp_path /mnt/hdd/experiments/med_vlm_benchmark \
     --save_pred

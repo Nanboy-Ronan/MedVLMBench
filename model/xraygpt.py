@@ -14,14 +14,15 @@ class XrayGPT(ChatMetaModel):
     def __init__(self, args=None):
         super().__init__(args)
         self.name = "XrayGPT-mini"
+        self.model_type = "medical"
         # self.processor = Blip2Processor.from_pretrained(self.model_name)
         self.model = MiniGPT4(
-            vit_model='eva_clip_g',
-            q_former_model='https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth',
+            vit_model="eva_clip_g",
+            q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
             img_size=224,
             drop_path_rate=0,
             use_grad_checkpoint=False,
-            vit_precision='fp16',
+            vit_precision="fp16",
             freeze_vit=True,
             freeze_qformer=True,
             num_query_token=32,
@@ -30,7 +31,7 @@ class XrayGPT(ChatMetaModel):
             prompt_template='###Patient: {} ###Doctor: ',
             max_txt_len=160,
             low_resource=True,
-            end_sym='###'
+            end_sym="###",
         )
 
         ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
@@ -93,7 +94,7 @@ class XrayGPT(ChatMetaModel):
             eos_token_id=self.model.llama_tokenizer.eos_token_id,
             pad_token_id=self.model.llama_tokenizer.eos_token_id
         )
-
+        
         output_token = outputs[0]
         if output_token[0] == 0:  # Remove initial <unk> token if present
             output_token = output_token[1:]

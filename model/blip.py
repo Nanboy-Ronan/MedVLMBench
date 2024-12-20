@@ -25,13 +25,13 @@ def visualize_tensor_image(tensor, unnormalize=True):
         mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
         std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
         img = img * std + mean
-    
+
     img = torch.clamp(img, 0, 1)
-    
+
     img_np = img.permute(1, 2, 0).cpu().numpy()
-    
+
     plt.imshow(img_np)
-    plt.axis('off')
+    plt.axis("off")
     plt.savefig("./demo.png")
 
 
@@ -48,6 +48,7 @@ class BLIP(ChatMetaModel):
         super().__init__(args)
         # if mode == "vqa":
         self.name = "BLIP"
+        self.model_type = "general"
         self.model_name = "Salesforce/blip-vqa-base"
         # elif mode == "caption":
         #     self.model_name = "Salesforce/blip-image-captioning-base"

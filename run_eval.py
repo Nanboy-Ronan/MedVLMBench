@@ -25,7 +25,7 @@ def collect_args():
         default="SLAKE",
         choices=constants.DATASETS,
     )
-    parser.add_argument("--image_path", type=str, help="local path to images")
+    parser.add_argument("--image_path", type=str, default="", help="local path to images")
     parser.add_argument("--split", type=str, default="all", help="dataset split for evaluation")
 
     # evaluation

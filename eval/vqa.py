@@ -18,23 +18,15 @@ class VQAEvalEngine(EvalEngine):
 
         self.task = "vqa"
 
-        # 0 for closed question, 1 for open question
-        self.prompt_template = [
-            "{}",
-            "Answer the following question about the image with yes or no. {}",
-        ]
-
     def evaluate_subject(self, subject, model):
         # evaluation batch size is 1
-        image, qs, answer, is_open, image_size, image_path = subject
+        image, qs, answer, is_open, prompt_template, image_size, image_path = subject
         qs_l, answer_l = qs.lower(), answer.lower()
 
         device = self.args.device
         image = image.to(device, non_blocking=True)
 
-        is_binary = answer_l in ["yes", "no"]
-
-        prompt = self.prompt_template[int(is_binary)].format(qs)
+        prompt = prompt_template.format(qs)
         output = model.infer_vision_language(image, prompt, image_size=image_size)
         output_l = output.lower()
 
@@ -43,15 +35,6 @@ class VQAEvalEngine(EvalEngine):
 
         f1_score, precision, recall = calculate_f1score(output_l, answer_l)
         exact_match = calculate_exactmatch(output_l, answer_l)
-
-        # clean_output = clean_str(output)
-        # output_tokens = process_tokens(clean_output)
-
-        # precision = (
-        #     len(output_tokens.intersection(answer_tokens)) / len(output_tokens) if len(output_tokens) > 0 else 0
-        # )
-        # recall = len(output_tokens.intersection(answer_tokens)) / len(answer_tokens) if len(answer_tokens) > 0 else 0
-        # f1 = 2 * (precision * recall) / (precision + recall + 1e-8)
 
         if is_open:
             # evaluation of open questions

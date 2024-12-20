@@ -13,6 +13,8 @@ class VQADataset(BaseDataset):
 
         self.transform = transform
 
+        # 0 for open question, 1 for yes/no question
+        self.prompt_templates = ["{}", "Answer the following question about the image with yes or no. {}"]
 
 class SLAKE(VQADataset):
     def __init__(self, data_args, split, transform=None):
@@ -42,13 +44,16 @@ class SLAKE(VQADataset):
         answer = self.ds[index]["answer"]
         is_open = self.ds[index]["answer_type"] == "OPEN"
 
+        is_binary = answer.lower() in ["yes", "no"]
+        prompt_template = self.prompt_templates[int(is_binary)]
+
         image = Image.open(image_path).convert("RGB")
         image_size = image.size
 
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, qs, answer, is_open, image_size, image_path
+        return image, qs, answer, is_open, prompt_template, image_size, image_path
 
 
 class PathVQA(VQADataset):
@@ -56,7 +61,7 @@ class PathVQA(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "PathVQA"
-        self.modality = "medical"
+        self.modality = "pathology"
 
         if split == "all":
             df_train = load_dataset("flaviagiammarino/path-vqa", split="train")
@@ -77,13 +82,16 @@ class PathVQA(VQADataset):
         is_open = answer.lower() not in ["yes", "no"]
         image_path = "NA"
 
+        is_binary = answer.lower() in ["yes", "no"]
+        prompt_template = self.prompt_templates[int(is_binary)]
+
         image = self.ds[index]["image"].convert("RGB")
         image_size = image.size
 
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, qs, answer, is_open, image_size, image_path
+        return image, qs, answer, is_open, prompt_template, image_size, image_path
 
 
 class VQARAD(VQADataset):
@@ -91,12 +99,12 @@ class VQARAD(VQADataset):
         super().__init__(data_args, split, transform)
 
         self.name = "VQA-RAD"
-        self.modality = "medical"
+        self.modality = "radiology"
 
         if split == "all":
             df_train = load_dataset("flaviagiammarino/vqa-rad", split="train")
             df_test = load_dataset("flaviagiammarino/vqa-rad", split="test")
-            self.ds = concatenate_datasets([df_train, df_val, df_test])
+            self.ds = concatenate_datasets([df_train, df_test])
         else:
             self.ds = load_dataset("flaviagiammarino/vqa-rad", split=split)
 
@@ -106,18 +114,20 @@ class VQARAD(VQADataset):
     def __getitem__(self, index):
         qs = self.ds[index]["question"]
         answer = self.ds[index]["answer"]
-        image = self.ds[index]["image"]
+        image = self.ds[index]["image"].convert("RGB")
 
         is_open = answer.lower() not in ["yes", "no"]
+        is_binary = answer.lower() in ["yes", "no"]
+        prompt_template = self.prompt_templates[int(is_binary)]
 
         image_size = image.size if hasattr(image, "size") else (None, None)
 
         if self.transform is not None:
             image = self.transform(image)
 
-        image_path = "No exist in this implementation"
+        image_path = "NA"
 
-        return image, qs, answer, is_open, image_size, image_path
+        return image, qs, answer, is_open, prompt_template, image_size, image_path
 
 
 if __name__ == "__main__":

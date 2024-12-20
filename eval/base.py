@@ -42,7 +42,7 @@ class EvalEngine:
 
         self.metric_logger.synchronize_between_processes()
 
-        self.save(self.args.save_folder, model.name)
+        self.save(self.args.save_folder, model)
 
         results = {k: meter.global_avg for k, meter in self.metric_logger.meters.items()}
 
@@ -71,11 +71,12 @@ class EvalEngine:
         """
         return {"idx": idx, "sample": self.dataset[idx]}
 
-    def save(self, path, model_name):
+    def save(self, path, model):
         info = {
-            "model": [model_name],
+            "model": [model.name],
             "task": [self.task],
             "dataset": [self.dataset.name],
+            "model_type": [model.model_type],
             "modality": [self.dataset.modality],
             "size": [len(self.dataset)],
         }

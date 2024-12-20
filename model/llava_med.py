@@ -29,6 +29,7 @@ class LLaVAMed(LLaVA):
 
         self.conv_mode = "mistral_instruct"
         self.name = "LLaVA-Med"
+        self.model_type = "medical"
 
     def load_from_pretrained(
         self,
