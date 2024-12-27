@@ -7,13 +7,11 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
 from eval.base import EvalEngine
 
-from diagnosis.info import INFO, DEFAULT_ROOT
-
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
 
 class DiagnosisEvalEngine(EvalEngine):
-    def __init__(self, flag, split, size=None, root=DEFAULT_ROOT):
+    def __init__(self, args, dataset, logger, size=224):
         self.flag = flag
         self.split = split
 
