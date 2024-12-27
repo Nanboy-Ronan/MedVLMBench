@@ -1,5 +1,5 @@
 import json
-import os
+import os, sys
 import random
 import argparse
 from utils import constants
@@ -70,6 +70,7 @@ class Arguments(transformers.TrainingArguments):
     mm_vision_select_feature: Optional[str] = field(default="patch")
 
     # misc
+    exp_path: str = field(default="")
     device: Optional[str] = field(default="cuda")
     cache_dir: Optional[str] = field(default=None)
     if_wandb: Optional[str] = False
@@ -86,88 +87,16 @@ def setup_args(args):
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
-    # def collect_args():
-    parser = argparse.ArgumentParser()
-
-    # data
-    parser.add_argument("--task", default="vqa", choices=constants.TASKS)
-    parser.add_argument(
-        "--dataset",
-        default="SLAKE",
-        choices=constants.DATASETS,
-    )
-    parser.add_argument("--image_path", type=str, default="", help="local path to images")
-    parser.add_argument("--split", type=str, default="all", help="dataset split for evaluation")
-    parser.add_argument("--image_aspect_ratio", type=str, default="pad")
-
-    # train
-    parser.add_argument("--learning_rate", type=float, default=2e-4)
-    parser.add_argument("--mm_projector_lr", type=float, default=2e-5)  # for LLMs
-    parser.add_argument("--per_device_train_batch_size", type=int, default=16)
-    parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
-    parser.add_argument("--num_train_epochs", type=int, default=1)
-    parser.add_argument("--weight_decay", type=float, default=0.0)
-    parser.add_argument("--warmup_ratio", type=float, default=0.03)
-    parser.add_argument("--lr_scheduler_type", type=str, default="cosine")
-
-    parser.add_argument("--freeze_backbone", type=bool, default=False)
-    parser.add_argument("--lora_enable", action="store_true")
-    parser.add_argument("--lora_r", type=int, default=128)
-    parser.add_argument("--lora_alpha", type=int, default=256)
-    parser.add_argument("--lora_dropout", type=float, default=0.05)
-    parser.add_argument("--lora_weight_path", type=str)
-    parser.add_argument("--lora_bias", type=str, default="none")
-    parser.add_argument("--bf16", type=bool, default=False)
-    parser.add_argument("--fp16", type=bool, default=False)
-    parser.add_argument("--bits", type=int, default=16)
-    parser.add_argument("--gradient_checkpointing", type=bool, default=True)
-    parser.add_argument("--model_max_length", type=int, default=2048)
-
-    # network
-    parser.add_argument(
-        "--model",
-        default="BLIP",
-        choices=constants.MODELS,
-    )
-    parser.add_argument("--version", type=str, default="v1")
-    parser.add_argument("--context_length", default=77)
-    parser.add_argument("--model_path", type=str, default="", help="explicitly indentify checkpoint path to resume.")
-    ## LLaVA
-    parser.add_argument("--mm_vision_select_layer", type=int, default=-2)
-    parser.add_argument("--mm_projector_type", type=str, default="mlp2x_gelu")
-    parser.add_argument("--mm_use_im_start_end", type=bool, default=False)
-    parser.add_argument("--mm_use_im_patch_token", type=bool, default=False)
-    parser.add_argument("--mm_vision_select_feature", default=None)
-    parser.add_argument("--mm_patch_merge_type", default=None)
-    parser.add_argument("--pretrain_mm_mlp_adapter", default=None)
-
-    # misc
-    parser.add_argument("--device", default="cuda")
-    parser.add_argument("--cache_dir", default=None)
-    parser.add_argument("--eval_print_freq", type=int, default=100, help="logging frequency (step)")
-    parser.add_argument("--exp_path", type=str, default="./output")
-    parser.add_argument("--wandb_name", type=str, default="baseline")
-    parser.add_argument("--if_wandb", type=bool, default=False)
-
-    args = parser.parse_args()
-
-    assert args.dataset in getattr(
-        constants, f"{str.upper(args.task)}_DATASETS"
-    ), f"dataset {args.dataset} is not supported for task {args.task}"
-
-    args.save_folder = os.path.join(
+    args.output_dir = os.path.join(
         args.exp_path,
         args.task,
         args.dataset,
         args.model,
-        f"seed{args.random_seed}",
+        f"train_seed{args.seed}",
     )
+    args.split = "train"
 
-    basics.creat_folder(args.save_folder)
-
-    if args.cache_dir is not None:
-        os.environ["HF_HOME"] = args.cache_dir
-        os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
+    basics.creat_folder(args.output_dir)
 
     return args
 
@@ -175,6 +104,7 @@ def setup_args(args):
 if __name__ == "__main__":
     parser = transformers.HfArgumentParser(Arguments)
     args = parser.parse_args()
+    args = setup_args(args)
     # args = collect_args()
 
     logger = basics.setup_logger("train", args.save_folder, "train.log", screen=True, tofile=True)
@@ -183,15 +113,17 @@ if __name__ == "__main__":
 
     args.logger = logger
 
-    torch.manual_seed(args.random_seed)
-    np.random.seed(args.random_seed)
-    random.seed(args.random_seed)
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     if args.device == "cuda":
-        torch.cuda.manual_seed(args.random_seed)
-        torch.cuda.manual_seed_all(args.random_seed)
+        torch.cuda.manual_seed(args.seed)
+        torch.cuda.manual_seed_all(args.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+    sys.exit()
 
     model = get_model(args=args, device=args.device)
     dataset = get_dataset(args, image_processor_callable=model.image_processor_callable)
@@ -200,3 +132,89 @@ if __name__ == "__main__":
     eval_engine.evaluate(args=args, model=model)
 
     args.logger.info("End of the evaluation")
+
+
+# def collect_args():
+#     parser = argparse.ArgumentParser()
+
+#     # data
+#     parser.add_argument("--task", default="vqa", choices=constants.TASKS)
+#     parser.add_argument(
+#         "--dataset",
+#         default="SLAKE",
+#         choices=constants.DATASETS,
+#     )
+#     parser.add_argument("--image_path", type=str, default="", help="local path to images")
+#     parser.add_argument("--split", type=str, default="all", help="dataset split for evaluation")
+#     parser.add_argument("--image_aspect_ratio", type=str, default="pad")
+
+#     # train
+#     parser.add_argument("--learning_rate", type=float, default=2e-4)
+#     parser.add_argument("--mm_projector_lr", type=float, default=2e-5)  # for LLMs
+#     parser.add_argument("--per_device_train_batch_size", type=int, default=16)
+#     parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
+#     parser.add_argument("--num_train_epochs", type=int, default=1)
+#     parser.add_argument("--weight_decay", type=float, default=0.0)
+#     parser.add_argument("--warmup_ratio", type=float, default=0.03)
+#     parser.add_argument("--lr_scheduler_type", type=str, default="cosine")
+
+#     parser.add_argument("--freeze_backbone", type=bool, default=False)
+#     parser.add_argument("--lora_enable", action="store_true")
+#     parser.add_argument("--lora_r", type=int, default=128)
+#     parser.add_argument("--lora_alpha", type=int, default=256)
+#     parser.add_argument("--lora_dropout", type=float, default=0.05)
+#     parser.add_argument("--lora_weight_path", type=str)
+#     parser.add_argument("--lora_bias", type=str, default="none")
+#     parser.add_argument("--bf16", type=bool, default=False)
+#     parser.add_argument("--fp16", type=bool, default=False)
+#     parser.add_argument("--bits", type=int, default=16)
+#     parser.add_argument("--gradient_checkpointing", type=bool, default=True)
+#     parser.add_argument("--model_max_length", type=int, default=2048)
+
+#     # network
+#     parser.add_argument(
+#         "--model",
+#         default="BLIP",
+#         choices=constants.MODELS,
+#     )
+#     parser.add_argument("--version", type=str, default="v1")
+#     parser.add_argument("--context_length", default=77)
+#     parser.add_argument("--model_path", type=str, default="", help="explicitly indentify checkpoint path to resume.")
+#     ## LLaVA
+#     parser.add_argument("--mm_vision_select_layer", type=int, default=-2)
+#     parser.add_argument("--mm_projector_type", type=str, default="mlp2x_gelu")
+#     parser.add_argument("--mm_use_im_start_end", type=bool, default=False)
+#     parser.add_argument("--mm_use_im_patch_token", type=bool, default=False)
+#     parser.add_argument("--mm_vision_select_feature", default=None)
+#     parser.add_argument("--mm_patch_merge_type", default=None)
+#     parser.add_argument("--pretrain_mm_mlp_adapter", default=None)
+
+#     # misc
+#     parser.add_argument("--device", default="cuda")
+#     parser.add_argument("--cache_dir", default=None)
+#     parser.add_argument("--eval_print_freq", type=int, default=100, help="logging frequency (step)")
+#     parser.add_argument("--exp_path", type=str, default="./output")
+#     parser.add_argument("--wandb_name", type=str, default="baseline")
+#     parser.add_argument("--if_wandb", type=bool, default=False)
+
+#     args = parser.parse_args()
+
+#     assert args.dataset in getattr(
+#         constants, f"{str.upper(args.task)}_DATASETS"
+#     ), f"dataset {args.dataset} is not supported for task {args.task}"
+
+#     args.save_folder = os.path.join(
+#         args.exp_path,
+#         args.task,
+#         args.dataset,
+#         args.model,
+#         f"seed{args.random_seed}",
+#     )
+
+#     basics.creat_folder(args.save_folder)
+
+#     if args.cache_dir is not None:
+#         os.environ["HF_HOME"] = args.cache_dir
+#         os.environ["TRANSFORMERS_CACHE"] = args.cache_dir
+
+#     return args

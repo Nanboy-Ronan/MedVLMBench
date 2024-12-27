@@ -29,7 +29,7 @@ def collect_args():
     parser.add_argument("--split", type=str, default="all", help="dataset split for evaluation")
 
     # evaluation
-    parser.add_argument("--random_seed", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--print_freq", type=int, default=10, help="logging frequency during evaluation")
     parser.add_argument("--save_pred", action="store_true", help="whether to save predictions during evaluation")
     parser.add_argument("--gpt_eval", action="store_true", help="whether to use GPT for evaluation")
@@ -64,7 +64,7 @@ def collect_args():
         args.task,
         args.dataset,
         args.model,
-        f"seed{args.random_seed}",
+        f"eval_seed{args.seed}",
     )
 
     basics.creat_folder(args.save_folder)
@@ -85,13 +85,13 @@ if __name__ == "__main__":
 
     args.logger = logger
 
-    torch.manual_seed(args.random_seed)
-    np.random.seed(args.random_seed)
-    random.seed(args.random_seed)
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    random.seed(args.seed)
 
     if args.device == "cuda":
-        torch.cuda.manual_seed(args.random_seed)
-        torch.cuda.manual_seed_all(args.random_seed)
+        torch.cuda.manual_seed(args.seed)
+        torch.cuda.manual_seed_all(args.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
