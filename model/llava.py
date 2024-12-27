@@ -102,26 +102,6 @@ class LLaVA(ChatMetaModel):
 
                 model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
 
-        if self.args.lora_enable:
-            from peft import LoraConfig, get_peft_model
-
-            lora_config = LoraConfig(
-                r=self.args.lora_r,
-                lora_alpha=self.args.lora_alpha,
-                target_modules=1,
-                lora_dropout=self.args.lora_dropout,
-                bias=self.args.lora_bias,
-                task_type="CAUSAL_LM",
-            )
-
-            if self.args.bits == 16:
-                if self.args.bf16:
-                    model.to(torch.bfloat16)
-                if self.args.fp16:
-                    model.to(torch.float16)
-
-            model = get_peft_model(model, lora_config)
-
         if "mpt" in model_name_or_path:
             tokenizer = AutoTokenizer.from_pretrained(
                 model_name_or_path,
@@ -181,11 +161,31 @@ class LLaVA(ChatMetaModel):
             if self.args.bits in [4, 8]:
                 model.get_model().mm_projector.to(dtype=compute_dtype, device=self.args.device)
 
-            model.config.mm_use_im_start_end = data_args.mm_use_im_start_end = self.args.mm_use_im_start_end
+            model.config.mm_use_im_start_end = self.args.mm_use_im_start_end
             model.config.mm_projector_lr = self.args.mm_projector_lr
             self.args.use_im_start_end = self.args.mm_use_im_start_end
             model.config.mm_use_im_patch_token = self.args.mm_use_im_patch_token
             model.initialize_vision_tokenizer(self.args, tokenizer=tokenizer)
+
+        if self.args.lora_enable:
+            from peft import LoraConfig, get_peft_model
+
+            lora_config = LoraConfig(
+                r=self.args.lora_r,
+                lora_alpha=self.args.lora_alpha,
+                target_modules=1,
+                lora_dropout=self.args.lora_dropout,
+                bias=self.args.lora_bias,
+                task_type="CAUSAL_LM",
+            )
+
+            if self.args.bits == 16:
+                if self.args.bf16:
+                    model.to(torch.bfloat16)
+                if self.args.fp16:
+                    model.to(torch.float16)
+
+            model = get_peft_model(model, lora_config)
 
         if self.args.bits in [4, 8]:
             from peft.tuners.lora import LoraLayer

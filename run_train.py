@@ -9,6 +9,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import transformers
+from dataclasses import dataclass, field
+from typing import Dict, Optional, Sequence, List
+
 from utils import basics
 from model import get_model
 from dataset import get_dataset
@@ -16,7 +20,73 @@ from eval import get_eval_engine
 from train import get_train_engine
 
 
-def collect_args():
+@dataclass
+class Arguments(transformers.TrainingArguments):
+    # data
+    task: str = field(default="vqa")
+    dataset: str = field(default="SLAKE")
+    image_path: str = field(default="")
+    image_aspect_ratio: str = field(default="pad")
+
+    # train
+    optim: str = field(default="adamw_torch")
+    bits: int = field(default=16, metadata={"help": "How many bits to use."})
+    lora_enable: bool = False
+    lora_r: int = 128
+    lora_alpha: int = 256
+    lora_dropout: float = 0.05
+    lora_weight_path: str = ""
+    lora_bias: str = "none"
+
+    mm_projector_lr: Optional[float] = None  # for LLMs
+    remove_unused_columns: bool = field(default=False)
+    freeze_mm_mlp_adapter: bool = field(default=False)
+    mpt_attn_impl: Optional[str] = field(default="triton")
+    model_max_length: int = field(
+        default=2048,
+        metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
+    )
+    double_quant: bool = field(
+        default=True, metadata={"help": "Compress the quantization statistics through double quantization."}
+    )
+    quant_type: str = field(
+        default="nf4", metadata={"help": "Quantization data type to use. Should be one of `fp4` or `nf4`."}
+    )
+    group_by_modality_length: bool = field(default=False)
+
+    # network
+    model: str = field(default="LLaVA")
+    version: str = field(default="v1")
+    context_length: int = field(default=77)
+    model_path: str = field(default="", help="explicitly indentify checkpoint path to resume.")
+    freeze_backbone: bool = field(default=False)
+    ## LlaVA
+    mm_vision_select_layer: Optional[int] = field(default=-2)
+    pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
+    mm_projector_type: Optional[str] = field(default="mlp2x_gelu")
+    mm_use_im_start_end: bool = field(default=False)
+    mm_use_im_patch_token: bool = field(default=True)
+    mm_patch_merge_type: Optional[str] = field(default="flat")
+    mm_vision_select_feature: Optional[str] = field(default="patch")
+
+    # misc
+    device: Optional[str] = field(default="cuda")
+    cache_dir: Optional[str] = field(default=None)
+    if_wandb: Optional[str] = False
+    wandb_name: Optional[str] = field(default=None)
+
+
+def setup_args(args):
+    assert args.task in constants.TASKS, f"Task {args.task} is not supported. Supported tasks: {constants.TASKS}"
+    assert args.model in constants.MODELS, f"Model {args.model} is not supported. Supported models: {constants.MODELS}"
+    assert (
+        args.dataset in constants.DATASETS
+    ), f"Dataset {args.task} is not supported. Supported datasets: {constants.DATASETS}"
+    assert args.dataset in getattr(
+        constants, f"{str.upper(args.task)}_DATASETS"
+    ), f"dataset {args.dataset} is not supported for task {args.task}"
+
+    # def collect_args():
     parser = argparse.ArgumentParser()
 
     # data
@@ -31,27 +101,27 @@ def collect_args():
     parser.add_argument("--image_aspect_ratio", type=str, default="pad")
 
     # train
+    parser.add_argument("--learning_rate", type=float, default=2e-4)
+    parser.add_argument("--mm_projector_lr", type=float, default=2e-5)  # for LLMs
+    parser.add_argument("--per_device_train_batch_size", type=int, default=16)
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=1)
     parser.add_argument("--num_train_epochs", type=int, default=1)
+    parser.add_argument("--weight_decay", type=float, default=0.0)
+    parser.add_argument("--warmup_ratio", type=float, default=0.03)
+    parser.add_argument("--lr_scheduler_type", type=str, default="cosine")
+
     parser.add_argument("--freeze_backbone", type=bool, default=False)
     parser.add_argument("--lora_enable", action="store_true")
     parser.add_argument("--lora_r", type=int, default=128)
     parser.add_argument("--lora_alpha", type=int, default=256)
     parser.add_argument("--lora_dropout", type=float, default=0.05)
-    parser.add_argument("--lora_wright_path", type=str)
+    parser.add_argument("--lora_weight_path", type=str)
     parser.add_argument("--lora_bias", type=str, default="none")
     parser.add_argument("--bf16", type=bool, default=False)
     parser.add_argument("--fp16", type=bool, default=False)
     parser.add_argument("--bits", type=int, default=16)
     parser.add_argument("--gradient_checkpointing", type=bool, default=True)
     parser.add_argument("--model_max_length", type=int, default=2048)
-
-    # evaluation
-    parser.add_argument("--random_seed", type=int, default=0)
-    parser.add_argument("--print_freq", type=int, default=10, help="logging frequency during evaluation")
-    parser.add_argument("--save_pred", action="store_true", help="whether to save predictions during evaluation")
-    parser.add_argument("--gpt_eval", action="store_true", help="whether to use GPT for evaluation")
-
-    parser.add_argument("--hash_id", type=str, default="")
 
     # network
     parser.add_argument(
@@ -62,7 +132,14 @@ def collect_args():
     parser.add_argument("--version", type=str, default="v1")
     parser.add_argument("--context_length", default=77)
     parser.add_argument("--model_path", type=str, default="", help="explicitly indentify checkpoint path to resume.")
+    ## LLaVA
+    parser.add_argument("--mm_vision_select_layer", type=int, default=-2)
+    parser.add_argument("--mm_projector_type", type=str, default="mlp2x_gelu")
     parser.add_argument("--mm_use_im_start_end", type=bool, default=False)
+    parser.add_argument("--mm_use_im_patch_token", type=bool, default=False)
+    parser.add_argument("--mm_vision_select_feature", default=None)
+    parser.add_argument("--mm_patch_merge_type", default=None)
+    parser.add_argument("--pretrain_mm_mlp_adapter", default=None)
 
     # misc
     parser.add_argument("--device", default="cuda")
@@ -96,10 +173,12 @@ def collect_args():
 
 
 if __name__ == "__main__":
-    args = collect_args()
+    parser = transformers.HfArgumentParser(Arguments)
+    args = parser.parse_args()
+    # args = collect_args()
 
-    logger = basics.setup_logger("eval", args.save_folder, "eval.log", screen=True, tofile=True)
-    logger.info("Using following arguments for evaluation.")
+    logger = basics.setup_logger("train", args.save_folder, "train.log", screen=True, tofile=True)
+    logger.info("Using following arguments for training.")
     logger.info(args)
 
     args.logger = logger
