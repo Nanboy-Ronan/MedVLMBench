@@ -10,17 +10,23 @@ from dataset.vqa import SLAKE, PathVQA, VQARAD
 from dataset.caption import HarvardFairVLMed10k
 from dataset.diagnosis import PneumoniaMNIST
 
-datasets = {"SLAKE": SLAKE, "PathVQA": PathVQA, "VQA-RAD": VQARAD, "Harvard-FairVLMed10k": HarvardFairVLMed10k, "PneumoniaMNIST": PneumoniaMNIST}
+datasets = {
+    "SLAKE": SLAKE,
+    "PathVQA": PathVQA,
+    "VQA-RAD": VQARAD,
+    "Harvard-FairVLMed10k": HarvardFairVLMed10k,
+    "PneumoniaMNIST": PneumoniaMNIST,
+}
 
 
 def get_dataset(args, image_processor_callable=None):
 
     g = torch.Generator()
-    g.manual_seed(args.random_seed)
+    g.manual_seed(args.seed)
 
     def seed_worker(worker_id):
-        np.random.seed(args.random_seed)
-        random.seed(args.random_seed)
+        np.random.seed(args.seed)
+        random.seed(args.seed)
 
     dataset_name = datasets[args.dataset]
 
@@ -31,7 +37,9 @@ def get_dataset(args, image_processor_callable=None):
     else:
         transform = get_transform(args)
 
-    dataset = dataset_name(data_args=edict(image_path=args.image_path, size=224), split=args.split, transform=transform)
+    dataset = dataset_name(
+        data_args=edict(image_path=args.image_path, size=224), split=args.split, transform=transform
+    )
 
     print("Loaded dataset: " + dataset.name)
 

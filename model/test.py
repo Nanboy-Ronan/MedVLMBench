@@ -51,9 +51,14 @@ model_args = edict(
     mm_vision_select_layer=-2,
     mm_projector_type="mlp2x_gelu",
     cache_dir="/research/d5/gds/yzhong22/misc/cache",
+    mm_vision_select_feature=None,
+    pretrain_mm_mlp_adapter=None,
+    mm_patch_merge_type=None,
 )
 model.get_model().initialize_vision_modules(model_args=model_args, fsdp=None)
 
-for n, p in model.named_parameters():
-    if p.requires_grad is True:
-        print(n)
+print(model)
+
+# for n, p in model.named_parameters():
+#     if p.requires_grad is True:
+#         print(n)
