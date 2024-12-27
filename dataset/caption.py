@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 
 from PIL import Image
 
@@ -32,7 +33,7 @@ class HarvardFairVLMed10k(CaptionDataset):
         item = self.ds.iloc[index]
 
         image_path = os.path.join(self.image_path, item["image_path"])
-        image = Image.fromarray(image_path).convert("RGB")
+        image = Image.fromarray(np.load(image_path)["slo_fundus"]).convert("RGB")
         image_size = image.size
 
         caption = item["gpt_summary"]
@@ -41,4 +42,10 @@ class HarvardFairVLMed10k(CaptionDataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, caption, prompt_template, image_size, image_path
+        return {
+            "image": image,
+            "label": caption,
+            "prompt_template": prompt_template,
+            "image_size": image_size,
+            "image_path": image_path,
+        }

@@ -16,6 +16,7 @@ class VQADataset(BaseDataset):
         # 0 for open question, 1 for yes/no question
         self.prompt_templates = ["{}", "Answer the following question about the image with yes or no. {}"]
 
+
 class SLAKE(VQADataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split, transform)
@@ -53,7 +54,15 @@ class SLAKE(VQADataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, qs, answer, is_open, prompt_template, image_size, image_path
+        return {
+            "image": image,
+            "query": qs,
+            "label": answer,
+            "is_open": is_open,
+            "prompt_template": prompt_template,
+            "image_size": image_size,
+            "image_path": image_path,
+        }
 
 
 class PathVQA(VQADataset):
@@ -91,7 +100,15 @@ class PathVQA(VQADataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, qs, answer, is_open, prompt_template, image_size, image_path
+        return {
+            "image": image,
+            "query": qs,
+            "label": answer,
+            "is_open": is_open,
+            "prompt_template": prompt_template,
+            "image_size": image_size,
+            "image_path": image_path,
+        }
 
 
 class VQARAD(VQADataset):
@@ -127,7 +144,15 @@ class VQARAD(VQADataset):
 
         image_path = "NA"
 
-        return image, qs, answer, is_open, prompt_template, image_size, image_path
+        return {
+            "image": image,
+            "query": qs,
+            "label": answer,
+            "is_open": is_open,
+            "prompt_template": prompt_template,
+            "image_size": image_size,
+            "image_path": image_path,
+        }
 
 
 if __name__ == "__main__":

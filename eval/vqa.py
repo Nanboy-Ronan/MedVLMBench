@@ -20,7 +20,14 @@ class VQAEvalEngine(EvalEngine):
 
     def evaluate_subject(self, subject, model):
         # evaluation batch size is 1
-        image, qs, answer, is_open, prompt_template, image_size, image_path = subject
+        image = subject["image"]
+        qs = subject["query"]
+        answer = subject["label"]
+        is_open = subject["is_open"]
+        prompt_template = subject["prompt_template"]
+        image_size = subject["image_size"]
+        image_path = subject["image_path"]
+
         qs_l, answer_l = qs.lower(), answer.lower()
 
         device = self.args.device

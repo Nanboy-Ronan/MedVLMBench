@@ -1,3 +1,7 @@
+import nltk
+
+nltk.download("wordnet")
+
 from torchvision.transforms.functional import to_pil_image
 from torchmetrics.functional.text import bleu_score, rouge_score, bert_score
 from nltk.translate.meteor_score import meteor_score
@@ -14,7 +18,12 @@ class CaptionEvalEngine(EvalEngine):
         self.task = "caption"
 
     def evaluate_subject(self, subject, model):
-        image, caption, prompt_template, image_size, image_path = subject
+        image = subject["image"]
+        caption = subject["label"]
+        prompt_template = subject["prompt_template"]
+        image_size = subject["image_size"]
+        image_path = subject["image_path"]
+
         caption_l = caption.lower()
 
         device = self.args.device
@@ -41,7 +50,8 @@ class CaptionEvalEngine(EvalEngine):
             "rougeL_fmeasure",
             "rougeL_precision",
             "rougeL_recall",
-            "methor" "exact_match",
+            "methor",
+            "exact_match",
             "bert_score_precision",
             "bert_score_recall",
             "bert_score_f1",
@@ -54,14 +64,14 @@ class CaptionEvalEngine(EvalEngine):
         bleu3 = bleu_score([output_normed], [[caption_normed]], n_gram=3).item()
         bleu4 = bleu_score([output_normed], [[caption_normed]], n_gram=4).item()
         rouge_scores = rouge_score(output_normed, caption_normed)
-        methor = meteor_score([caption_normed], output_normed)
+        methor = meteor_score([caption_normed.split()], output_normed.split())
         bert_scores = bert_score([output_normed], [caption_normed])
 
         for metric in metrics:
             if metric.startswith("rouge"):
-                self.metric_logger.meters[metric].update(rouge_scores[metric], n=1)
+                self.metric_logger.meters[metric].update(rouge_scores[metric].item(), n=1)
             elif metric.startswith("bert_score"):
-                self.metric_logger.meters[metric].update(bert_scores[metric.replace("bert_score_", "")], n=1)
+                self.metric_logger.meters[metric].update(bert_scores[metric.replace("bert_score_", "")].item(), n=1)
             else:
                 self.metric_logger.meters[metric].update(eval(metric), n=1)
 
