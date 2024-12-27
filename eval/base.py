@@ -38,7 +38,7 @@ class EvalEngine:
         with torch.inference_mode():
             for batch in self.metric_logger.log_every(data_loader, args.eval_print_freq, header="Test:"):
                 # subject = [x[0] for x in batch]
-                subject = {k: v[0] for k, v in batch.itmes()}
+                subject = {k: v[0] for k, v in batch.items()}
                 self.evaluate_subject(subject, model)
 
         self.metric_logger.synchronize_between_processes()

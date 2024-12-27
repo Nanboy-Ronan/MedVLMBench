@@ -7,7 +7,7 @@ from easydict import EasyDict as edict
 from PIL import Image
 
 from datasets import load_dataset, concatenate_datasets
-from base import BaseDataset
+from dataset.base import BaseDataset
 
 
 class CaptionDataset(BaseDataset):
@@ -61,7 +61,6 @@ class MIMIC_CXR(CaptionDataset):
         self.modality = "Chest Xray"
 
         self.image_path = os.path.join(data_args.image_path, "images")
-        # self.ds = pd.read_json(os.path.join(data_args.image_path, f"annotation.json"))
 
         with open(os.path.join(data_args.image_path, f"annotation.json"), 'r') as f:
             annotations = json.load(f)
@@ -87,7 +86,7 @@ class MIMIC_CXR(CaptionDataset):
         return {
             "image": image,
             "label": caption,
-            "prompt_template": None,
+            "prompt_template": "",
             "image_size": image_size,
             "image_path": image_path,
         }
