@@ -18,7 +18,12 @@ class CaptionEvalEngine(EvalEngine):
         self.task = "caption"
 
     def evaluate_subject(self, subject, model):
-        image, caption, prompt_template, image_size, image_path = subject
+        image = subject["image"]
+        caption = subject["label"]
+        prompt_template = subject["prompt_template"]
+        image_size = subject["image_size"]
+        image_path = subject["image_path"]
+
         caption_l = caption.lower()
 
         device = self.args.device

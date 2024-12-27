@@ -42,4 +42,10 @@ class HarvardFairVLMed10k(CaptionDataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, caption, prompt_template, image_size, image_path
+        return {
+            "image": image,
+            "label": caption,
+            "prompt_template": prompt_template,
+            "image_size": image_size,
+            "image_path": image_path,
+        }
