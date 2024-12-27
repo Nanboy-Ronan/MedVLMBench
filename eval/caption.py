@@ -64,9 +64,9 @@ class CaptionEvalEngine(EvalEngine):
 
         for metric in metrics:
             if metric.startswith("rouge"):
-                self.metric_logger.meters[metric].update(rouge_scores[metric], n=1)
+                self.metric_logger.meters[metric].update(rouge_scores[metric].item(), n=1)
             elif metric.startswith("bert_score"):
-                self.metric_logger.meters[metric].update(bert_scores[metric.replace("bert_score_", "")], n=1)
+                self.metric_logger.meters[metric].update(bert_scores[metric.replace("bert_score_", "")].item(), n=1)
             else:
                 self.metric_logger.meters[metric].update(eval(metric), n=1)
 
