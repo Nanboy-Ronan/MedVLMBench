@@ -8,8 +8,9 @@ from easydict import EasyDict as edict
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD
 from dataset.caption import HarvardFairVLMed10k
+from dataset.diagnosis import PneumoniaMNIST
 
-datasets = {"SLAKE": SLAKE, "PathVQA": PathVQA, "VQA-RAD": VQARAD, "Harvard-FairVLMed10k": HarvardFairVLMed10k}
+datasets = {"SLAKE": SLAKE, "PathVQA": PathVQA, "VQA-RAD": VQARAD, "Harvard-FairVLMed10k": HarvardFairVLMed10k, "PneumoniaMNIST": PneumoniaMNIST}
 
 
 def get_dataset(args, image_processor_callable=None):
@@ -30,7 +31,7 @@ def get_dataset(args, image_processor_callable=None):
     else:
         transform = get_transform(args)
 
-    dataset = dataset_name(data_args=edict(image_path=args.image_path), split=args.split, transform=transform)
+    dataset = dataset_name(data_args=edict(image_path=args.image_path, size=224), split=args.split, transform=transform)
 
     print("Loaded dataset: " + dataset.name)
 

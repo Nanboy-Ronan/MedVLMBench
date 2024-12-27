@@ -109,9 +109,27 @@ python run_eval.py \
     --cache_dir ./cache \
     --save_pred
 
-# SLAKE, XrayGPT
+# SLAKE, XrayGPT (done)
 python run_eval.py \
     --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model XrayGPT --model_path not_given \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred 
+
+# PathVQA, XrayGPT (done)
+python run_eval.py \
+    --task vqa --dataset PathVQA --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model XrayGPT --model_path not_given \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# VQARAD, XrayGPT (done)
+python run_eval.py \
+    --task vqa --dataset VQARAD --split test \
     --image_path ./data/SLAKE/imgs \
     --model XrayGPT --model_path not_given \
     --exp_path ./log \

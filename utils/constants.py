@@ -1,5 +1,5 @@
 # tasks
-TASKS = ["vqa", "caption"]
+TASKS = ["vqa", "caption", "diagnosis"]
 
 
 # models
@@ -13,8 +13,9 @@ LANGUAGE_MODELS = ["LLaVA-1.5", "LLaVA-Med", "XGenMiniV1", "XrayGPT"]
 MODELS = CLIP_MODELS + LANGUAGE_MODELS
 
 
-# ddddddddatasets
+# datasets
 VQA_DATASETS = ["SLAKE", "PathVQA", "VQA-RAD"]
 CAPTION_DATASETS = ["Harvard-FairVLMed10k"]
+DIAGNOSIS_DATASETS = ["PneumoniaMNIST"]
 
-DATASETS = VQA_DATASETS + CAPTION_DATASETS
+DATASETS = VQA_DATASETS + CAPTION_DATASETS + DIAGNOSIS_DATASETS

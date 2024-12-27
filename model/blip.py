@@ -60,13 +60,6 @@ class BLIP(ChatMetaModel):
         self.image_processor_callable = ImageProcessorCallable(self.processor.image_processor)
         self.tokenizer = self.processor.tokenizer
 
-    # def caption(self, image_path):
-    #     raw_image = Image.open(image_path).convert("RGB")
-    #     inputs = self.processor(raw_image, return_tensors="pt").to(self.device)
-
-    #     outputs = self.model.generate(**inputs, max_length=50)
-    #     caption = self.processor.decode(outputs[0], skip_special_tokens=True)
-    #     return caption
 
     def infer_vision_language(self, image, qs, image_size=None):
         text_inputs = self.tokenizer(qs, return_tensors="pt", padding=True, truncation=True)
@@ -88,13 +81,16 @@ if __name__ == "__main__":
     blip_vqa = BLIP(args=edict(device="cuda"))
 
     image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"
-    image_path = "/fast/rjin02/DataSets/COCO/2014/val2014/COCO_val2014_000000000042.jpg"
+    # image_path = "/fast/rjin02/DataSets/COCO/2014/val2014/COCO_val2014_000000000042.jpg"
+    image_path = "/fast/rjin02/DataSets/mimic_cxr_all/p10/p10000032/s50414267/02aa804e-bde0afdd-112c0b34-7bc16630-4e384014.jpg"
 
     # caption = blip_caption.caption(image_path)
     # print("Generated Caption:", caption)
 
     image = Image.open(image_path).convert("RGB")
+    image = blip_vqa.image_processor_callable(image)[0]
+    image = torch.tensor(image).unsqueeze(0)
 
-    question = "What is in the image?"
+    question = "the gender of this patient is?"
     answer = blip_vqa.infer_vision_language(image, question, image_size=None)
     print("VQA Answer:", answer)
