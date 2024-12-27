@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
 from transformers import BlipForConditionalGeneration, BlipProcessor, BlipForQuestionAnswering
 
-from base import BaseModel
-from chat import ChatMetaModel
+from model.base import BaseModel
+from model.chat import ChatMetaModel
 
 
 def visualize_tensor_image(tensor, unnormalize=True):

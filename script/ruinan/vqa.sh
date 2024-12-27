@@ -125,7 +125,7 @@ python run_eval.py \
     --model XrayGPT --model_path not_given \
     --exp_path ./log \
     --cache_dir ./cache \
-    --save_pred 
+    --save_pred
 
 # VQARAD, XrayGPT (done)
 python run_eval.py \

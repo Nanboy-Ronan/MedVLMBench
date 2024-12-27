@@ -5,13 +5,14 @@ import pandas as pd
 from collections import namedtuple
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
+from eval.base import EvalEngine
 
-from medmnist.info import INFO, DEFAULT_ROOT
+from diagnosis.info import INFO, DEFAULT_ROOT
 
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
 
-class Evaluator:
+class DiagnosisEvalEngine(EvalEngine):
     def __init__(self, flag, split, size=None, root=DEFAULT_ROOT):
         self.flag = flag
         self.split = split

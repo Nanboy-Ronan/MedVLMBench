@@ -423,12 +423,12 @@ class MedMNIST(Dataset):
 
     def __init__(
         self,
+        data_args,
         split,
         transform=None,
         target_transform=None,
-        download=False,
+        download=True,
         as_rgb=False,
-        root=DEFAULT_ROOT,
         size=None,
         mmap_mode=None,
     ):
@@ -456,9 +456,10 @@ class MedMNIST(Dataset):
             self.size_flag = f"_{size}"
 
         self.info = INFO[self.flag]
+        self.name = self.flag
 
-        if root is not None and os.path.exists(root):
-            self.root = root
+        if data_args.image_path is not None and os.path.exists(data_args.image_path):
+            self.root = data_args.image_path
         else:
             raise RuntimeError(
                 "Failed to setup the default `root` directory. "
