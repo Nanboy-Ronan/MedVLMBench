@@ -8,6 +8,7 @@ from easydict import EasyDict as edict
 
 import torch
 from torch.utils.data import Dataset
+import torchvision.transforms as transforms
 from PIL import Image
 
 import model.release.llava.conversation as conversation_lib
@@ -212,6 +213,8 @@ class LLaVADataset(Dataset):
         query = sources["query"] if "query" in sources.keys() else ""
         answer = sources["label"]
         prompt_template = sources["prompt_template"]
+
+        image = transforms.functional.to_pil_image(image, mode="RGB")
 
         if self.args.image_aspect_ratio == "pad":
 

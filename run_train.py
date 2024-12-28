@@ -16,7 +16,6 @@ from typing import Dict, Optional, Sequence, List
 from utils import basics
 from model import get_model
 from dataset import get_dataset
-from eval import get_eval_engine
 
 from train import get_train_engine
 
@@ -131,15 +130,11 @@ if __name__ == "__main__":
     model_wrapped = get_model(args=args, device=args.device)
     model_wrapped.load_for_training(args.model_path)
 
-    sys.exit()
+    dataset = get_dataset(args)
+    train_engine = get_train_engine(args, model=model_wrapped, dataset=dataset)
+    train_engine.train()
 
-    model = get_model(args=args, device=args.device)
-    dataset = get_dataset(args, image_processor_callable=model.image_processor_callable)
-
-    eval_engine = get_eval_engine(args=args, dataset=dataset)
-    eval_engine.evaluate(args=args, model=model)
-
-    args.logger.info("End of the evaluation")
+    logger.info("End of the training")
 
 
 # def collect_args():

@@ -4,6 +4,7 @@ import logging
 import os
 import string
 import json
+import pathlib
 
 import numpy as np
 import pandas as pd
@@ -14,7 +15,7 @@ from torch.utils.data import DataLoader
 
 
 class TrainEngine:
-    def __init__(self, args, dataset, logger):
+    def __init__(self, args, dataset, model_wrapped, logger, hf_trainer=None):
         """Initialize the benchmark.
 
         Args:
@@ -22,33 +23,31 @@ class TrainEngine:
         """
         self.args = args
         self.task: str = "None"
-        self.prompt_template = "{}"
         self.dataset = dataset
+        self.model_wrapped = model_wrapped
 
-        self.hf_trainer = None
-        self.lora_enable = False
+        self.hf_trainer = hf_trainer
         self.logger = logger
 
-    def train(self, args, model):
-        pass
+    def train(self):
+        if self.hf_trainer is not None:
+            if list(pathlib.Path(self.args.output_dir).glob("checkpoint-*")):
+                self.hf_trainer.train(resume_from_checkpoint=True)
+            else:
+                self.hf_trainer.train()
+        else:
+            # TODO: implementation of not using HF trainer
+            pass
+
+        self.save()
 
     def train_batch(self, subject, model):
         pass
 
-    def __len__(self):
-        """Get the length of the dataset."""
-        return len(self.dataset)
+    def save(self):
+        if self.hf_trainer is not None:
+            self.hf_trainer.save_state()
 
-    def __getitem__(self, idx):
-        """Get an item from the dataset.
-
-        Args:
-            idx: The index of the item to get.
-
-        Returns:
-            The item from the dataset.
-        """
-        return {"idx": idx, "sample": self.dataset[idx]}
-
-    def save(self, path):
-        pass
+            self.model_wrapped.save(self.args.output_dir, self.hf_trainer)
+        else:
+            self.model_wrapped.save(self.args.output_dir)

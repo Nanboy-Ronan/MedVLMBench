@@ -25,5 +25,5 @@ class BaseModel:
         pass
 
     @abc.abstractmethod
-    def save(self, output_folder):
+    def save(self, output_folder, trainer=None):
         pass
