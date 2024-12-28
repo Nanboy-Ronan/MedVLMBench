@@ -2,7 +2,7 @@ import torch
 from PIL import Image
 import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
-from transformers import BlipForConditionalGeneration, BlipProcessor, BlipForQuestionAnswering
+from transformers import BlipProcessor, BlipConfig, BlipForConditionalGeneration, BlipForQuestionAnswering, BlipModel
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
@@ -80,25 +80,32 @@ class BLIPForQA(ChatMetaModel):
 class BLIPForDiagnosis(CLIPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
-        self.model, _ = clip.load(backbone, device="cpu")
-        self.feat_dim = 512
+        self.blip_config = BlipConfig()
+        self.model = BlipModel(self.blip_config)
+        self.vision_model = self.model.vision_model
+        self.feat_dim = 768
 
     def forward_clip(self, images, text_features):
-        image_features = self.model.encode_image(images)
+        sample = {"image": images, "text_input": None}
+        image_features = self.model.extract_features(sample, mode="image").image_embeds_proj[:, 0]
 
-        image_features = F.normalize(image_features, dim=-1)
         text_features = F.normalize(text_features, dim=-1)
 
-        logits = 100.0 * image_features @ text_features.T
+        logits = (image_features @ text_features.T) / self.model.temp
 
         return logits
 
     def encode_text(self, text):
-        return self.model.encode_text(text.to(next(self.model.parameters()).device))
+        sample = {"image": None, "text_input": text}
+
+        text_features = self.model.extract_features(sample, mode="text").text_embeds_proj[:, 0, :]
+        return text_features
+
 
     def forward(self, images):
-        return self.model.visual(images)
+        # sample = {"image": images, "text_input": None}
+        breakpoint()
+        return self.vision_model(images).image_embeds[:, 0, :]
 
     def from_pretrained(self, path):
         pass
