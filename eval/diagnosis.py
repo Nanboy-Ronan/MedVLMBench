@@ -51,25 +51,19 @@ class DiagnosisEvalEngine(EvalEngine):
 
         image = image.to(self.device, non_blocking=True)
 
-        # Forward pass to get predictions
         output = model(image)
         
-        # If model outputs logits, apply softmax
         if output.dim() > 1:
             output = torch.softmax(output, dim=-1)
         
-        # Get predicted class (for multi-class or binary classification)
         pred_label = output.argmax(dim=-1) if output.dim() > 1 else (output > 0.5).int()
 
-        # Compute classification metrics
         acc = self.compute_accuracy(true_label, pred_label)
         auc = self.compute_auc(true_label, output)
 
-        # Update metrics
         self.metric_logger.meters["accuracy"].update(acc, n=1)
         self.metric_logger.meters["auc"].update(auc, n=1)
 
-        # Optionally save predictions
         if self.args.save_pred:
             self.records.append({
                 "image_path": image_path,

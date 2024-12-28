@@ -6,16 +6,16 @@ from easydict import EasyDict as edict
 class CLIPLPModel(BaseModel):
     def __init__(self, args):
         super().__init__(args)
+        self.encoder = model
 
+        self.head = torch.nn.Linear(self.encoder.feat_dim, 2)
 
-    def forward_clip(self, image, qs, image_size=None):
-        pass
+        for param in self.encoder.parameters():
+            param.requires_grad = False
 
-    def encode_text(self, qs):
-        pass
 
     def forward(self):
-        pass
+        return self.head(self.encoder(x))
 
     def save(self, output_folder):
         pass
