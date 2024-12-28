@@ -83,7 +83,7 @@ class BLIPForDiagnosis(CLIPModel):
         self.blip_config = BlipConfig()
         self.model = BlipModel(self.blip_config)
         self.vision_model = self.model.vision_model
-        self.feat_dim = 768
+        self.vision_model.feat_dim = 768
 
     def forward_clip(self, images, text_features):
         sample = {"image": images, "text_input": None}
@@ -102,13 +102,14 @@ class BLIPForDiagnosis(CLIPModel):
         return text_features
 
 
-    def forward(self, images):
+    # def forward(self, images):
         # sample = {"image": images, "text_input": None}
-        breakpoint()
-        return self.vision_model(images).image_embeds[:, 0, :]
+        # return self.vision_model(images).image_embeds[:, 0, :]
 
-    def from_pretrained(self, path):
-        pass
+    def load_for_training(self, model_name_or_path):
+        if "lp" in self.args.usage:
+            from wrappers import LinearProbeWrapper
+            self.model = LinearProbeWrapper(self.vision_model)
 
 
 # if __name__ == "__main__":

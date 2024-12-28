@@ -51,7 +51,7 @@ class DiagnosisEvalEngine(EvalEngine):
 
         image = image.to(self.device, non_blocking=True)
 
-        output = model(image)
+        output = model.forward(image)
         
         if output.dim() > 1:
             output = torch.softmax(output, dim=-1)

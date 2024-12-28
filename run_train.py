@@ -62,6 +62,8 @@ class Arguments(transformers.TrainingArguments):
     model_path: str = field(default=None, metadata={"help": "explicitly indentify checkpoint path to resume."})
     model_base: str = field(default=None)
     freeze_backbone: bool = field(default=False)
+    usage: str = field(default=None)
+
     ## LlaVA
     tune_mm_mlp_adapter: bool = field(default=False)
     freeze_mm_mlp_adapter: bool = field(default=False)
@@ -79,6 +81,7 @@ class Arguments(transformers.TrainingArguments):
     cache_dir: Optional[str] = field(default=None)
     if_wandb: Optional[str] = False
     wandb_name: Optional[str] = field(default=None)
+    split: Optional[str] = field(default="train")
 
 
 def setup_args(args):
@@ -150,7 +153,7 @@ if __name__ == "__main__":
 #         choices=constants.DATASETS,
 #     )
 #     parser.add_argument("--image_path", type=str, default="", help="local path to images")
-#     parser.add_argument("--split", type=str, default="all", help="dataset split for evaluation")
+    # parser.add_argument("--split", type=str, default="train", help="dataset split for training")
 #     parser.add_argument("--image_aspect_ratio", type=str, default="pad")
 
 #     # train
