@@ -12,7 +12,7 @@ deepspeed run_train.py \
     --image_aspect_ratio pad \
     --group_by_modality_length True \
     --bf16 True \
-    --exp_path /research/d5/gds/yzhong22/experiments/med_vlm_benchmark \
+    --output_dir /research/d5/gds/yzhong22/experiments/med_vlm_benchmark \
     --cache_dir /research/d5/gds/yzhong22/misc/cache \
     --num_train_epochs 1 \
     --per_device_train_batch_size 16 \

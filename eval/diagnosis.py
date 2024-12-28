@@ -50,9 +50,7 @@ class DiagnosisEvalEngine(EvalEngine):
         metrics = Metrics(auc, acc)
 
         if save_folder is not None:
-            path = os.path.join(
-                save_folder, self.get_standard_evaluation_filename(metrics, run)
-            )
+            path = os.path.join(save_folder, self.get_standard_evaluation_filename(metrics, run))
             pd.DataFrame(y_score).to_csv(path, header=None)
         return metrics
 
@@ -108,7 +106,7 @@ class DiagnosisEvalEngine(EvalEngine):
         elif split_.startswith("test"):
             split = "test"
         else:
-            flag, size, split_, *_ = filename.split("_") # for size_flag
+            flag, size, split_, *_ = filename.split("_")  # for size_flag
             if split_.startswith("train"):
                 split = "train"
             elif split_.startswith("val"):
@@ -204,10 +202,7 @@ def save_results(y_true, y_score, outputpath):
 
     """
 
-    warnings.DeprecationWarning(
-        "Only kept for backward compatiblility."
-        + "Please use `Evaluator` API instead. "
-    )
+    warnings.DeprecationWarning("Only kept for backward compatiblility." + "Please use `Evaluator` API instead. ")
     idx = []
 
     idx.append("id")

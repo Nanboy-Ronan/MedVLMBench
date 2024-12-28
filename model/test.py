@@ -29,35 +29,38 @@ def find_all_linear_names(model):
 print(model)
 print(find_all_linear_names(model))
 
-for n, p in model.named_parameters():
-    if p.requires_grad is True:
-        print(n)
+for n, m in model.named_modules():
+    print(n)
 
-from peft import LoraConfig, get_peft_model
+# for n, p in model.named_parameters():
+#     if p.requires_grad is True:
+#         print(n)
 
-lora_config = LoraConfig(
-    r=128,
-    lora_alpha=256,
-    target_modules=find_all_linear_names(model),
-    lora_dropout=0.05,
-    bias="none",
-    task_type="CAUSAL_LM",
-)
+# from peft import LoraConfig, get_peft_model
 
-model = get_peft_model(model, lora_config)
+# lora_config = LoraConfig(
+#     r=128,
+#     lora_alpha=256,
+#     target_modules=find_all_linear_names(model),
+#     lora_dropout=0.05,
+#     bias="none",
+#     task_type="CAUSAL_LM",
+# )
 
-model_args = edict(
-    vision_tower="openai/clip-vit-large-patch14-336",
-    mm_vision_select_layer=-2,
-    mm_projector_type="mlp2x_gelu",
-    cache_dir="/research/d5/gds/yzhong22/misc/cache",
-    mm_vision_select_feature=None,
-    pretrain_mm_mlp_adapter=None,
-    mm_patch_merge_type=None,
-)
-model.get_model().initialize_vision_modules(model_args=model_args, fsdp=None)
+# model = get_peft_model(model, lora_config)
 
-print(model)
+# model_args = edict(
+#     vision_tower="openai/clip-vit-large-patch14-336",
+#     mm_vision_select_layer=-2,
+#     mm_projector_type="mlp2x_gelu",
+#     cache_dir="/research/d5/gds/yzhong22/misc/cache",
+#     mm_vision_select_feature=None,
+#     pretrain_mm_mlp_adapter=None,
+#     mm_patch_merge_type=None,
+# )
+# model.get_model().initialize_vision_modules(model_args=model_args, fsdp=None)
+
+# print(model)
 
 # for n, p in model.named_parameters():
 #     if p.requires_grad is True:

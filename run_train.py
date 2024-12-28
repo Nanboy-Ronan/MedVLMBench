@@ -17,6 +17,7 @@ from utils import basics
 from model import get_model
 from dataset import get_dataset
 from eval import get_eval_engine
+
 from train import get_train_engine
 
 
@@ -31,6 +32,7 @@ class Arguments(transformers.TrainingArguments):
     # train
     optim: str = field(default="adamw_torch")
     bits: int = field(default=16, metadata={"help": "How many bits to use."})
+    tune_modules: str = "VML"  # V for vision tower, M for multimodal projector, L for LLM
     lora_enable: bool = False
     lora_r: int = 128
     lora_alpha: int = 256
@@ -40,7 +42,6 @@ class Arguments(transformers.TrainingArguments):
 
     mm_projector_lr: Optional[float] = None  # for LLMs
     remove_unused_columns: bool = field(default=False)
-    freeze_mm_mlp_adapter: bool = field(default=False)
     mpt_attn_impl: Optional[str] = field(default="triton")
     model_max_length: int = field(
         default=2048,
@@ -58,9 +59,12 @@ class Arguments(transformers.TrainingArguments):
     model: str = field(default="LLaVA")
     version: str = field(default="v1")
     context_length: int = field(default=77)
-    model_path: str = field(default="", help="explicitly indentify checkpoint path to resume.")
+    model_path: str = field(default=None, metadata={"help": "explicitly indentify checkpoint path to resume."})
+    model_base: str = field(default=None)
     freeze_backbone: bool = field(default=False)
     ## LlaVA
+    tune_mm_mlp_adapter: bool = field(default=False)
+    freeze_mm_mlp_adapter: bool = field(default=False)
     mm_vision_select_layer: Optional[int] = field(default=-2)
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
     mm_projector_type: Optional[str] = field(default="mlp2x_gelu")
@@ -70,7 +74,7 @@ class Arguments(transformers.TrainingArguments):
     mm_vision_select_feature: Optional[str] = field(default="patch")
 
     # misc
-    exp_path: str = field(default="")
+    # exp_path: str = field(default="")
     device: Optional[str] = field(default="cuda")
     cache_dir: Optional[str] = field(default=None)
     if_wandb: Optional[str] = False
@@ -88,13 +92,14 @@ def setup_args(args):
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
     args.output_dir = os.path.join(
-        args.exp_path,
+        args.output_dir,
         args.task,
         args.dataset,
         args.model,
-        f"train_seed{args.seed}",
+        f"train_{args.tune_modules}_seed{args.seed}",
     )
     args.split = "train"
+    args.tune_mm_mlp_adapter = "M" in args.tune_modules
 
     basics.creat_folder(args.output_dir)
 
@@ -107,7 +112,7 @@ if __name__ == "__main__":
     args = setup_args(args)
     # args = collect_args()
 
-    logger = basics.setup_logger("train", args.save_folder, "train.log", screen=True, tofile=True)
+    logger = basics.setup_logger("train", args.output_dir, "train.log", screen=True, tofile=True)
     logger.info("Using following arguments for training.")
     logger.info(args)
 
@@ -122,6 +127,9 @@ if __name__ == "__main__":
         torch.cuda.manual_seed_all(args.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+    model_wrapped = get_model(args=args, device=args.device)
+    model_wrapped.load_for_training(args.model_path)
 
     sys.exit()
 
