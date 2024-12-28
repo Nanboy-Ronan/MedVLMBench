@@ -61,7 +61,7 @@ class EvalEngine:
         """Get the length of the dataset."""
         return len(self.dataset)
 
-    def __getitem__(self, idx): # TODO: Check why this method is implemented here?
+    def __getitem__(self, idx):  # TODO: Check why this method is implemented here?
         """Get an item from the dataset.
 
         Args:
