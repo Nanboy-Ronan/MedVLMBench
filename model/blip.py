@@ -6,6 +6,7 @@ from transformers import BlipForConditionalGeneration, BlipProcessor, BlipForQue
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
+from model.clip_base import CLIPModel
 
 
 def visualize_tensor_image(tensor, unnormalize=True):
@@ -43,7 +44,7 @@ class ImageProcessorCallable:
         return self.image_processor(image)["pixel_values"]
 
 
-class BLIP(ChatMetaModel):
+class BLIPForQA(ChatMetaModel):
     def __init__(self, args=None):
         super().__init__(args)
         # if mode == "vqa":
@@ -76,27 +77,7 @@ class BLIP(ChatMetaModel):
         return answer
 
 
-if __name__ == "__main__":
-    # blip_caption = BLIP(mode="caption")
-    blip_vqa = BLIP(args=edict(device="cuda"))
-
-    image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"
-    # image_path = "/fast/rjin02/DataSets/COCO/2014/val2014/COCO_val2014_000000000042.jpg"
-    image_path = "/fast/rjin02/DataSets/mimic_cxr_all/p10/p10000032/s50414267/02aa804e-bde0afdd-112c0b34-7bc16630-4e384014.jpg"
-
-    # caption = blip_caption.caption(image_path)
-    # print("Generated Caption:", caption)
-
-    image = Image.open(image_path).convert("RGB")
-    image = blip_vqa.image_processor_callable(image)[0]
-    image = torch.tensor(image).unsqueeze(0)
-
-    question = "the gender of this patient is?"
-    answer = blip_vqa.infer_vision_language(image, question, image_size=None)
-    print("VQA Answer:", answer)
-
-
-class BLIPLP(CLIPLPModel):
+class BLIPForDiagnosis(CLIPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -121,3 +102,23 @@ class BLIPLP(CLIPLPModel):
 
     def from_pretrained(self, path):
         pass
+
+
+# if __name__ == "__main__":
+#     # blip_caption = BLIP(mode="caption")
+#     blip_vqa = BLIP(args=edict(device="cuda"))
+
+#     image_path = "/fast/rjin02/DataSets/CheXpert-v1.0-small/valid/patient64541/study1/view1_frontal.jpg"
+#     # image_path = "/fast/rjin02/DataSets/COCO/2014/val2014/COCO_val2014_000000000042.jpg"
+#     image_path = "/fast/rjin02/DataSets/mimic_cxr_all/p10/p10000032/s50414267/02aa804e-bde0afdd-112c0b34-7bc16630-4e384014.jpg"
+
+#     # caption = blip_caption.caption(image_path)
+#     # print("Generated Caption:", caption)
+
+#     image = Image.open(image_path).convert("RGB")
+#     image = blip_vqa.image_processor_callable(image)[0]
+#     image = torch.tensor(image).unsqueeze(0)
+
+#     question = "the gender of this patient is?"
+#     answer = blip_vqa.infer_vision_language(image, question, image_size=None)
+#     print("VQA Answer:", answer)

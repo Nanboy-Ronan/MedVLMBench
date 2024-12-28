@@ -1,9 +1,9 @@
 import torch.nn as nn
-from base import BaseModel
+from model.base import BaseModel
 from easydict import EasyDict as edict
 
 
-class CLIPLPModel(BaseModel):
+class CLIPModel(BaseModel):
     def __init__(self, args):
         super().__init__(args)
         self.encoder = model
