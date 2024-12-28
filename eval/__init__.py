@@ -1,9 +1,10 @@
 from eval.vqa import VQAEvalEngine
 from eval.caption import CaptionEvalEngine
-from eval.diagnosis import DiagnosisEvalEngine
+
+# from eval.diagnosis import DiagnosisEvalEngine
 
 
-task_engines = {"vqa": VQAEvalEngine, "caption": CaptionEvalEngine, "diagnosis": DiagnosisEvalEngine}
+task_engines = {"vqa": VQAEvalEngine, "caption": CaptionEvalEngine}
 
 
 def get_eval_engine(args, dataset):
