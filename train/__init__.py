@@ -22,9 +22,13 @@ def get_trainer(args, model_wrapped, dataset):
         return None
 
 
-def get_train_engine(args, model, dataset):
+def get_train_engine(args, model_wrapped, dataset):
     engine = task_engines[args.task](
-        args=args, dataset=dataset, model_wrapped=model, logger=args.logger, hf_trainer=get_trainer(model)
+        args=args,
+        dataset=dataset,
+        model_wrapped=model_wrapped,
+        logger=args.logger,
+        hf_trainer=get_trainer(args, model_wrapped=model_wrapped, dataset=dataset),
     )
 
     return engine

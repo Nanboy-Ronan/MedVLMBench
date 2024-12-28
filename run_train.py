@@ -53,6 +53,7 @@ class Arguments(transformers.TrainingArguments):
         default="nf4", metadata={"help": "Quantization data type to use. Should be one of `fp4` or `nf4`."}
     )
     group_by_modality_length: bool = field(default=False)
+    deepspeed_plugin: Optional[str] = field(default=None)
 
     # network
     model: str = field(default="LLaVA")
@@ -74,7 +75,7 @@ class Arguments(transformers.TrainingArguments):
 
     # misc
     # exp_path: str = field(default="")
-    device: Optional[str] = field(default="cuda")
+    # device: Optional[str] = field(default="cuda")
     cache_dir: Optional[str] = field(default=None)
     if_wandb: Optional[str] = False
     wandb_name: Optional[str] = field(default=None)
@@ -106,8 +107,9 @@ def setup_args(args):
 
 
 if __name__ == "__main__":
-    parser = transformers.HfArgumentParser(Arguments)
-    args = parser.parse_args()
+    parser = transformers.HfArgumentParser((Arguments))
+    args = parser.parse_args_into_dataclasses()[0]
+    # args = parser.parse_args()
     args = setup_args(args)
     # args = collect_args()
 
@@ -121,17 +123,17 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     random.seed(args.seed)
 
-    if args.device == "cuda":
+    if args.device.type == "cuda":
         torch.cuda.manual_seed(args.seed)
         torch.cuda.manual_seed_all(args.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-    model_wrapped = get_model(args=args, device=args.device)
+    model_wrapped = get_model(args=args, device=args.device.type)
     model_wrapped.load_for_training(args.model_path)
 
     dataset = get_dataset(args)
-    train_engine = get_train_engine(args, model=model_wrapped, dataset=dataset)
+    train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
     train_engine.train()
 
     logger.info("End of the training")

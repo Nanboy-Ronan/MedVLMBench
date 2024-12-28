@@ -1,9 +1,10 @@
 # SLAKE, LLaVA-1.5
 deepspeed run_train.py \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
-    --deepspeed ./scripts/zero3.json \
+    --deepspeed ./script/zero3.json \
     --task vqa --dataset SLAKE \
     --model LLaVA-1.5 --version v1 \
+    --image_path /research/d5/gds/yzhong22/datasets/SLAKE/imgs \
     --model_path /research/d5/gds/yzhong22/misc/pretrained/llava-v1.5-7b \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \

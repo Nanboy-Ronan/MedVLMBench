@@ -28,20 +28,19 @@ def preprocess_multimodal(args, query, answer, constants):
         },
     ]
 
-    for source in sources:
-        for sentence in source:
-            if constants.DEFAULT_IMAGE_TOKEN in sentence["value"]:
-                sentence["value"] = sentence["value"].replace(constants.DEFAULT_IMAGE_TOKEN, "").strip()
-                sentence["value"] = constants.DEFAULT_IMAGE_TOKEN + "\n" + sentence["value"]
-                sentence["value"] = sentence["value"].strip()
-                if "mmtag" in args.version:
-                    sentence["value"] = sentence["value"].replace(
-                        constants.DEFAULT_IMAGE_TOKEN, "<Image>" + constants.DEFAULT_IMAGE_TOKEN + "</Image>"
-                    )
-            replace_token = constants.DEFAULT_IMAGE_TOKEN
-            if args.mm_use_im_start_end:
-                replace_token = constants.DEFAULT_IM_START_TOKEN + replace_token + constants.DEFAULT_IM_END_TOKEN
-            sentence["value"] = sentence["value"].replace(constants.DEFAULT_IMAGE_TOKEN, replace_token)
+    for sentence in sources:
+        if constants.DEFAULT_IMAGE_TOKEN in sentence["value"]:
+            sentence["value"] = sentence["value"].replace(constants.DEFAULT_IMAGE_TOKEN, "").strip()
+            sentence["value"] = constants.DEFAULT_IMAGE_TOKEN + "\n" + sentence["value"]
+            sentence["value"] = sentence["value"].strip()
+            if "mmtag" in args.version:
+                sentence["value"] = sentence["value"].replace(
+                    constants.DEFAULT_IMAGE_TOKEN, "<Image>" + constants.DEFAULT_IMAGE_TOKEN + "</Image>"
+                )
+        replace_token = constants.DEFAULT_IMAGE_TOKEN
+        if args.mm_use_im_start_end:
+            replace_token = constants.DEFAULT_IM_START_TOKEN + replace_token + constants.DEFAULT_IM_END_TOKEN
+        sentence["value"] = sentence["value"].replace(constants.DEFAULT_IMAGE_TOKEN, replace_token)
 
     return sources
 
@@ -52,18 +51,17 @@ def preprocess_v1(
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
 
     # Apply prompt templates
-    conversations = []
-    for i, source in enumerate(sources):
-        if roles[source[0]["from"]] != conv.roles[0]:
-            # Skip the first one if it is not from human
-            source = source[1:]
+    if roles[sources[0]["from"]] != conv.roles[0]:
+        # Skip the first one if it is not from human
+        sources = sources[1:]
 
-        conv.messages = []
-        for j, sentence in enumerate(source):
-            role = roles[sentence["from"]]
-            assert role == conv.roles[j % 2], f"{i}"
-            conv.append_message(role, sentence["value"])
-        conversations.append(conv.get_prompt())
+    conv.messages = []
+    for j, sentence in enumerate(sources):
+        role = roles[sentence["from"]]
+        assert role == conv.roles[j % 2], f"{i}"
+        conv.append_message(role, sentence["value"])
+
+    conversations = [conv.get_prompt()]
 
     # Tokenize conversations
 
@@ -144,7 +142,7 @@ def preprocess(
     if conv.sep_style == conversation_lib.SeparatorStyle.LLAMA_2:
         return preprocess_llama_2(sources, tokenizer, model_constants, has_image=has_image)
     if conv.version.startswith("v1"):
-        return preprocess_v1(sources, conv.copy(), tokenizer, has_image=has_image)
+        return preprocess_v1(sources, conv.copy(), tokenizer, model_constants, has_image=has_image)
     if conv.version == "mpt":
         return preprocess_mpt(sources, tokenizer, has_image=has_image)
     # add end signal and concatenate together
@@ -192,16 +190,23 @@ class LLaVADataset(Dataset):
     @property
     def lengths(self):
         length_list = []
-        for sample in self.base_dataset:
+        for idx in range(len(self.base_dataset)):
+            sample = self.base_dataset[idx]
             img_tokens = 128 if "image" in sample.keys() else 0
-            length_list.append(len(sample["label"].split()) + img_tokens)
+            cur_len = len(sample["label"].split()) + len(sample["prompt_template"].split())
+            if "query" in sample.keys():
+                cur_len += len(sample["query"].split())
+            length_list.append(cur_len + img_tokens)
         return length_list
 
     @property
     def modality_lengths(self):
         length_list = []
-        for sample in self.base_dataset:
-            cur_len = len(sample["label"].split())
+        for idx in range(len(self.base_dataset)):
+            sample = self.base_dataset[idx]
+            cur_len = len(sample["label"].split()) + len(sample["prompt_template"].split())
+            if "query" in sample.keys():
+                cur_len += len(sample["query"].split())
             cur_len = cur_len if "image" in sample.keys() else -cur_len
             length_list.append(cur_len)
         return length_list
@@ -240,14 +245,12 @@ class LLaVADataset(Dataset):
         query = prompt_template.format(query) + "/n" + self.model_constants.DEFAULT_IMAGE_TOKEN
         sources = preprocess_multimodal(self.args, query, answer, self.model_constants)
 
-        data_dict = preprocess(
-            self.args, sources, self.tokenizer, self.model_constants, has_image=("image" in sources.keys())
-        )
+        data_dict = preprocess(self.args, sources, self.tokenizer, self.model_constants, has_image=image is not None)
         if isinstance(i, int):
             data_dict = dict(input_ids=data_dict["input_ids"][0], labels=data_dict["labels"][0])
 
         # image exist in the data
-        if "image" in sources.keys():
+        if "image" in self.base_dataset[i]:
             data_dict["image"] = image
         else:
             # image does not exist in the data, but the model is multimodal
@@ -268,7 +271,9 @@ class DataCollatorForSupervisedDataset(object):
         input_ids = torch.nn.utils.rnn.pad_sequence(
             input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id
         )
-        labels = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True, padding_value=IGNORE_INDEX)
+        labels = torch.nn.utils.rnn.pad_sequence(
+            labels, batch_first=True, padding_value=self.model_constants.IGNORE_INDEX
+        )
         input_ids = input_ids[:, : self.tokenizer.model_max_length]
         labels = labels[:, : self.tokenizer.model_max_length]
         batch = dict(
