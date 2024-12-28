@@ -605,6 +605,7 @@ class LLaVA(ChatMetaModel):
         return outputs
 
     def save(self, output_folder, trainer=None):
+        self.model.config.use_cache = True
         if self.args.lora_enable:
             state_dict = get_peft_state_maybe_zero_3(self.model.named_parameters(), self.args.lora_bias)
             non_lora_state_dict = get_peft_state_non_lora_maybe_zero_3(self.model.named_parameters())
