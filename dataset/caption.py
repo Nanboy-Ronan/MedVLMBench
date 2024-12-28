@@ -1,6 +1,8 @@
 import os
+import json
 import pandas as pd
 import numpy as np
+from easydict import EasyDict as edict
 
 from PIL import Image
 
@@ -49,3 +51,48 @@ class HarvardFairVLMed10k(CaptionDataset):
             "image_size": image_size,
             "image_path": image_path,
         }
+
+
+class MIMIC_CXR(CaptionDataset):
+    def __init__(self, data_args, split, transform=None):
+        super().__init__(data_args, split, transform)
+
+        self.name = "MIMIC-CXR"
+        self.modality = "Chest Xray"
+
+        self.image_path = os.path.join(data_args.image_path, "images")
+
+        with open(os.path.join(data_args.image_path, f"annotation.json"), 'r') as f:
+            annotations = json.load(f)
+        
+        self.data = [item for item in annotations[self.split]]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        item = self.data[index]
+
+        image_paths = item["image_path"]
+        image_path = os.path.join(self.image_path, image_paths[0])
+        image = Image.open(image_path).convert("RGB")
+        image_size = image.size
+
+        if self.transform:
+            image = self.transform(image)
+
+        caption = item["report"]
+
+        return {
+            "image": image,
+            "label": caption,
+            "prompt_template": "",
+            "image_size": image_size,
+            "image_path": image_path,
+        }
+
+if __name__ == "__main__":
+    dataset = MIMIC_CXR(edict(image_path="/fast/rjin02/DataSets/mimic_cxr"), split="train", transform=None)
+    sample = dataset[0]
+    print("Image Path:", sample["image_path"])
+    print("Label:", sample["label"])
