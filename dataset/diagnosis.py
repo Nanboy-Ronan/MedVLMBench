@@ -548,7 +548,7 @@ class MedMNIST2D(MedMNIST):
             img: PIL.Image
             target: np.array of `L` (L=1 for single-label)
         """
-        img, target = self.imgs[index], self.labels[index].astype(int)
+        img, label = self.imgs[index], self.labels[index].astype(int)
         img = Image.fromarray(img)
 
         if self.as_rgb:
@@ -558,9 +558,13 @@ class MedMNIST2D(MedMNIST):
             img = self.transform(img)
 
         if self.target_transform is not None:
-            target = self.target_transform(target)
+            label = self.target_transform(label)
 
-        return img, target
+        return {
+            "image": img,
+            "label": label,
+            "image_path": ""
+        }
 
     def save(self, folder, postfix="png", write_csv=True):
         from medmnist.utils import save2d
@@ -607,17 +611,21 @@ class MedMNIST3D(MedMNIST):
             img: an array of 1x28x28x28 or 3x28x28x28 (if `as_RGB=True`), in [0,1]
             target: np.array of `L` (L=1 for single-label)
         """
-        img, target = self.imgs[index], self.labels[index].astype(int)
+        img, label = self.imgs[index], self.labels[index].astype(int)
 
         img = np.stack([img / 255.0] * (3 if self.as_rgb else 1), axis=0)
 
         if self.transform is not None:
             img = self.transform(img)
 
-        if self.target_transform is not None:
-            target = self.target_transform(target)
+        if label.target_transform is not None:
+            target = self.target_transform(label)
 
-        return img, target
+        return {
+            "image": img,
+            "label": label,
+            "image_path": ""
+        }
 
     def save(self, folder, postfix="gif", write_csv=True):
         from medmnist.utils import save3d

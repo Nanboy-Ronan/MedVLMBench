@@ -5,7 +5,7 @@ import clip
 from model.clip_base import CLIPLPModel
 
 
-class CLIPLP(CLIPLPModel):
+class CLIP(CLIPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
