@@ -1,4 +1,4 @@
-from model.blip import BLIPForQA
+from model.blip import BLIPForQA, BLIPForDiagnosis
 from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
@@ -9,20 +9,43 @@ from easydict import EasyDict as edict
 
 
 def get_model(args, **kwargs):
-    if args.model == "BLIP":
-        model = BLIPForQA(args=args)
-    elif args.model == "LLaVA-1.5":
-        model = LLaVA(args=args)
-    elif args.model == "BLIP2-2.7b":
-        model = BLIP2(args=args)
-    elif args.model == "LLaVA-Med":
-        model = LLaVAMed(args=args)
-    elif args.model == "XGenMiniV1":
-        model = XGenMiniV1(args=args)
-    elif args.model == "XrayGPT":
-        from model.xraygpt import XrayGPT
-
-        model = XrayGPT(args=args)
+    if args.task == "vqa":
+        if args.model == "BLIP":
+            model = BLIPForQA(args=args)
+        elif args.model == "LLaVA-1.5":
+            model = LLaVA(args=args)
+        elif args.model == "BLIP2-2.7b":
+            model = BLIP2(args=args)
+        elif args.model == "LLaVA-Med":
+            model = LLaVAMed(args=args)
+        elif args.model == "XGenMiniV1":
+            model = XGenMiniV1(args=args)
+        elif args.model == "XrayGPT":
+            from model.xraygpt import XrayGPT
+            model = XrayGPT(args=args)
+        else:
+            raise NotImplementedError()
+    elif args.task == "caption":
+        if args.model == "BLIP":
+            model = BLIPForQA(args=args)
+        elif args.model == "LLaVA-1.5":
+            model = LLaVA(args=args)
+        elif args.model == "BLIP2-2.7b":
+            model = BLIP2(args=args)
+        elif args.model == "LLaVA-Med":
+            model = LLaVAMed(args=args)
+        elif args.model == "XGenMiniV1":
+            model = XGenMiniV1(args=args)
+        elif args.model == "XrayGPT":
+            from model.xraygpt import XrayGPT
+            model = XrayGPT(args=args)
+        else:
+            raise NotImplementedError()
+    elif args.task == "diagnosis":
+        if args.model == "BLIP":
+            model = BLIPForDiagnosis(args=args)
+        else:
+            raise NotImplementedError()
     else:
         raise NotImplementedError()
 

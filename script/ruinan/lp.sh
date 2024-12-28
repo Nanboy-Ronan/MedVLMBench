@@ -1,3 +1,4 @@
+# Evaluation only
 python run_eval.py \
     --task diagnosis --dataset PneumoniaMNIST --split test \
     --image_path ./data \
