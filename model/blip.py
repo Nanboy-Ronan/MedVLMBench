@@ -103,10 +103,6 @@ class BLIPForDiagnosis(CLIPModel):
         return text_features
 
 
-    # def forward(self, images):
-        # sample = {"image": images, "text_input": None}
-        # return self.vision_model(images).image_embeds[:, 0, :]
-
     def load_for_training(self, model_name_or_path):
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper

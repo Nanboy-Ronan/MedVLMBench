@@ -559,9 +559,9 @@ class MedMNIST2D(MedMNIST):
 
         if self.target_transform is not None:
             label = self.target_transform(label)
-
+        
         return {
-            "image": img,
+            "pixel_values": img,
             "label": label,
             "image_path": ""
         }
@@ -622,7 +622,7 @@ class MedMNIST3D(MedMNIST):
             target = self.target_transform(label)
 
         return {
-            "image": img,
+            "pixel_values": img,
             "label": label,
             "image_path": ""
         }

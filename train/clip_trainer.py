@@ -1,5 +1,7 @@
 import torch
 import torch.nn.functional as F
+import numpy as np
+from typing import List, Dict
 from torch.utils.data import Dataset
 from torchvision import transforms
 from transformers import Trainer
@@ -55,6 +57,7 @@ def make_contrastive_data_module(args, dataset, tokenizer, image_processor, mode
 
     return train_dataset, val_dataset
 
+
 class CLIPLPTrainer(Trainer):
     def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
         super().__init__(
@@ -77,61 +80,49 @@ class CLIPLPTrainer(Trainer):
         return (loss, logits) if return_outputs else loss
 
     def get_labels(self, eval_preds):
-        """
-        Extracts labels from the evaluation predictions.
-
-        Args:
-            eval_preds: The evaluation predictions.
-
-        Returns:
-            torch.Tensor: The ground truth labels.
-        """
         logits, labels = eval_preds
         return labels
 
-class LinearProbingDataset(Dataset):
-    def __init__(self, data, tokenizer, transform, max_length=128):
-        """
-        Initializes the dataset.
 
-        Args:
-            data (list of dict): Each dict should have 'image' and 'label' keys.
-            tokenizer (transformers.PreTrainedTokenizer): Tokenizer for text (unused here but kept for compatibility).
-            transform (torchvision.transforms.Compose): Transformations for images.
-            max_length (int, optional): Max token length for texts (unused here but kept for compatibility). Defaults to 128.
-        """
-        self.data = data
-        self.tokenizer = tokenizer
-        self.transform = transform
-        self.max_length = max_length
+# train/data_collator.py
 
-    def __len__(self):
-        return len(self.data)
+from dataclasses import dataclass
+from typing import Any, Dict, List, Sequence, Optional
+import torch
+from transformers import PreTrainedTokenizer
 
-    def __getitem__(self, idx):
-        item = self.data[idx]
-        
-        image = self.transform(item['image'])
+@dataclass
+class LinearProbingDataCollator:
+    def __call__(self, instances: Sequence[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
+        images = [instance['pixel_values'] for instance in instances]    # List of image tensors
+        labels = [instance['label'] for instance in instances]    # List of label arrays
 
-        label = item['label']
-        
-        return {
-            'pixel_values': image,
-            'labels': label
+        pixel_values = torch.stack(images)                        # Shape: (batch_size, C, H, W)
+
+        labels = [int(label[0]) if isinstance(label, (list, tuple, np.ndarray, torch.Tensor)) else int(label) for label in labels]
+        labels = torch.tensor(labels, dtype=torch.long)           # Shape: (batch_size,)
+
+        batch = {
+            'pixel_values': pixel_values,
+            'labels': labels
         }
+
+        return batch
+
 
 def make_lp_data_module(args, dataset, image_processor):
     from dataset.diagnosis import PneumoniaMNIST
     transform = transforms.Compose([
-        transforms.ToTensor(),
+        transforms.PILToTensor(),
         # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
     ])
 
+    data_collator = LinearProbingDataCollator()
     # TODO: check transform
     train_dataset = PneumoniaMNIST(
         data_args=args,
         split="train", # 'train', 'val' or 'test'
-        transform=image_processor,
+        transform=transform,
         target_transform=None,
         download=True,
         as_rgb=True,
@@ -139,18 +130,18 @@ def make_lp_data_module(args, dataset, image_processor):
         mmap_mode=None,
     )
 
-    val_dataset = PneumoniaMNIST(
-        data_args=args,
-        split="val", # 'train', 'val' or 'test'
-        transform=image_processor,
-        target_transform=None,
-        download=True,
-        as_rgb=True,
-        size=224,
-        mmap_mode=None,
-    )
+    # val_dataset = PneumoniaMNIST(
+    #     data_args=args,
+    #     split="val", # 'train', 'val' or 'test'
+    #     transform=image_processor,
+    #     target_transform=None,
+    #     download=True,
+    #     as_rgb=True,
+    #     size=224,
+    #     mmap_mode=None,
+    # )
 
-    return train_dataset, val_dataset
+    return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
 
 
 class CLIPTrainer(Trainer):

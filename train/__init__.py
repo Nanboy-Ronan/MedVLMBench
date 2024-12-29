@@ -22,10 +22,10 @@ def get_trainer(args, model_wrapped, dataset):
     elif args.model == "BLIP":
         if args.usage == "lp":
             from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module, LinearProbingDataset
+            from train.clip_trainer import make_lp_data_module
 
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-            train_dataset, eval_dataset = make_lp_data_module(
+            data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
                 image_processor=model_wrapped.image_processor,
@@ -52,8 +52,7 @@ def get_trainer(args, model_wrapped, dataset):
                 model=model_wrapped,
                 args=args,
                 image_processor=model_wrapped.image_processor,
-                train_dataset=train_dataset,
-                eval_dataset=eval_dataset,
+                **data_module
             )
 
             return trainer

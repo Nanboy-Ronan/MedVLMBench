@@ -3,7 +3,7 @@ from model.base import BaseModel
 from easydict import EasyDict as edict
 
 
-class CLIPModel(BaseModel):
+class CLIPModel(BaseModel, nn.Module):
     def __init__(self, args):
         super().__init__(args)
 
