@@ -2,7 +2,7 @@ import torch
 from PIL import Image
 import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
-from transformers import BlipProcessor, BlipConfig, BlipForConditionalGeneration, BlipForQuestionAnswering, BlipModel
+from transformers import BlipProcessor, BlipImageProcessor, BlipConfig, BlipForConditionalGeneration, BlipForQuestionAnswering, BlipModel
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
@@ -81,6 +81,7 @@ class BLIPForDiagnosis(CLIPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
+        self.image_processor = BlipImageProcessor()
         self.model = BlipModel(self.blip_config)
         self.vision_model = self.model.vision_model
         self.vision_model.feat_dim = 768

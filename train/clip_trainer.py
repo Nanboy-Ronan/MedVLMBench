@@ -34,7 +34,7 @@ class ContrastiveDataset(Dataset):
         attention_mask = encoding['attention_mask'].squeeze()
 
         return {
-            'pixel_values': image
+            'pixel_values': image,
             'input_ids': input_ids,
             'attention_mask': attention_mask
         }
@@ -55,7 +55,105 @@ def make_contrastive_data_module(args, dataset, tokenizer, image_processor, mode
 
     return train_dataset, val_dataset
 
-class BLIPTrainer(Trainer):
+class CLIPLPTrainer(Trainer):
+    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
+        super().__init__(
+            model=model,
+            args=args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            **kwargs
+        )
+        self.image_processor = image_processor
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        pixel_values = inputs.pop("pixel_values")
+        labels = inputs.pop("labels")
+
+        logits = model(pixel_values=pixel_values)
+        
+        loss = F.cross_entropy(logits, labels)
+        
+        return (loss, logits) if return_outputs else loss
+
+    def get_labels(self, eval_preds):
+        """
+        Extracts labels from the evaluation predictions.
+
+        Args:
+            eval_preds: The evaluation predictions.
+
+        Returns:
+            torch.Tensor: The ground truth labels.
+        """
+        logits, labels = eval_preds
+        return labels
+
+class LinearProbingDataset(Dataset):
+    def __init__(self, data, tokenizer, transform, max_length=128):
+        """
+        Initializes the dataset.
+
+        Args:
+            data (list of dict): Each dict should have 'image' and 'label' keys.
+            tokenizer (transformers.PreTrainedTokenizer): Tokenizer for text (unused here but kept for compatibility).
+            transform (torchvision.transforms.Compose): Transformations for images.
+            max_length (int, optional): Max token length for texts (unused here but kept for compatibility). Defaults to 128.
+        """
+        self.data = data
+        self.tokenizer = tokenizer
+        self.transform = transform
+        self.max_length = max_length
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        item = self.data[idx]
+        
+        image = self.transform(item['image'])
+
+        label = item['label']
+        
+        return {
+            'pixel_values': image,
+            'labels': label
+        }
+
+def make_lp_data_module(args, dataset, image_processor):
+    from dataset.diagnosis import PneumoniaMNIST
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
+    ])
+
+    # TODO: check transform
+    train_dataset = PneumoniaMNIST(
+        data_args=args,
+        split="train", # 'train', 'val' or 'test'
+        transform=image_processor,
+        target_transform=None,
+        download=True,
+        as_rgb=True,
+        size=224,
+        mmap_mode=None,
+    )
+
+    val_dataset = PneumoniaMNIST(
+        data_args=args,
+        split="val", # 'train', 'val' or 'test'
+        transform=image_processor,
+        target_transform=None,
+        download=True,
+        as_rgb=True,
+        size=224,
+        mmap_mode=None,
+    )
+
+    return train_dataset, val_dataset
+
+
+class CLIPTrainer(Trainer):
     def __init__(self, 
                  model, 
                  args, 
