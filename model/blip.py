@@ -94,7 +94,7 @@ class BLIPLPForDiagnosis(LPModel):
         pass
     
     def forward(self, x):
-        return self.model.head(self.model.encoder(x)["last_hidden_state"])
+        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
 
 
 class BLIPForDiagnosis(CLIPModel):

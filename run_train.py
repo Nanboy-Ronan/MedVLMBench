@@ -38,6 +38,7 @@ class Arguments(transformers.TrainingArguments):
     lora_dropout: float = 0.05
     lora_weight_path: str = ""
     lora_bias: str = "none"
+    num_train_epochs: int = None
 
     mm_projector_lr: Optional[float] = None  # for LLMs
     remove_unused_columns: bool = field(default=False)

@@ -13,4 +13,5 @@ python run_train.py \
     --image_path ./data \
     --output_dir ./log \
     --model BLIP --model_path not_given \
-    --cache_dir ./cache
+    --cache_dir ./cache \
+    --num_train_epochs 1
