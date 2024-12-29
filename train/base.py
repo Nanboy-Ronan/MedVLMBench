@@ -33,7 +33,7 @@ class TrainEngine:
         all_parameter_size, tuned_parameter_size, tuned_parameters = self.model_wrapped.get_parameters_info()
 
         self.logger.info(
-            "Total parameter: {:n}  Trainable paramter: {:n}".format(all_parameter_size, tuned_parameter_size)
+            "Total parameter: {:,}  Trainable paramter: {:,}".format(all_parameter_size, tuned_parameter_size)
         )
         self.logger.info(f"Tune the following parameters: {tuned_parameters}")
 

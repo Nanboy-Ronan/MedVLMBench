@@ -75,6 +75,7 @@ class EvalEngine:
     def save(self, path, model):
         info = {
             "model": [model.name],
+            "model_name": [self.args.model_path.split("/")[-1]],
             "task": [self.task],
             "dataset": [self.dataset.name],
             "model_type": [model.model_type],

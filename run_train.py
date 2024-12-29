@@ -101,7 +101,7 @@ def setup_args(args):
     if args.model == "LLaVA-1.5":
         save_folder_name += "_llava"
     if args.model == "LLaVA-Med":
-        save_folder_name += "_mistral"
+        save_folder_name += "_llava_mistral"
 
     args.output_dir = os.path.join(
         args.output_dir,
