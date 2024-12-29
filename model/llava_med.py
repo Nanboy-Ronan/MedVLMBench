@@ -8,7 +8,7 @@ from model.release.llava_med.model import LlavaMistralForCausalLM
 from model.release.llava_med.conversation import conv_templates
 from model.release.llava_med.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
 
-from model.llava import LLaVA
+from model.llava import LLaVA, find_lora_modules
 from PIL import Image
 
 import warnings
@@ -30,6 +30,169 @@ class LLaVAMed(LLaVA):
         self.conv_mode = "mistral_instruct"
         self.name = "LLaVA-Med"
         self.model_type = "medical"
+
+    def load_for_training(self, model_name_or_path):
+        compute_dtype = torch.float16 if self.args.fp16 else (torch.bfloat16 if self.args.bf16 else torch.float32)
+
+        self.args.vision_tower = "openai/clip-vit-large-patch14-336"
+        attn_implementation = "flash_attention_2"
+
+        bnb_model_from_pretrained_args = {}
+        if self.args.bits in [4, 8]:
+            from transformers import BitsAndBytesConfig
+
+            bnb_model_from_pretrained_args.update(
+                dict(
+                    device_map={"": self.args.device},
+                    load_in_4bit=self.args.bits == 4,
+                    load_in_8bit=self.args.bits == 8,
+                    quantization_config=BitsAndBytesConfig(
+                        load_in_4bit=self.args.bits == 4,
+                        load_in_8bit=self.args.bits == 8,
+                        llm_int8_skip_modules=["mm_projector"],
+                        llm_int8_threshold=6.0,
+                        llm_int8_has_fp16_weight=False,
+                        bnb_4bit_compute_dtype=compute_dtype,
+                        bnb_4bit_use_double_quant=self.args.double_quant,
+                        bnb_4bit_quant_type=self.args.quant_type,  # {'fp4', 'nf4'}
+                    ),
+                )
+            )
+
+        if self.args.vision_tower is not None:
+            if "mistral" in self.args.model_path.lower():
+                model = LlavaMistralForCausalLM.from_pretrained(
+                    self.args.model_path,
+                    attn_implementation=attn_implementation,
+                    torch_dtype=(torch.bfloat16 if self.args.bf16 else None),
+                    **bnb_model_from_pretrained_args,
+                )
+            else:
+                raise NotImplementedError
+
+        else:
+            raise NotImplementedError
+
+        model.config.use_cache = False
+        if self.args.freeze_backbone:
+            model.model.requires_grad_(False)
+
+        if self.args.bits in [4, 8]:
+            from peft import prepare_model_for_kbit_training
+
+            model.config.torch_dtype = compute_dtype
+            model = prepare_model_for_kbit_training(
+                model, use_gradient_checkpointing=self.args.use_gradient_checkpointing
+            )
+
+        if self.args.gradient_checkpointing:
+            if hasattr(model, "enable_input_require_grads"):
+                model.enable_input_require_grads()
+            else:
+
+                def make_inputs_require_grad(module, input, output):
+                    output.requires_grad_(True)
+
+                model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            self.args.model_path,
+            cache_dir=self.args.cache_dir,
+            model_max_length=self.args.model_max_length,
+            padding_side="right",
+            use_fast=False,
+        )
+
+        if self.args.version == "v0":
+            if tokenizer.pad_token is None:
+                smart_tokenizer_and_embedding_resize(
+                    special_tokens_dict=dict(pad_token="[PAD]"),
+                    tokenizer=tokenizer,
+                    model=model,
+                )
+        elif self.args.version == "v0.5":
+            tokenizer.pad_token = tokenizer.unk_token
+        else:
+            tokenizer.pad_token = tokenizer.unk_token
+
+        if self.args.vision_tower is not None:
+            model.get_model().initialize_vision_modules(model_args=self.args, fsdp=None)
+
+            vision_tower = model.get_vision_tower()
+            vision_tower.to(dtype=torch.bfloat16 if self.args.bf16 else torch.float16, device=self.args.device)
+
+            image_processor = vision_tower.image_processor
+
+            model.config.image_aspect_ratio = self.args.image_aspect_ratio
+            model.config.tokenizer_padding_side = tokenizer.padding_side
+            model.config.tokenizer_model_max_length = tokenizer.model_max_length
+
+        if self.args.lora_enable:
+            from peft import LoraConfig, get_peft_model
+
+            # target_modules, exclude_modules = find_lora_modules(self.args, model)
+
+            lora_config = LoraConfig(
+                r=self.args.lora_r,
+                lora_alpha=self.args.lora_alpha,
+                target_modules=find_lora_modules(self.args, model),
+                lora_dropout=self.args.lora_dropout,
+                bias=self.args.lora_bias,
+                task_type="CAUSAL_LM",
+            )
+
+            if self.args.bits == 16:
+                if self.args.bf16:
+                    model.to(torch.bfloat16)
+                if self.args.fp16:
+                    model.to(torch.float16)
+
+            model = get_peft_model(model, lora_config)
+
+        if self.args.vision_tower is not None:
+            model.config.tune_mm_mlp_adapter = self.args.tune_mm_mlp_adapter
+            if self.args.tune_mm_mlp_adapter:
+                # model.requires_grad_(False)
+                for p in model.get_model().mm_projector.parameters():
+                    p.requires_grad = True
+
+            model.config.freeze_mm_mlp_adapter = self.args.freeze_mm_mlp_adapter
+            if self.args.freeze_mm_mlp_adapter:
+                for p in model.get_model().mm_projector.parameters():
+                    p.requires_grad = False
+
+            if self.args.bits in [4, 8]:
+                model.get_model().mm_projector.to(dtype=compute_dtype, device=self.args.device)
+
+            model.config.mm_use_im_start_end = self.args.mm_use_im_start_end
+            model.config.mm_projector_lr = self.args.mm_projector_lr
+            self.args.use_im_start_end = self.args.mm_use_im_start_end
+            model.config.mm_use_im_patch_token = self.args.mm_use_im_patch_token
+            model.initialize_vision_tokenizer(self.args, tokenizer=tokenizer)
+
+        tuned_parameters = []
+        for n, p in model.named_parameters():
+            if p.requires_grad:
+                tuned_parameters.append(n)
+        self.args.logger.info(f"Tune the following parameters: {tuned_parameters}")
+
+        if self.args.bits in [4, 8]:
+            from peft.tuners.lora import LoraLayer
+
+            for name, module in model.named_modules():
+                if isinstance(module, LoraLayer):
+                    if self.args.bf16:
+                        module = module.to(torch.bfloat16)
+                if "norm" in name:
+                    module = module.to(torch.float32)
+                if "lm_head" in name or "embed_tokens" in name:
+                    if hasattr(module, "weight"):
+                        if self.args.bf16 and module.weight.dtype == torch.float32:
+                            module = module.to(torch.bfloat16)
+
+        self.model = model
+        self.tokenizer = tokenizer
+        self.image_processor = image_processor
 
     def load_from_pretrained(
         self,
