@@ -32,7 +32,7 @@ deepspeed run_train.py \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
-    --tune_module L
+    --tune_modules L
 
 
 deepspeed run_train.py \
@@ -68,4 +68,4 @@ deepspeed run_train.py \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
-    --tune_module L
+    --tune_modules L

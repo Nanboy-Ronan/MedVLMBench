@@ -306,7 +306,8 @@ class LLaVA(ChatMetaModel):
         if self.args.vision_tower is not None:
             model.config.tune_mm_mlp_adapter = self.args.tune_mm_mlp_adapter
             if self.args.tune_mm_mlp_adapter:
-                # model.requires_grad_(False)
+                if not self.args.lora_enable:
+                    model.requires_grad_(False)
                 for p in model.get_model().mm_projector.parameters():
                     p.requires_grad = True
 
@@ -323,12 +324,6 @@ class LLaVA(ChatMetaModel):
             self.args.use_im_start_end = self.args.mm_use_im_start_end
             model.config.mm_use_im_patch_token = self.args.mm_use_im_patch_token
             model.initialize_vision_tokenizer(self.args, tokenizer=tokenizer)
-
-        tuned_parameters = []
-        for n, p in model.named_parameters():
-            if p.requires_grad:
-                tuned_parameters.append(n)
-        self.args.logger.info(f"Tune the following parameters: {tuned_parameters}")
 
         if self.args.bits in [4, 8]:
             from peft.tuners.lora import LoraLayer

@@ -92,6 +92,10 @@ def setup_args(args):
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
+    if "LLaVA" in args.model and args.tune_modules == "M":
+        args.peft = ""
+        print(args.peft)
+
     save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
     if args.model == "LLaVA-1.5":
@@ -111,6 +115,8 @@ def setup_args(args):
 
     if args.peft == "lora":
         args.lora_enable = True
+    else:
+        args.lora_enable = False
 
     basics.creat_folder(args.output_dir)
 

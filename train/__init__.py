@@ -4,7 +4,7 @@ task_engines = {"vqa": VQATrainEngine}
 
 
 def get_trainer(args, model_wrapped, dataset):
-    if args.model == "LLaVA-1.5":
+    if args.model in ["LLaVA-1.5", "LLaVA-Med"]:
         from model.release.llava.train.llava_trainer import LLaVATrainer
         from train.llava_trainer import make_supervised_data_module
 
