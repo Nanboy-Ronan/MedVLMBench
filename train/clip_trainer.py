@@ -1,10 +1,11 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-from typing import List, Dict
 from torch.utils.data import Dataset
 from torchvision import transforms
 from transformers import Trainer
+from dataclasses import dataclass
+from typing import Any, Dict, List, Sequence, Optional
 
 class ContrastiveDataset(Dataset):
     # TODO
@@ -41,6 +42,7 @@ class ContrastiveDataset(Dataset):
             'attention_mask': attention_mask
         }
 
+
 def make_contrastive_data_module(args, dataset, tokenizer, image_processor, model_constants):
     # TODO
     transform = transforms.Compose([
@@ -69,11 +71,11 @@ class CLIPLPTrainer(Trainer):
         )
         self.image_processor = image_processor
 
-    def compute_loss(self, model, inputs, return_outputs=False):
-        pixel_values = inputs.pop("pixel_values")
-        labels = inputs.pop("labels")
-
-        logits = model(pixel_values=pixel_values)
+    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        pixel_values = inputs["pixel_values"]
+        labels = inputs["labels"]
+        pixel_values = self.image_processor(pixel_values, return_tensors="pt")["pixel_values"]
+        logits = model(pixel_values)
         
         loss = F.cross_entropy(logits, labels)
         
@@ -84,12 +86,6 @@ class CLIPLPTrainer(Trainer):
         return labels
 
 
-# train/data_collator.py
-
-from dataclasses import dataclass
-from typing import Any, Dict, List, Sequence, Optional
-import torch
-from transformers import PreTrainedTokenizer
 
 @dataclass
 class LinearProbingDataCollator:

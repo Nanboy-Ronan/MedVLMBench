@@ -7,6 +7,7 @@ from transformers import BlipProcessor, BlipImageProcessor, BlipConfig, BlipForC
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.clip_base import CLIPModel
+from model.lp_base import LPModel
 
 
 def visualize_tensor_image(tensor, unnormalize=True):
@@ -77,6 +78,25 @@ class BLIPForQA(ChatMetaModel):
         return answer
 
 
+class BLIPLPForDiagnosis(LPModel):
+    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.blip_config = BlipConfig()
+        self.image_processor = BlipImageProcessor()
+        self.model = BlipModel(self.blip_config)
+        self.vision_model = self.model.vision_model
+        self.vision_model.feat_dim = 768
+        if "lp" in self.args.usage:
+            from wrappers import LinearProbeWrapper
+            self.model = LinearProbeWrapper(self.vision_model)
+        
+    def load_for_training(self, model_path):
+        pass
+    
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)["last_hidden_state"])
+
+
 class BLIPForDiagnosis(CLIPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -86,7 +106,7 @@ class BLIPForDiagnosis(CLIPModel):
         self.vision_model = self.model.vision_model
         self.vision_model.feat_dim = 768
 
-    def forward_clip(self, images, text_features):
+    def forward(self, images, text_features):
         sample = {"image": images, "text_input": None}
         image_features = self.model.extract_features(sample, mode="image").image_embeds_proj[:, 0]
 
@@ -101,12 +121,6 @@ class BLIPForDiagnosis(CLIPModel):
 
         text_features = self.model.extract_features(sample, mode="text").text_embeds_proj[:, 0, :]
         return text_features
-
-
-    def load_for_training(self, model_name_or_path):
-        if "lp" in self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model)
 
 
 # if __name__ == "__main__":
