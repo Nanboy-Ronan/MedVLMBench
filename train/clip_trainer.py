@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -76,7 +77,7 @@ class CLIPLPTrainer(Trainer):
         labels = inputs["labels"]
         pixel_values = self.image_processor(pixel_values, return_tensors="pt")["pixel_values"]
         logits = model(pixel_values)
-        
+
         loss = F.cross_entropy(logits, labels)
         
         return (loss, logits) if return_outputs else loss
@@ -84,6 +85,19 @@ class CLIPLPTrainer(Trainer):
     def get_labels(self, eval_preds):
         logits, labels = eval_preds
         return labels
+
+    def save_model(self, output_dir=None, _internal_call=False):
+        if output_dir is None:
+            output_dir = self.args.output_dir
+
+        os.makedirs(output_dir, exist_ok=True)
+        
+        model_to_save = self.model.model
+
+        if hasattr(model_to_save, 'module'):
+            model_to_save = model_to_save.module
+
+        torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
 
 
