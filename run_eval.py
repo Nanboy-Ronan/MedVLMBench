@@ -98,8 +98,8 @@ if __name__ == "__main__":
         torch.backends.cudnn.benchmark = False
 
     model_wrapped = get_model(args=args, device=args.device)
-    breakpoint()
     model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
+
     dataset = get_dataset(args, image_processor_callable=model_wrapped.image_processor_callable)
 
     eval_engine = get_eval_engine(args=args, dataset=dataset)

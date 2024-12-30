@@ -429,7 +429,7 @@ class MedMNIST(Dataset):
         target_transform=None,
         download=True,
         as_rgb=False,
-        size=None,
+        size=224,
         mmap_mode=None,
     ):
         """

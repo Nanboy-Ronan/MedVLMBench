@@ -14,7 +14,7 @@ Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
 class DiagnosisEvalEngine(EvalEngine):
     # TODO: support for multi-class
-    def __init__(self, args, dataset, logger, task="binary-class", device="cpu"):
+    def __init__(self, args, dataset, logger, task="binary-class", device="cuda"):
         super().__init__(args, dataset, logger)
 
         self.task = task  # e.g., "multi-class", "binary-class", "multi-label"
@@ -47,10 +47,9 @@ class DiagnosisEvalEngine(EvalEngine):
         """Evaluate a single subject (image and label)."""
         image = subject["pixel_values"]
         true_label = subject["label"]
-
         image = image.to(self.device, non_blocking=True)
 
-        output = model.forward(image)
+        output = model(image)
         
         if output.dim() > 1:
             output = torch.softmax(output, dim=-1)
