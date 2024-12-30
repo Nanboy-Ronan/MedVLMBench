@@ -14,7 +14,7 @@ Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
 class DiagnosisEvalEngine(EvalEngine):
     # TODO: support for multi-class
-    def __init__(self, args, dataset, logger, task="binary-class", device="cpu"):
+    def __init__(self, args, dataset, logger, task="binary-class", device="cuda"):
         super().__init__(args, dataset, logger)
 
         self.task = task  # e.g., "multi-class", "binary-class", "multi-label"
@@ -45,10 +45,8 @@ class DiagnosisEvalEngine(EvalEngine):
 
     def evaluate_subject(self, subject, model):
         """Evaluate a single subject (image and label)."""
-        image = subject["image"]
+        image = subject["pixel_values"]
         true_label = subject["label"]
-        image_path = subject["image_path"]
-
         image = image.to(self.device, non_blocking=True)
 
         output = model(image)

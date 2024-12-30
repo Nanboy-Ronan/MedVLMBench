@@ -1,4 +1,4 @@
-from model.blip import BLIPForQA, BLIPForDiagnosis
+from model.blip import BLIPForQA, BLIPForDiagnosis, BLIPLPForDiagnosis
 from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
@@ -43,7 +43,7 @@ def get_model(args, **kwargs):
             raise NotImplementedError()
     elif args.task == "diagnosis":
         if args.model == "BLIP":
-            model = BLIPForDiagnosis(args=args)
+            model = BLIPLPForDiagnosis(args=args)
         else:
             raise NotImplementedError()
     else:

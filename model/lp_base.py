@@ -3,11 +3,11 @@ from model.base import BaseModel
 from easydict import EasyDict as edict
 
 
-class CLIPModel(BaseModel, nn.Module):
+class LPModel(BaseModel, nn.Module):
     def __init__(self, args):
         super().__init__(args)
 
-    def forward(self, images, text_features):
+    def forward(self, images):
         pass
 
     def encode_text(self, text):

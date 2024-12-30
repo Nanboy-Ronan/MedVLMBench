@@ -10,7 +10,7 @@ class LinearProbeWrapper(BaseWrapper):
         super().__init__(model, *args, **kwargs)
 
         self.encoder = model
-
+        # TODO: Check num_classes
         self.head = torch.nn.Linear(self.encoder.feat_dim, 2)
 
         for param in self.encoder.parameters():

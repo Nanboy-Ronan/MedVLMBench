@@ -2,11 +2,12 @@ import torch
 from PIL import Image
 import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
-from transformers import BlipProcessor, BlipConfig, BlipForConditionalGeneration, BlipForQuestionAnswering, BlipModel
+from transformers import BlipProcessor, BlipImageProcessor, BlipConfig, BlipForConditionalGeneration, BlipForQuestionAnswering, BlipModel
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.clip_base import CLIPModel
+from model.lp_base import LPModel
 
 
 def visualize_tensor_image(tensor, unnormalize=True):
@@ -77,15 +78,38 @@ class BLIPForQA(ChatMetaModel):
         return answer
 
 
+class BLIPLPForDiagnosis(LPModel):
+    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.blip_config = BlipConfig()
+        self.image_processor = BlipImageProcessor()
+        self.model = BlipModel(self.blip_config)
+        self.vision_model = self.model.vision_model
+        self.vision_model.feat_dim = 768
+        if "lp" in self.args.usage:
+            from wrappers import LinearProbeWrapper
+            self.model = LinearProbeWrapper(self.vision_model)
+            self.image_processor_callable = ImageProcessorCallable(self.image_processor)
+        
+    def load_from_pretrained(self, model_path, device, **kwargs):
+        model_ckpt = torch.load(model_path)
+        self.model.load_state_dict(model_ckpt)
+        self.model.to(device)
+    
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
+
+
 class BLIPForDiagnosis(CLIPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
+        self.image_processor = BlipImageProcessor()
         self.model = BlipModel(self.blip_config)
         self.vision_model = self.model.vision_model
-        self.feat_dim = 768
+        self.vision_model.feat_dim = 768
 
-    def forward_clip(self, images, text_features):
+    def forward(self, images, text_features):
         sample = {"image": images, "text_input": None}
         image_features = self.model.extract_features(sample, mode="image").image_embeds_proj[:, 0]
 
@@ -100,15 +124,6 @@ class BLIPForDiagnosis(CLIPModel):
 
         text_features = self.model.extract_features(sample, mode="text").text_embeds_proj[:, 0, :]
         return text_features
-
-
-    def forward(self, images):
-        # sample = {"image": images, "text_input": None}
-        breakpoint()
-        return self.vision_model(images).image_embeds[:, 0, :]
-
-    def from_pretrained(self, path):
-        pass
 
 
 # if __name__ == "__main__":
