@@ -128,9 +128,6 @@ def setup_args(args):
         assert (
             args.gradient_checkpointing is False
         ), "Currently there is a bug when training visual tower using peft + gradient checkpointing. For more info: https://github.com/huggingface/peft/issues/1402"
-        args.gradient_checkpointing = False
-        args.per_device_train_batch_size = args.per_device_train_batch_size // 4
-        args.gradient_accumulation_steps = int(args.gradient_accumulation_steps * 4)
 
         if args.model == "LLaVA-1.5":
             save_folder_name += "_llava"
