@@ -90,6 +90,9 @@ class BLIPLPForDiagnosis(LPModel):
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model)
             # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
+    
+    def load_for_training(self, model_path):
+        pass
         
     def load_from_pretrained(self, model_path, device, **kwargs):
         model_ckpt = torch.load(model_path)

@@ -8,6 +8,7 @@ from model.release.xraygpt.processors.blip_processors import Blip2ImageEvalProce
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
+from model.lp_base import LPModel
 
 
 class XrayGPT(ChatMetaModel):
@@ -107,3 +108,55 @@ class XrayGPT(ChatMetaModel):
         output_text = output_text.split('###')[0]
         answer = output_text.split('Doctor:')[-1].strip()
         return answer
+
+class XGenGPTLPForDiagnosis(LPModel):
+    def __init__(self, args=None) -> None:
+        super().__init__(args)
+        self.name = "XrayGPT-mini"
+        self.model_type = "medical"
+        self.model = MiniGPT4(
+            vit_model="eva_clip_g",
+            q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
+            img_size=224,
+            drop_path_rate=0,
+            use_grad_checkpoint=False,
+            vit_precision="fp16",
+            freeze_vit=True,
+            freeze_qformer=True,
+            num_query_token=32,
+            llama_model='./pretrained_models/Vicuna_Radiology_fp16/',
+            prompt_path='./model/release/xraygpt/prompts/alignment.txt',
+            prompt_template='###Patient: {} ###Doctor: ',
+            max_txt_len=160,
+            low_resource=True,
+            end_sym="###",
+        )
+
+        ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
+        msg = self.model.load_state_dict(ckpt['model'], strict=False)
+        all_ckpt_keys = set(ckpt['model'].keys())
+        missing_keys = set(msg.missing_keys)
+        unexpected_keys = set(msg.unexpected_keys)
+        loaded_keys = all_ckpt_keys - unexpected_keys  # keys from checkpoint that aren't unexpected
+        loaded_keys = loaded_keys - missing_keys
+
+        self.model.to(self.args.device)
+
+        self.vision_model = self.model.visual_encoder
+        self.vision_model.feat_dim = 1408
+
+        if "lp" in self.args.usage:
+            from wrappers import LinearProbeWrapper
+            self.model = LinearProbeWrapper(self.vision_model)
+            # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
+    
+    def load_for_training(self, model_path):
+        pass
+        
+    def load_from_pretrained(self, model_path, device, **kwargs):
+        model_ckpt = torch.load(model_path)
+        self.model.load_state_dict(model_ckpt)
+        self.model.to(device)
+    
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])

@@ -73,9 +73,11 @@ class CLIPLPTrainer(Trainer):
         self.image_processor = image_processor
 
     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
-        pixel_values = self.image_processor(pixel_values, return_tensors="pt")["pixel_values"]
+        pixel_values = self.image_processor(pixel_values, return_tensors="pt")["pixel_values"].to(device)
+
         logits = model(pixel_values)
 
         loss = F.cross_entropy(logits, labels)
