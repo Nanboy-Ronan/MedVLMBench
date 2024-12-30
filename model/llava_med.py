@@ -274,11 +274,27 @@ class LLaVAMed(LLaVA):
 
                 from peft import PeftModel
 
+                vision_tower = model.get_vision_tower()
+                if not vision_tower.is_loaded:
+                    vision_tower.load_model()
+
                 print("Loading LoRA weights...")
                 model = PeftModel.from_pretrained(model, model_path)
                 print("Merging LoRA weights...")
                 model = model.merge_and_unload()
                 print("Model is loaded...")
+            elif model_base is not None:
+                # this may be mm projector only
+                print("Loading LLaVA from base model...")
+                tokenizer = AutoTokenizer.from_pretrained(model_base)
+                cfg_pretrained = AutoConfig.from_pretrained(model_path)
+                model = LlavaMistralForCausalLM.from_pretrained(
+                    model_base, config=cfg_pretrained, low_cpu_mem_usage=False, use_flash_attention_2=False, **kwargs
+                )
+
+                mm_projector_weights = torch.load(os.path.join(model_path, "mm_projector.bin"), map_location="cpu")
+                mm_projector_weights = {k: v.to(torch.float16) for k, v in mm_projector_weights.items()}
+                model.load_state_dict(mm_projector_weights, strict=False)
             else:
                 if "mistral" in model_name.lower():
                     tokenizer = AutoTokenizer.from_pretrained(model_path)
