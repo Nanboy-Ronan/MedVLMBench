@@ -13,4 +13,5 @@ python run_train.py \
     --output_dir ./log \
     --model BLIP --model_path not_given \
     --cache_dir ./cache \
-    --num_train_epochs 1
+    --num_train_epochs 50 \
+    --learning_rate 5e-5

@@ -7,6 +7,7 @@ from collections import namedtuple
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
 from torch.utils.data import DataLoader
+from train.clip_trainer import LinearProbingDataCollator
 from eval.base import EvalEngine
 
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
@@ -27,14 +28,14 @@ class DiagnosisEvalEngine(EvalEngine):
 
     def evaluate(self, args, model):
         """Run evaluation on the classification dataset."""
-        data_loader = DataLoader(self.dataset, batch_size=1, shuffle=False)
+        data_loader = DataLoader(self.dataset, batch_size=64, collate_fn=LinearProbingDataCollator(), shuffle=False)
         
         self.init_metric_logger()
 
         with torch.no_grad():
             for batch in self.metric_logger.log_every(data_loader, self.args.eval_print_freq, header="Test:"):
-                subject = {k: v[0] for k, v in batch.items()}
-                self.evaluate_subject(subject, model)
+                # batch = {k: v[0] for k, v in batch.items()}
+                self.evaluate_subject(batch, model)
 
         self.metric_logger.synchronize_between_processes()
 
@@ -43,11 +44,15 @@ class DiagnosisEvalEngine(EvalEngine):
 
         return results
 
-    def evaluate_subject(self, subject, model):
-        """Evaluate a single subject (image and label)."""
-        image = subject["pixel_values"]
-        true_label = subject["label"]
+    def evaluate_subject(self, batch, model):
+        """Evaluate a single batch (image and label)."""
+        image = batch["pixel_values"]
+        true_label = batch["labels"]
+    
+        image = torch.tensor(model.image_processor(image)["pixel_values"])
+
         image = image.to(self.device, non_blocking=True)
+        true_label = true_label.to(self.device)
 
         output = model(image)
         
@@ -55,8 +60,8 @@ class DiagnosisEvalEngine(EvalEngine):
             output = torch.softmax(output, dim=-1)
         
         pred_label = output.argmax(dim=-1) if output.dim() > 1 else (output > 0.5).int()
-
         acc = self.compute_accuracy(true_label, pred_label)
+
         auc = self.compute_auc(true_label, output)
 
         self.metric_logger.meters["accuracy"].update(acc, n=1)
@@ -78,11 +83,30 @@ class DiagnosisEvalEngine(EvalEngine):
 
     def compute_auc(self, true_label, output):
         """Compute AUC (Area Under the Curve) for multi-class or binary classification."""
-        # For multi-class, we calculate the AUC per class
-        if self.task == "multi-class" or self.task == "binary-class":
-            return roc_auc_score(true_label.cpu().numpy(), output.cpu().numpy(), multi_class='ovr' if output.shape[1] > 2 else 'raise')
+        true_label_np = true_label.cpu().numpy()
+        output_np = output.cpu().numpy()
+
+        if self.task == "binary-class":
+            # Ensure true_label is 1D
+            if true_label_np.ndim > 1 and true_label_np.shape[1] == 2:
+                # If labels are one-hot encoded, convert to single class labels
+                true_label_np = true_label_np.argmax(axis=1)
+            elif true_label_np.ndim > 1:
+                raise ValueError("For binary classification, true_label should be 1D or one-hot encoded with 2 classes.")
+
+            # For binary classification, use the probability of the positive class
+            y_score = output_np[:, 1]
+            return roc_auc_score(true_label_np, y_score)
+        elif self.task == "multi-class":
+            # Ensure that y_true is a 1D array of class indices
+            if true_label_np.ndim > 1 and true_label_np.shape[1] > 1:
+                # If labels are one-hot encoded, convert to single class labels
+                true_label_np = true_label_np.argmax(axis=1)
+            elif true_label_np.ndim > 1:
+                raise ValueError("For multi-class classification, true_label should be 1D or one-hot encoded.")
+
+            return roc_auc_score(true_label_np, output_np, multi_class='ovr')
         else:
-            # Handle other cases (e.g., multi-label classification)
             raise NotImplementedError("AUC computation for multi-label classification is not yet implemented.")
     
     def save(self, path, model):

@@ -39,6 +39,7 @@ class Arguments(transformers.TrainingArguments):
     lora_weight_path: str = ""
     lora_bias: str = "none"
     num_train_epochs: int = None
+    learning_rate: float = 3e-5
 
     mm_projector_lr: Optional[float] = None  # for LLMs
     remove_unused_columns: bool = field(default=False)

@@ -107,6 +107,12 @@ class LinearProbingDataCollator:
         images = [instance['pixel_values'] for instance in instances]    # List of image tensors
         labels = [instance['label'] for instance in instances]    # List of label arrays
 
+        # for idx, img in enumerate(images):
+        #     # print(f"Image {idx} type: {type(img)}")
+        #     if isinstance(img, torch.Tensor):
+        #         print(f"Image {idx} shape: {img.shape}")
+        #     else:
+        #         print(f"Image {idx} is not a tensor.")
         pixel_values = torch.stack(images)                        # Shape: (batch_size, C, H, W)
 
         labels = [int(label[0]) if isinstance(label, (list, tuple, np.ndarray, torch.Tensor)) else int(label) for label in labels]
