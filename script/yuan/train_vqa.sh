@@ -16,9 +16,9 @@ deepspeed run_train.py \
     --output_dir /research/d5/gds/yzhong22/experiments/med_vlm_benchmark \
     --cache_dir /research/d5/gds/yzhong22/misc/cache \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 16 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 1 \
+    --gradient_accumulation_steps 2 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 50000 \

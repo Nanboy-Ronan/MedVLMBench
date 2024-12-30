@@ -37,6 +37,11 @@ class TrainEngine:
         )
         self.logger.info(f"Tune the following parameters: {tuned_parameters}")
 
+        # # for debug only
+        # for n, p in self.model_wrapped.model.named_parameters():
+        #     if p.requires_grad:
+        #         self.logger.info(f"{n}: {p}")
+
         if self.hf_trainer is not None:
             if list(pathlib.Path(self.args.output_dir).glob("checkpoint-*")):
                 self.hf_trainer.train(resume_from_checkpoint=True)
