@@ -90,8 +90,10 @@ class BLIPLPForDiagnosis(LPModel):
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model)
         
-    def load_for_training(self, model_path):
-        pass
+    def load_from_pretrained(self, model_path, device, **kwargs):
+        model_ckpt = torch.load(model_path)
+        self.model.load_state_dict(model_ckpt)
+        self.model.to(device)
     
     def forward(self, x):
         return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])

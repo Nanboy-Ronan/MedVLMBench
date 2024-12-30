@@ -45,9 +45,8 @@ class DiagnosisEvalEngine(EvalEngine):
 
     def evaluate_subject(self, subject, model):
         """Evaluate a single subject (image and label)."""
-        image = subject["image"]
+        image = subject["pixel_values"]
         true_label = subject["label"]
-        image_path = subject["image_path"]
 
         image = image.to(self.device, non_blocking=True)
 

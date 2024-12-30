@@ -21,17 +21,17 @@ All data will be stored under `MedVLMBench/data`.
 mkdir data
 ```
 
-| Dataset   | Download Link   |
+| Dataset   | Status   |
 |------------|------------|
-| [SLAKE](https://github.com/openmedlab/Awesome-Medical-Dataset/blob/main/resources/SLAKE.md) | https://drive.google.com/file/d/1EZ0WpO5Z6BJUqC3iPBQJJS1INWSMsh7U/view?pli=1 |
-| VQA-RAD | TODO |
-| MIMIC -CXR| TODO |
+| [SLAKE](https://github.com/openmedlab/Awesome-Medical-Dataset/blob/main/resources/SLAKE.md) | Done |
+| VQA-RAD | Done |
+| MIMIC -CXR| Done |
 | Peir Gross | TODO|
 | PMC-OA | TODO |
 | Medtrinity-25M | TODO |
-| Harvard-FairVLMed | TODO |
+| Harvard-FairVLMed | Done |
 | Quilt | TODO |
-| PneumoniaMNIST | TODO |
+| PneumoniaMNIST | Done |
 | BrestMNIST | TODO |
 | DermaMNIST | TODO |
 | TCGA-COAD | TODO |
@@ -54,3 +54,8 @@ mkdir data
 | Visual Med Apaca | TODO |
 | BioMedGPT | TODO |
 | Med PaLM | TODO |
+
+## Implementation Logic
+### Training
+#### Diagnosis
+First finetune the linear layer using `run_train.py` then load the pretrained model for evaluation in `run_eval.py`

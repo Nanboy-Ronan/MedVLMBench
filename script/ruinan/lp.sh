@@ -1,11 +1,10 @@
 # Evaluation only
 python run_eval.py \
-    --task diagnosis --usage clip-zs --dataset PneumoniaMNIST --split test \
+    --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
     --image_path ./data \
-    --model BLIP --model_path not_given \
     --exp_path ./log \
-    --cache_dir ./cache \
-    --save_pred
+    --model BLIP --model_path "/fast/rjin02/MedVLMBench/log/diagnosis/PneumoniaMNIST/BLIP/train_VML_seed42/checkpoint-74/pytorch_model.bin" \
+    --cache_dir ./cache
 
 # Train
 python run_train.py \
