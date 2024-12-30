@@ -5,7 +5,11 @@ task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine}
 
 
 def get_trainer(args, model_wrapped, dataset):
+<<<<<<< HEAD
     if args.model in ["LLaVA-1.5", "LLaVA-Med"]:
+=======
+    if args.model == "LLaVA-1.5":
+>>>>>>> 29b064e (finish xragGPT)
         from model.release.llava.train.llava_trainer import LLaVATrainer
         from train.llava_trainer import make_supervised_data_module
 
@@ -28,7 +32,7 @@ def get_trainer(args, model_wrapped, dataset):
             data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
-                image_processor=model_wrapped.image_processor,
+                image_processor=None,
             )
 
             trainer = CLIPLPTrainer(
@@ -62,34 +66,35 @@ def get_trainer(args, model_wrapped, dataset):
                 eval_dataset=eval_dataset,
                 temperature=args.temperature if hasattr(args, 'temperature') else 0.07,
             )
-            
-        elif args.model == "XrayGPT":
-            if args.usage == "lp":
-                from train.clip_trainer import CLIPLPTrainer
-                from train.clip_trainer import make_lp_data_module
 
-                num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-                data_module = make_lp_data_module(
-                    args,
-                    dataset=dataset,
-                    image_processor=model_wrapped.image_processor,
-                )
-
-                trainer = CLIPLPTrainer(
-                    model=model_wrapped,
-                    args=args,
-                    image_processor=model_wrapped.image_processor,
-                    **data_module
-                )
-
-                return trainer
-            else:
-                raise NotImplementedError()
         else:
             raise NotImplementedError()
 
         return trainer
 
+
+    elif args.model == "XrayGPT":
+        if args.usage == "lp":
+            from train.clip_trainer import XrayGPTLPTrainer
+            from train.clip_trainer import make_lp_data_module
+
+            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
+            data_module = make_lp_data_module(
+                args,
+                dataset=dataset,
+                image_processor=model_wrapped.image_processor,
+            )
+
+            trainer = XrayGPTLPTrainer(
+                model=model_wrapped,
+                args=args,
+                image_processor=model_wrapped.image_processor,
+                **data_module
+            )
+
+            return trainer
+        else:
+            raise NotImplementedError()
     else:
         raise NotImplementedError("Trainer not supported for {}".format(args.model))
 

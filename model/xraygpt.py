@@ -23,7 +23,7 @@ class XrayGPT(ChatMetaModel):
             img_size=224,
             drop_path_rate=0,
             use_grad_checkpoint=False,
-            vit_precision="fp16",
+            vit_precision="fp32",
             freeze_vit=True,
             freeze_qformer=True,
             num_query_token=32,
@@ -120,7 +120,7 @@ class XGenGPTLPForDiagnosis(LPModel):
             img_size=224,
             drop_path_rate=0,
             use_grad_checkpoint=False,
-            vit_precision="fp16",
+            vit_precision="fp32",
             freeze_vit=True,
             freeze_qformer=True,
             num_query_token=32,
@@ -144,11 +144,13 @@ class XGenGPTLPForDiagnosis(LPModel):
 
         self.vision_model = self.model.visual_encoder
         self.vision_model.feat_dim = 1408
-
+        
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model)
             # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
+        
+        self.image_processor = Blip2ImageEvalProcessor()
     
     def load_for_training(self, model_path):
         pass
@@ -159,4 +161,4 @@ class XGenGPTLPForDiagnosis(LPModel):
         self.model.to(device)
     
     def forward(self, x):
-        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
+        return self.model.head(self.model.encoder(x)[:, 0, :])

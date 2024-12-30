@@ -101,6 +101,44 @@ class CLIPLPTrainer(Trainer):
 
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
+class XrayGPTLPTrainer(Trainer):
+    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
+        super().__init__(
+            model=model,
+            args=args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            **kwargs
+        )
+        self.image_processor = image_processor
+
+    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        device = inputs["pixel_values"].device
+        pixel_values = inputs["pixel_values"]
+        labels = inputs["labels"]
+
+        logits = model(pixel_values)
+
+        loss = F.cross_entropy(logits, labels)
+        
+        return (loss, logits) if return_outputs else loss
+
+    def get_labels(self, eval_preds):
+        logits, labels = eval_preds
+        return labels
+
+    def save_model(self, output_dir=None, _internal_call=False):
+        if output_dir is None:
+            output_dir = self.args.output_dir
+
+        os.makedirs(output_dir, exist_ok=True)
+        
+        model_to_save = self.model.model
+
+        if hasattr(model_to_save, 'module'):
+            model_to_save = model_to_save.module
+
+        torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
 
 @dataclass
@@ -130,10 +168,13 @@ class LinearProbingDataCollator:
 
 def make_lp_data_module(args, dataset, image_processor):
     from dataset.diagnosis import PneumoniaMNIST
-    transform = transforms.Compose([
-        transforms.PILToTensor(),
-        # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
-    ])
+    if image_processor is None:
+        transform = transforms.Compose([
+            transforms.PILToTensor(),
+            # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
+        ])
+    else:
+        transform = image_processor
 
     data_collator = LinearProbingDataCollator()
     # TODO: check transform
