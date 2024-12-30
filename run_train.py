@@ -25,6 +25,7 @@ class Arguments(transformers.TrainingArguments):
     # data
     task: str = field(default="vqa")
     dataset: str = field(default="SLAKE")
+    peft: str = field(default=None)
     image_path: str = field(default="")
     image_aspect_ratio: str = field(default="pad")
 
@@ -96,15 +97,31 @@ def setup_args(args):
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
+    if "LLaVA" in args.model and args.tune_modules == "M":
+        args.peft = ""
+        print(args.peft)
+
+    save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
+
+    if args.model == "LLaVA-1.5":
+        save_folder_name += "_llava"
+    if args.model == "LLaVA-Med":
+        save_folder_name += "_llava_mistral"
+
     args.output_dir = os.path.join(
         args.output_dir,
         args.task,
         args.dataset,
         args.model,
-        f"train_{args.tune_modules}_seed{args.seed}",
+        save_folder_name,
     )
     args.split = "train"
     args.tune_mm_mlp_adapter = "M" in args.tune_modules
+
+    if args.peft == "lora":
+        args.lora_enable = True
+    else:
+        args.lora_enable = False
 
     basics.creat_folder(args.output_dir)
 

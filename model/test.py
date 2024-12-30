@@ -1,12 +1,18 @@
 from release.llava.model import LlavaLlamaForCausalLM
+from release.llava_med.model import LlavaMistralForCausalLM
 import torch
 from easydict import EasyDict as edict
 
-model = LlavaLlamaForCausalLM.from_pretrained(
-    "/research/d5/gds/yzhong22/misc/pretrained/llava-v1.5-7b",
-    cache_dir=None,
-    torch_dtype=torch.bfloat16,
-    low_cpu_mem_usage=True,
+# model = LlavaLlamaForCausalLM.from_pretrained(
+#     "/research/d5/gds/yzhong22/misc/pretrained/llava-v1.5-7b",
+#     cache_dir=None,
+#     torch_dtype=torch.bfloat16,
+#     low_cpu_mem_usage=True,
+# )
+
+model = LlavaMistralForCausalLM.from_pretrained(
+    "/research/d5/gds/yzhong22/misc/pretrained/llava-med-v1.5-mistral-7b",
+    low_cpu_mem_usage=False,
 )
 
 

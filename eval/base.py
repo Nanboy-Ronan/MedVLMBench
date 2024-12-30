@@ -61,7 +61,7 @@ class EvalEngine:
         """Get the length of the dataset."""
         return len(self.dataset)
 
-    def __getitem__(self, idx): # TODO: Check why this method is implemented here?
+    def __getitem__(self, idx):  # TODO: Check why this method is implemented here?
         """Get an item from the dataset.
 
         Args:
@@ -75,6 +75,7 @@ class EvalEngine:
     def save(self, path, model):
         info = {
             "model": [model.name],
+            "model_name": [self.args.model_path.split("/")[-1]],
             "task": [self.task],
             "dataset": [self.dataset.name],
             "model_type": [model.model_type],

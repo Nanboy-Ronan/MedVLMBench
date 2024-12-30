@@ -62,11 +62,7 @@ def collect_args():
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
     args.save_folder = os.path.join(
-        args.exp_path,
-        args.task,
-        args.dataset,
-        args.model,
-        f"eval_seed{args.seed}",
+        args.exp_path, args.task, args.dataset, args.model, f"eval_seed{args.seed}", os.path.basename(args.model_path)
     )
 
     basics.creat_folder(args.save_folder)

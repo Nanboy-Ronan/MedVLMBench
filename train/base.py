@@ -30,6 +30,13 @@ class TrainEngine:
         self.logger = logger
 
     def train(self):
+        all_parameter_size, tuned_parameter_size, tuned_parameters = self.model_wrapped.get_parameters_info()
+
+        self.logger.info(
+            "Total parameter: {:,}  Trainable paramter: {:,}".format(all_parameter_size, tuned_parameter_size)
+        )
+        self.logger.info(f"Tune the following parameters: {tuned_parameters}")
+
         if self.hf_trainer is not None:
             if list(pathlib.Path(self.args.output_dir).glob("checkpoint-*")):
                 self.hf_trainer.train(resume_from_checkpoint=True)
