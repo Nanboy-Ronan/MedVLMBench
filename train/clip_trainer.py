@@ -141,6 +141,29 @@ class XrayGPTLPTrainer(Trainer):
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
 
+class BioMedCLIPLPTrainer(CLIPLPTrainer):
+    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
+        super().__init__(
+            model=model,
+            args=args,
+            image_processor=image_processor,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            **kwargs
+        )
+
+    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        device = inputs["pixel_values"].device
+        pixel_values = inputs["pixel_values"]
+        labels = inputs["labels"]
+
+        logits = model(pixel_values)
+
+        loss = F.cross_entropy(logits, labels)
+        
+        return (loss, logits) if return_outputs else loss
+
+
 @dataclass
 class LinearProbingDataCollator:
     def __call__(self, instances: Sequence[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
@@ -153,6 +176,7 @@ class LinearProbingDataCollator:
         #         print(f"Image {idx} shape: {img.shape}")
         #     else:
         #         print(f"Image {idx} is not a tensor.")
+
         pixel_values = torch.stack(images)                        # Shape: (batch_size, C, H, W)
 
         labels = [int(label[0]) if isinstance(label, (list, tuple, np.ndarray, torch.Tensor)) else int(label) for label in labels]

@@ -6,6 +6,7 @@ TASKS = ["vqa", "caption", "diagnosis"]
 CLIP_MODELS = [
     "BLIP",
     "BLIP2-2.7b",
+    "BioMedCLIP",
 ]
 
 LANGUAGE_MODELS = ["LLaVA-1.5", "LLaVA-Med", "XGenMiniV1", "XrayGPT"]
