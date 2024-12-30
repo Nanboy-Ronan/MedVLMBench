@@ -5,11 +5,7 @@ task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine}
 
 
 def get_trainer(args, model_wrapped, dataset):
-<<<<<<< HEAD
     if args.model in ["LLaVA-1.5", "LLaVA-Med"]:
-=======
-    if args.model == "LLaVA-1.5":
->>>>>>> 29b064e (finish xragGPT)
         from model.release.llava.train.llava_trainer import LLaVATrainer
         from train.llava_trainer import make_supervised_data_module
 
