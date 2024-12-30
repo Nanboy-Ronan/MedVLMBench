@@ -432,23 +432,11 @@ class LLaVA(ChatMetaModel):
                 if not vision_tower.is_loaded:
                     vision_tower.load_model(device_map=device_map)
 
-                import copy
-
-                before = copy.deepcopy(model.get_vision_tower())
-
                 print("Loading LoRA weights...")
                 model = PeftModel.from_pretrained(model, model_path)
                 print("Merging LoRA weights...")
                 model = model.merge_and_unload()
 
-                identitical = True
-                for p1, p2 in zip(before.parameters(), model.get_vision_tower().parameters()):
-                    if p1.data.ne(p2.data).sum() > 0:
-                        identitical = False
-                for n, p in model.get_vision_tower().named_parameters():
-                    print(n)
-                    print(p)
-                print(identitical)
                 print("Model is loaded...")
             elif model_base is not None:
                 # this may be mm projector only
