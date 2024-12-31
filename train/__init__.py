@@ -114,6 +114,28 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
         else:
             raise NotImplementedError()
+    elif args.model == "CLIP":        
+        if args.usage == "lp":
+            from train.clip_trainer import CLIPLPTrainer
+            from train.clip_trainer import make_lp_data_module
+
+            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
+            data_module = make_lp_data_module(
+                args,
+                dataset=dataset,
+                image_processor=model_wrapped.image_processor,
+            )
+
+            trainer = CLIPLPTrainer(
+                model=model_wrapped,
+                args=args,
+                image_processor=model_wrapped.image_processor,
+                **data_module
+            )
+
+            return trainer
+        else:
+            raise NotImplementedError()
 
     else:
         raise NotImplementedError("Trainer not supported for {}".format(args.model))

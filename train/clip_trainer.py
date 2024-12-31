@@ -76,7 +76,6 @@ class CLIPLPTrainer(Trainer):
         device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
-        pixel_values = self.image_processor(pixel_values, return_tensors="pt")["pixel_values"].to(device)
 
         logits = model(pixel_values)
 
@@ -212,17 +211,6 @@ def make_lp_data_module(args, dataset, image_processor):
         size=224,
         mmap_mode=None,
     )
-
-    # val_dataset = PneumoniaMNIST(
-    #     data_args=args,
-    #     split="val", # 'train', 'val' or 'test'
-    #     transform=image_processor,
-    #     target_transform=None,
-    #     download=True,
-    #     as_rgb=True,
-    #     size=224,
-    #     mmap_mode=None,
-    # )
 
     return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
 

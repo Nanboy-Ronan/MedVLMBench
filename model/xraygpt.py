@@ -115,7 +115,7 @@ class ImageProcessorLPCallable:
 
     def __call__(self, image):
         image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
-        image = [model.image_processor(pil_image) for pil_image in image_batch_pil]
+        image = [self.image_processor(pil_image) for pil_image in image_batch_pil]
         image = torch.stack(image)
         return image
 

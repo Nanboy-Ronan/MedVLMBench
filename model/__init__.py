@@ -5,6 +5,7 @@ from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis
 from model.biomedclip import BioMedCLIPLPForDiagnosis
+from model.clip import CLIPLPForDiagnosis
 from dataset.diagnosis import INFO
 
 
@@ -52,6 +53,8 @@ def get_model(args, **kwargs):
             model = XGenGPTLPForDiagnosis(args=args, num_classes=num_classes)
         elif args.model == "BioMedCLIP":
             model = BioMedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+        elif args.model == "CLIP":
+            model = CLIPLPForDiagnosis(args=args, num_classes=num_classes)
         else:
             raise NotImplementedError()
     else:

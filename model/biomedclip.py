@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-
+from torchvision.transforms.functional import to_pil_image
 from open_clip import create_model_from_pretrained, get_tokenizer
 from model.clip_base import CLIPModel
 from model.lp_base import LPModel
@@ -43,7 +43,7 @@ class ImageProcessorLPCallable:
 
     def __call__(self, image):
         image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
-        image = [model.image_processor(pil_image) for pil_image in image_batch_pil]
+        image = [self.image_processor(pil_image) for pil_image in image_batch_pil]
         image = torch.stack(image)
         return image 
 
