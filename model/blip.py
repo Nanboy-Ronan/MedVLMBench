@@ -78,11 +78,20 @@ class BLIPForQA(ChatMetaModel):
         return answer
 
 
+class ImageProcessorLPCallable:
+    def __init__(self, image_processor):
+        self.image_processor = image_processor
+
+    def __call__(self, image):
+        return torch.tensor(self.image_processor(image)["pixel_values"])
+
+
 class BLIPLPForDiagnosis(LPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
         self.image_processor = BlipImageProcessor()
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
         self.model = BlipModel(self.blip_config)
         self.vision_model = self.model.vision_model
         self.vision_model.feat_dim = 768

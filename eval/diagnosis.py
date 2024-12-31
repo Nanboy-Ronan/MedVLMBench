@@ -8,6 +8,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
 from torch.utils.data import DataLoader
 from train.clip_trainer import LinearProbingDataCollator
+from torchvision.transforms.functional import to_pil_image
 from eval.base import EvalEngine
 
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
@@ -48,8 +49,14 @@ class DiagnosisEvalEngine(EvalEngine):
         """Evaluate a single batch (image and label)."""
         image = batch["pixel_values"]
         true_label = batch["labels"]
-    
-        image = torch.tensor(model.image_processor(image)["pixel_values"])
+        # breakpoint()
+        image = model.image_processor_evaluation(image)
+        # image = torch.tensor(model.image_processor(image)["pixel_values"]) # BLIP
+
+        # XGPT
+        # image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
+        # image = [model.image_processor(pil_image) for pil_image in image_batch_pil]
+        # image = torch.stack(image)
 
         image = image.to(self.device, non_blocking=True)
         true_label = true_label.to(self.device)

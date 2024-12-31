@@ -36,7 +36,16 @@ class BiomedCLIP(nn.Module):
 
     def from_pretrained(self, path):
         pass
-        
+
+class ImageProcessorLPCallable:
+    def __init__(self, image_processor):
+        self.image_processor = image_processor
+
+    def __call__(self, image):
+        image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
+        image = [model.image_processor(pil_image) for pil_image in image_batch_pil]
+        image = torch.stack(image)
+        return image 
 
 class BioMedCLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
@@ -57,6 +66,7 @@ class BioMedCLIPLPForDiagnosis(LPModel):
                     normalize,
                 ]
             )
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
         self.vision_model = self.model.visual
         self.vision_model.feat_dim = 512
 

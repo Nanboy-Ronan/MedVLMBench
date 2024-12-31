@@ -109,6 +109,17 @@ class XrayGPT(ChatMetaModel):
         answer = output_text.split('Doctor:')[-1].strip()
         return answer
 
+class ImageProcessorLPCallable:
+    def __init__(self, image_processor):
+        self.image_processor = image_processor
+
+    def __call__(self, image):
+        image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
+        image = [model.image_processor(pil_image) for pil_image in image_batch_pil]
+        image = torch.stack(image)
+        return image
+
+
 class XGenGPTLPForDiagnosis(LPModel):
     def __init__(self, args=None) -> None:
         super().__init__(args)
@@ -151,6 +162,8 @@ class XGenGPTLPForDiagnosis(LPModel):
             # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
         
         self.image_processor = Blip2ImageEvalProcessor()
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+        
     
     def load_for_training(self, model_path):
         pass
