@@ -5,6 +5,7 @@ from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis
 from model.biomedclip import BioMedCLIPLPForDiagnosis
+from dataset.diagnosis import INFO
 
 
 from easydict import EasyDict as edict
@@ -44,12 +45,13 @@ def get_model(args, **kwargs):
         else:
             raise NotImplementedError()
     elif args.task == "diagnosis":
+        num_classes = len(INFO[args.dataset.lower()]["label"])
         if args.model == "BLIP":
-            model = BLIPLPForDiagnosis(args=args)
+            model = BLIPLPForDiagnosis(args=args, num_classes=num_classes)
         elif args.model == "XrayGPT":
-            model = XGenGPTLPForDiagnosis(args=args)
+            model = XGenGPTLPForDiagnosis(args=args, num_classes=num_classes)
         elif args.model == "BioMedCLIP":
-            model = BioMedCLIPLPForDiagnosis(args=args)
+            model = BioMedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
         else:
             raise NotImplementedError()
     else:

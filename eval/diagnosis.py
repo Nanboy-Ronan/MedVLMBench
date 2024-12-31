@@ -19,7 +19,8 @@ class DiagnosisEvalEngine(EvalEngine):
     def __init__(self, args, dataset, logger, task="binary-class", device="cuda"):
         super().__init__(args, dataset, logger)
 
-        self.task = task  # e.g., "multi-class", "binary-class", "multi-label"
+        # self.task = task  # e.g., "multi-class", "binary-class", "multi-label"
+        self.task = "multi-class"  # e.g., "multi-class", "binary-class", "multi-label"
         self.device = device 
 
         self.metrics = {

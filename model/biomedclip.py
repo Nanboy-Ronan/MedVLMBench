@@ -72,7 +72,7 @@ class BioMedCLIPLPForDiagnosis(LPModel):
 
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model)
+            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
     
     def load_for_training(self, model_path):
         pass

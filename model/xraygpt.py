@@ -121,8 +121,8 @@ class ImageProcessorLPCallable:
 
 
 class XGenGPTLPForDiagnosis(LPModel):
-    def __init__(self, args=None) -> None:
-        super().__init__(args)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.name = "XrayGPT-mini"
         self.model_type = "medical"
         self.model = MiniGPT4(
@@ -158,7 +158,7 @@ class XGenGPTLPForDiagnosis(LPModel):
         
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model)
+            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
             # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
         
         self.image_processor = Blip2ImageEvalProcessor()

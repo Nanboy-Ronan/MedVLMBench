@@ -85,7 +85,7 @@ CUDA_VISIBLE_DEVICES=1 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5
 
-# Ongoing
+# Done
 CUDA_VISIBLE_DEVICES=2 python run_train.py \
     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
     --image_path ./data \
@@ -95,7 +95,7 @@ CUDA_VISIBLE_DEVICES=2 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5
 
-# Ongoing
+# Done
 CUDA_VISIBLE_DEVICES=3 python run_train.py \
     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
     --image_path ./data \
@@ -115,7 +115,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5
 
-# Ongoing
+# Done
 CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --task diagnosis --usage lp --dataset BreastMNIST --split train \
     --image_path ./data \
@@ -125,7 +125,7 @@ CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5
 
-# Ongoing
+# Done
 CUDA_VISIBLE_DEVICES=6 python run_train.py \
     --task diagnosis --usage lp --dataset BreastMNIST --split train \
     --image_path ./data \

@@ -6,12 +6,11 @@ from wrappers.base import BaseWrapper
 
 
 class LinearProbeWrapper(BaseWrapper):
-    def __init__(self, model, *args, **kwargs) -> None:
+    def __init__(self, model, num_classes, *args, **kwargs) -> None:
         super().__init__(model, *args, **kwargs)
 
         self.encoder = model
-        # TODO: Check num_classes
-        self.head = torch.nn.Linear(self.encoder.feat_dim, 2)
+        self.head = torch.nn.Linear(self.encoder.feat_dim, num_classes)
 
         for param in self.encoder.parameters():
             param.requires_grad = False

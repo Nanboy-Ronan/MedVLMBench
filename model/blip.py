@@ -97,7 +97,7 @@ class BLIPLPForDiagnosis(LPModel):
         self.vision_model.feat_dim = 768
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model)
+            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
             # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
     
     def load_for_training(self, model_path):
