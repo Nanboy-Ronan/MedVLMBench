@@ -87,7 +87,7 @@ class ImageProcessorLPCallable:
 
 
 class BLIPLPForDiagnosis(LPModel):
-    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
+    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None: # We choose this implemention as the generative model and CLIP-based model are initialized differently.
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
         self.image_processor = BlipImageProcessor()
@@ -98,7 +98,8 @@ class BLIPLPForDiagnosis(LPModel):
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
-            # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
+        else:
+            raise NotImplementedError()
     
     def load_for_training(self, model_path):
         pass

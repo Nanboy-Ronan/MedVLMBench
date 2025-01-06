@@ -100,7 +100,7 @@ class CLIPLPTrainer(Trainer):
 
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
-class XrayGPTLPTrainer(Trainer):
+class XrayGPTLPTrainer(CLIPLPTrainer):
     def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
         super().__init__(
             model=model,
@@ -121,24 +121,6 @@ class XrayGPTLPTrainer(Trainer):
         loss = F.cross_entropy(logits, labels)
         
         return (loss, logits) if return_outputs else loss
-
-    def get_labels(self, eval_preds):
-        logits, labels = eval_preds
-        return labels
-
-    def save_model(self, output_dir=None, _internal_call=False):
-        if output_dir is None:
-            output_dir = self.args.output_dir
-
-        os.makedirs(output_dir, exist_ok=True)
-        
-        model_to_save = self.model.model
-
-        if hasattr(model_to_save, 'module'):
-            model_to_save = model_to_save.module
-
-        torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
-
 
 class BioMedCLIPLPTrainer(CLIPLPTrainer):
     def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
@@ -214,7 +196,7 @@ def make_lp_data_module(args, dataset, image_processor):
 
     return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
 
-
+# TODO
 class CLIPTrainer(Trainer):
     def __init__(self, 
                  model, 

@@ -1,4 +1,4 @@
-from model.blip import BLIPForQA, BLIPForDiagnosis, BLIPLPForDiagnosis
+from model.blip import BLIPForQA, BLIPLPForDiagnosis
 from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed

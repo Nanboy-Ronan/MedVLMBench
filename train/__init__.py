@@ -39,6 +39,9 @@ def get_trainer(args, model_wrapped, dataset):
             )
 
             return trainer
+        
+        elif args.usage == "lora_lp":
+            raise NotImplementedError("To implement")
 
 
         elif args.usage == "clip-zs":
