@@ -112,32 +112,6 @@ class BLIPLPForDiagnosis(LPModel):
         return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
 
 
-class BLIPForDiagnosis(CLIPModel):
-    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.blip_config = BlipConfig()
-        self.image_processor = BlipImageProcessor()
-        self.model = BlipModel(self.blip_config)
-        self.vision_model = self.model.vision_model
-        self.vision_model.feat_dim = 768
-
-    def forward(self, images, text_features):
-        sample = {"image": images, "text_input": None}
-        image_features = self.model.extract_features(sample, mode="image").image_embeds_proj[:, 0]
-
-        text_features = F.normalize(text_features, dim=-1)
-
-        logits = (image_features @ text_features.T) / self.model.temp
-
-        return logits
-
-    def encode_text(self, text):
-        sample = {"image": None, "text_input": text}
-
-        text_features = self.model.extract_features(sample, mode="text").text_embeds_proj[:, 0, :]
-        return text_features
-
-
 # if __name__ == "__main__":
 #     # blip_caption = BLIP(mode="caption")
 #     blip_vqa = BLIP(args=edict(device="cuda"))

@@ -5,6 +5,7 @@ import clip
 from model.lp_base import LPModel
 
 from medclip import MedCLIPModel, MedCLIPVisionModelViT
+from medclip import MedCLIPProcessor
 
 
 # class MedCLIP(nn.Module):
@@ -48,6 +49,7 @@ class MedCLIPLPForDiagnosis(LPModel):
 
         self.model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
         self.model.from_pretrained()
+        self.image_processor = MedCLIPProcessor()
         self.vision_model = self.model.vision_model
         self.vision_model.feat_dim = 512
         if "lp" in self.args.usage:

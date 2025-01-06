@@ -59,7 +59,6 @@ class BLIP2LPForDiagnosis(LPModel):
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model)
-            # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
     
     def load_for_training(self, model_path):
         pass

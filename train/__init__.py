@@ -114,7 +114,7 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
         else:
             raise NotImplementedError()
-    elif args.model == "CLIP":        
+    elif args.model == "CLIP" or args.model == "MedCLIP":        
         if args.usage == "lp":
             from train.clip_trainer import CLIPLPTrainer
             from train.clip_trainer import make_lp_data_module

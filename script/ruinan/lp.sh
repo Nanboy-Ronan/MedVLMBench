@@ -155,6 +155,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5
 
+
 # Train BREAST
 CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --task diagnosis --usage lp --dataset BreastMNIST --split train \
