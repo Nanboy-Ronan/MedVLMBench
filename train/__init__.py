@@ -99,7 +99,7 @@ def get_trainer(args, model_wrapped, dataset):
             data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
-                image_processor=model_wrapped.image_processor,
+                image_processor=None,
             )
 
             trainer = XrayGPTLPTrainer(
@@ -149,7 +149,7 @@ def get_trainer(args, model_wrapped, dataset):
             data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
-                image_processor=model_wrapped.image_processor,
+                image_processor=None,
             )
 
             trainer = CLIPLPTrainer(
@@ -163,7 +163,7 @@ def get_trainer(args, model_wrapped, dataset):
         else:
             raise NotImplementedError()
     elif args.model == "CLIP" or args.model == "MedCLIP":        
-        if args.usage == "lp":
+        if args.usage == "lp" or args.usage == "lora_lp":
             from train.clip_trainer import CLIPLPTrainer
             from train.clip_trainer import make_lp_data_module
 
@@ -171,10 +171,10 @@ def get_trainer(args, model_wrapped, dataset):
             data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
-                image_processor=model_wrapped.image_processor,
+                image_processor=None,
             )
 
-            trainer = CLIPLPForDiagnosis(
+            trainer = CLIPLPTrainer(
                 model=model_wrapped,
                 args=args,
                 image_processor=model_wrapped.image_processor,
