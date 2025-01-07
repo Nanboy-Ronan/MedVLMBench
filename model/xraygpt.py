@@ -125,10 +125,9 @@ class ImageProcessorLPCallable:
 
 class XGenGPTLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
         self.name = "XrayGPT-mini"
         self.model_type = "medical"
-        self.model = MiniGPT4(
+        model = MiniGPT4(
             vit_model="eva_clip_g",
             q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
             img_size=224,
@@ -147,25 +146,21 @@ class XGenGPTLPForDiagnosis(LPModel):
         )
 
         ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
-        msg = self.model.load_state_dict(ckpt['model'], strict=False)
+        msg = model.load_state_dict(ckpt['model'], strict=False)
         all_ckpt_keys = set(ckpt['model'].keys())
         missing_keys = set(msg.missing_keys)
         unexpected_keys = set(msg.unexpected_keys)
         loaded_keys = all_ckpt_keys - unexpected_keys  # keys from checkpoint that aren't unexpected
         loaded_keys = loaded_keys - missing_keys
 
-        self.model.to(self.args.device)
+        vision_model = model.visual_encoder
+        vision_model.feat_dim = 1408
 
-        self.vision_model = self.model.visual_encoder
-        self.vision_model.feat_dim = 1408
-        
-        if "lp" in self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
-            # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
+        super().__init__(encoder=vision_model, *args, **kwargs)
         
         self.image_processor = Blip2ImageEvalProcessor()
-        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
         
     def forward(self, x):
         return self.model.head(self.model.encoder(x)[:, 0, :])

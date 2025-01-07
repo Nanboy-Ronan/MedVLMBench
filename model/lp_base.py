@@ -10,7 +10,7 @@ class LPModel(BaseModel, nn.Module):
         super().__init__(args)
         self.num_classes = num_classes
         self.encoder = encoder
-        self.head = torch.nn.Linear(self.encoder.feat_dim, num_classes)
+        self.head = torch.nn.Linear(self.encoder.feat_dim, self.num_classes)
         self.model = nn.Sequential(
             OrderedDict(
                     [

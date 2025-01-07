@@ -1,5 +1,7 @@
 from train.vqa import VQATrainEngine
 from train.lp import DiagnosisLPTrainEngine
+from train.clip_trainer import CLIPLPTrainer, make_lp_data_module
+from train.clip_trainer import make_lp_data_module
 
 task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine}
 
@@ -21,9 +23,6 @@ def get_trainer(args, model_wrapped, dataset):
         return trainer
     elif args.model == "BLIP":
         if args.usage == "lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -41,9 +40,6 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
         
         elif args.usage == "lora_lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -92,29 +88,6 @@ def get_trainer(args, model_wrapped, dataset):
 
     elif args.model == "XrayGPT":
         if args.usage == "lp":
-            from train.clip_trainer import XrayGPTLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
-            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-            data_module = make_lp_data_module(
-                args,
-                dataset=dataset,
-                image_processor=None,
-            )
-
-            trainer = XrayGPTLPTrainer(
-                model=model_wrapped,
-                args=args,
-                image_processor=model_wrapped.image_processor,
-                **data_module
-            )
-
-            return trainer
-        
-        elif args.usage == "lora_lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -128,12 +101,23 @@ def get_trainer(args, model_wrapped, dataset):
                 image_processor=model_wrapped.image_processor,
                 **data_module
             )
-            # trainer = XrayGPTLPTrainer(
-            #     model=model_wrapped,
-            #     args=args,
-            #     image_processor=model_wrapped.image_processor,
-            #     **data_module
-            # )
+
+            return trainer
+        
+        elif args.usage == "lora_lp":
+            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
+            data_module = make_lp_data_module(
+                args,
+                dataset=dataset,
+                image_processor=None,
+            )
+
+            trainer = CLIPLPTrainer(
+                model=model_wrapped,
+                args=args,
+                image_processor=model_wrapped.image_processor,
+                **data_module
+            )
 
             return trainer
 
@@ -142,9 +126,6 @@ def get_trainer(args, model_wrapped, dataset):
     
     elif args.model == "BioMedCLIP":        
         if args.usage == "lp" or args.usage == "lora_lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -164,9 +145,6 @@ def get_trainer(args, model_wrapped, dataset):
             raise NotImplementedError()
     elif args.model == "CLIP" or args.model == "MedCLIP":        
         if args.usage == "lp" or args.usage == "lora_lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
