@@ -9,6 +9,7 @@ from model.release.xraygpt.processors.blip_processors import Blip2ImageEvalProce
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.lp_base import LPModel
+from model.lora_base import LoRALPModel
 
 
 class XrayGPT(ChatMetaModel):
@@ -164,14 +165,48 @@ class XGenGPTLPForDiagnosis(LPModel):
         self.image_processor = Blip2ImageEvalProcessor()
         self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
         
-    
-    def load_for_training(self, model_path):
-        pass
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)[:, 0, :])
+
+
+class XGenGPTLoRALPForDiagnosis(LoRALPModel):
+    def __init__(self, *args, **kwargs) -> None:
+        self.name = "XrayGPT-mini"
+        self.model_type = "medical"
+        self.model = MiniGPT4(
+            vit_model="eva_clip_g",
+            q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
+            img_size=224,
+            drop_path_rate=0,
+            use_grad_checkpoint=False,
+            vit_precision="fp32",
+            freeze_vit=True,
+            freeze_qformer=True,
+            num_query_token=32,
+            llama_model='./pretrained_models/Vicuna_Radiology_fp16/',
+            prompt_path='./model/release/xraygpt/prompts/alignment.txt',
+            prompt_template='###Patient: {} ###Doctor: ',
+            max_txt_len=160,
+            low_resource=True,
+            end_sym="###",
+        )
+
+        ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
+        msg = self.model.load_state_dict(ckpt['model'], strict=False)
+        all_ckpt_keys = set(ckpt['model'].keys())
+        missing_keys = set(msg.missing_keys)
+        unexpected_keys = set(msg.unexpected_keys)
+        loaded_keys = all_ckpt_keys - unexpected_keys  # keys from checkpoint that aren't unexpected
+        loaded_keys = loaded_keys - missing_keys
+
+        vision_model = self.model.visual_encoder
+        vision_model.feat_dim = 1408
+        breakpoint()
+        lora_config = LoraConfig(target_modules=["qkv"])
+        super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
         
-    def load_from_pretrained(self, model_path, device, **kwargs):
-        model_ckpt = torch.load(model_path)
-        self.model.load_state_dict(model_ckpt)
-        self.model.to(device)
-    
+        self.image_processor = Blip2ImageEvalProcessor()
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+        
     def forward(self, x):
         return self.model.head(self.model.encoder(x)[:, 0, :])

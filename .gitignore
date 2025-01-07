@@ -168,3 +168,4 @@ data/
 pretrained_models/
 log/
 pretrained/
+wandb/
