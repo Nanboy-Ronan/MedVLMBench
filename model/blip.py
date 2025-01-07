@@ -85,23 +85,21 @@ class ImageProcessorLPCallable:
         self.image_processor = image_processor
 
     def __call__(self, image):
-        return torch.tensor(self.image_processor(image)["pixel_values"])
+        device = image.device
+        return torch.tensor(self.image_processor(image)["pixel_values"]).to(device)
 
 
 class BLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None: # We choose this implemention as the generative model and CLIP-based model are initialized differently.
-        super().__init__(*args, **kwargs)
-        self.blip_config = BlipConfig()
+        blip_config = BlipConfig()
+        model = BlipModel(blip_config)
+        vision_model = model.vision_model
+        vision_model.feat_dim = 768
+
+        super().__init__(encoder=vision_model, *args, **kwargs)
         self.image_processor = BlipImageProcessor()
-        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
-        self.model = BlipModel(self.blip_config)
-        self.vision_model = self.model.vision_model
-        self.vision_model.feat_dim = 768
-        if "lp" == self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
-        else:
-            raise RuntimeError("Has to be linear probing in this submodule")
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
     
     def forward(self, x):
         return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
