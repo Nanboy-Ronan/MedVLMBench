@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import copy
+from collections import OrderedDict
 from model.base import BaseModel
 from easydict import EasyDict as edict
 from peft import LoftQConfig, LoraConfig, get_peft_model
@@ -14,6 +15,14 @@ class LoRALPModel(BaseModel, nn.Module):
         self.encoder = encoder
         self.head = torch.nn.Linear(encoder.feat_dim, num_classes)
         self.encoder = copy.deepcopy(get_peft_model(self.encoder, lora_config))
+        self.model = nn.Sequential(
+            OrderedDict(
+                    [
+                        ("encoder", self.encoder),
+                        ("head", self.head)
+                    ]
+                )
+        )
     
     def load_for_training(self, model_path):
         pass
@@ -24,4 +33,4 @@ class LoRALPModel(BaseModel, nn.Module):
         self.model.to(device)
 
     def forward(self, images):
-        self.head(self.encoder(images))
+        self.model(images)

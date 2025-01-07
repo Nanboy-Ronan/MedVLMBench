@@ -89,7 +89,7 @@ class ImageProcessorLPCallable:
 
 
 class BLIPLPForDiagnosis(LPModel):
-    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None: # We choose this implemention as the generative model and CLIP-based model are initialized differently.
+    def __init__(self, *args, **kwargs) -> None: # We choose this implemention as the generative model and CLIP-based model are initialized differently.
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
         self.image_processor = BlipImageProcessor()
