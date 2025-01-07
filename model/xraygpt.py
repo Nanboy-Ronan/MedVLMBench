@@ -10,6 +10,7 @@ from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
+from peft import LoftQConfig, LoraConfig, get_peft_model
 
 
 class XrayGPT(ChatMetaModel):
@@ -115,9 +116,10 @@ class ImageProcessorLPCallable:
         self.image_processor = image_processor
 
     def __call__(self, image):
+        device = image.device
         image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
         image = [self.image_processor(pil_image) for pil_image in image_batch_pil]
-        image = torch.stack(image)
+        image = torch.stack(image).to(device)
         return image
 
 
@@ -173,7 +175,7 @@ class XGenGPTLoRALPForDiagnosis(LoRALPModel):
     def __init__(self, *args, **kwargs) -> None:
         self.name = "XrayGPT-mini"
         self.model_type = "medical"
-        self.model = MiniGPT4(
+        model = MiniGPT4(
             vit_model="eva_clip_g",
             q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
             img_size=224,
@@ -192,21 +194,21 @@ class XGenGPTLoRALPForDiagnosis(LoRALPModel):
         )
 
         ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
-        msg = self.model.load_state_dict(ckpt['model'], strict=False)
+        msg = model.load_state_dict(ckpt['model'], strict=False)
         all_ckpt_keys = set(ckpt['model'].keys())
         missing_keys = set(msg.missing_keys)
         unexpected_keys = set(msg.unexpected_keys)
         loaded_keys = all_ckpt_keys - unexpected_keys  # keys from checkpoint that aren't unexpected
         loaded_keys = loaded_keys - missing_keys
 
-        vision_model = self.model.visual_encoder
+        vision_model = model.visual_encoder
         vision_model.feat_dim = 1408
-        breakpoint()
         lora_config = LoraConfig(target_modules=["qkv"])
         super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
         
         self.image_processor = Blip2ImageEvalProcessor()
-        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
         
     def forward(self, x):
         return self.model.head(self.model.encoder(x)[:, 0, :])
