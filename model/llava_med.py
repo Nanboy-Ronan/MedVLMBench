@@ -229,12 +229,15 @@ class LLaVAMed(LLaVA):
             if "lora" in model_name.lower() and model_base is not None:
                 from .release.llava_med.model.language_model.llava_mistral import LlavaMistralConfig
 
-                lora_cfg_pretrained = LlavaMistralConfig.from_pretrained(model_path)
+                # lora_cfg_pretrained = LlavaMistralConfig.from_pretrained(model_path)
+                lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
 
-                tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
+                tokenizer = AutoTokenizer.from_pretrained(
+                    model_base,
+                )
                 print("Loading LLaVA from base model...")
                 model = LlavaMistralForCausalLM.from_pretrained(
-                    model_path,
+                    model_base,
                     low_cpu_mem_usage=False,
                     use_flash_attention_2=False,
                     config=lora_cfg_pretrained,
@@ -242,6 +245,7 @@ class LLaVAMed(LLaVA):
                 )
                 token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
                 if model.lm_head.weight.shape[0] != token_num:
+                    print(f"Warning: {model.lm_head.weight.shape[0]} and token_num {token_num} mismatch!")
                     model.lm_head.weight = torch.nn.Parameter(
                         torch.empty(token_num, tokem_dim, device=model.device, dtype=model.dtype)
                     )
@@ -328,6 +332,7 @@ class LLaVAMed(LLaVA):
                     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
                     model = AutoModelForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
 
+        # model.generation_config.pad_token_id = tokenizer.pad_token_id
         image_processor = None
 
         if "llava" in model_name.lower():  # or 'mistral' in model_name.lower():
