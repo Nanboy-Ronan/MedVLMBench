@@ -47,23 +47,12 @@ class MedCLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        self.model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
-        self.model.from_pretrained()
+        model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
+        model.from_pretrained()
+        vision_model = vision_model
+        vision_model.feat_dim = 512
+        super().__init__(encoder=vision_model, *args, **kwargs)
+
         self.image_processor = MedCLIPProcessor()
-        self.vision_model = self.model.vision_model
-        self.vision_model.feat_dim = 512
-        if "lp" in self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
-
-
-    def forward(self, images):
-        return self.model.head(self.model.encoder(images))
-
-    def load_for_training(self, path):
-        pass
-    
-    def load_from_pretrained(self, model_path, device, **kwargs):
-        model_ckpt = torch.load(model_path)
-        self.model.load_state_dict(model_ckpt)
-        self.model.to(device)
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor

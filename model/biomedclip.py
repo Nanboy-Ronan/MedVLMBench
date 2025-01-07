@@ -52,10 +52,12 @@ class ImageProcessorLPCallable:
 
 class BioMedCLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.model, _ = create_model_from_pretrained(
+        model, _ = create_model_from_pretrained(
             "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
         )  
+        vision_model = model.visual
+        vision_model.feat_dim = 512
+        super().__init__(encoder=vision_model, *args, **kwargs)
         # TODO: different normalization for different dataset
         mean = [0.48145466, 0.4578275, 0.40821073]
         std = [0.26862954, 0.26130258, 0.27577711]
@@ -69,17 +71,9 @@ class BioMedCLIPLPForDiagnosis(LPModel):
                     normalize,
                 ]
             )
-        self.image_processor = ImageProcessorCallable(self.image_processor)
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
         self.image_processor_evaluation = self.image_processor
-        self.vision_model = self.model.visual
-        self.vision_model.feat_dim = 512
 
-        if "lp" in self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
-    
-    def forward(self, x):
-        return self.model.head(self.model.encoder(x))
 
 
 class BioMedCLIPLoRALPForDiagnosis(LoRALPModel):
@@ -104,4 +98,5 @@ class BioMedCLIPLoRALPForDiagnosis(LoRALPModel):
                     normalize,
                 ]
             )
-        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor

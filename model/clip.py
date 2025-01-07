@@ -24,20 +24,16 @@ class ImageProcessorLPCallable:
 
 class CLIPLPForDiagnosis(LPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.model, processor = clip.load(backbone, device="cpu")
-        self.image_processor = processor
-        self.vision_model = self.model.visual
-        self.vision_model.feat_dim = 512
-        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
-        if "lp" in self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
-
-
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        vision_model = model.vision_model
+        vision_model.feat_dim = 768
+        super().__init__(encoder=vision_model, *args, **kwargs)
+        self.image_processor = CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+    
     def forward(self, images):
-        return self.model.head(self.model.encoder(images))
+        return self.head(self.encoder(images)["last_hidden_state"][:, 0, :])
 
 
 class CLIPLoRALPForDiagnosis(LoRALPModel):
