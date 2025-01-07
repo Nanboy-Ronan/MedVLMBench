@@ -8,6 +8,8 @@ from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.clip_base import CLIPModel
 from model.lp_base import LPModel
+from model.lora_base import LoRALPModel
+from peft import LoftQConfig, LoraConfig, get_peft_model
 
 
 def visualize_tensor_image(tensor, unnormalize=True):
@@ -95,23 +97,31 @@ class BLIPLPForDiagnosis(LPModel):
         self.model = BlipModel(self.blip_config)
         self.vision_model = self.model.vision_model
         self.vision_model.feat_dim = 768
-        if "lp" in self.args.usage:
+        if "lp" == self.args.usage:
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
         else:
-            raise NotImplementedError()
-    
-    def load_for_training(self, model_path):
-        pass
-        
-    def load_from_pretrained(self, model_path, device, **kwargs):
-        model_ckpt = torch.load(model_path)
-        self.model.load_state_dict(model_ckpt)
-        self.model.to(device)
+            raise RuntimeError("Has to be linear probing in this submodule")
     
     def forward(self, x):
         return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
 
+
+class BLIPLoRALPForDiagnosis(LoRALPModel):
+    def __init__(self, *args, **kwargs) -> None:
+        # TODO: refactor LP to be the following implementation, where lp is collectively added to base model. discard wrapper.
+        self.blip_config = BlipConfig()
+        model = BlipModel(self.blip_config)
+        vision_model = model.vision_model
+        vision_model.feat_dim = 768
+        lora_config = LoraConfig(target_modules=["qkv"])
+        super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
+        
+        self.image_processor = BlipImageProcessor()
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+    
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
 
 # if __name__ == "__main__":
 #     # blip_caption = BLIP(mode="caption")

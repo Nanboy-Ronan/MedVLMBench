@@ -41,10 +41,28 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
         
         elif args.usage == "lora_lp":
-            raise NotImplementedError("To implement")
+            from train.clip_trainer import CLIPLPTrainer
+            from train.clip_trainer import make_lp_data_module
+
+            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
+            data_module = make_lp_data_module(
+                args,
+                dataset=dataset,
+                image_processor=None,
+            )
+
+            trainer = CLIPLPTrainer(
+                model=model_wrapped,
+                args=args,
+                image_processor=model_wrapped.image_processor,
+                **data_module
+            )
+
+            return trainer
 
 
         elif args.usage == "clip-zs":
+            raise NotImplementedError("To implement")
             from train.blip_trainer import BLIPTrainer
             from train.blip_data import make_contrastive_data_module
 

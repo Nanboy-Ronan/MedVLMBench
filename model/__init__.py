@@ -1,4 +1,4 @@
-from model.blip import BLIPForQA, BLIPLPForDiagnosis
+from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis
 from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
@@ -48,18 +48,24 @@ def get_model(args, **kwargs):
             raise NotImplementedError()
     elif args.task == "diagnosis":
         num_classes = len(INFO[args.dataset.lower()]["label"])
-        if args.model == "BLIP":
-            model = BLIPLPForDiagnosis(args=args, num_classes=num_classes)
-        elif args.model == "XrayGPT":
-            model = XGenGPTLPForDiagnosis(args=args, num_classes=num_classes)
-        elif args.model == "BioMedCLIP":
-            model = BioMedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
-        elif args.model == "CLIP":
-            model = CLIPLPForDiagnosis(args=args, num_classes=num_classes)
-        elif args.model == "MedCLIP":
-            model = MedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
-        else:
-            raise NotImplementedError()
+        if args.usage == "lp":
+            if args.model == "BLIP":
+                model = BLIPLPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "XrayGPT":
+                model = XGenGPTLPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "BioMedCLIP":
+                model = BioMedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "CLIP":
+                model = CLIPLPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "MedCLIP":
+                model = MedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+            else:
+                raise NotImplementedError()
+        elif args.usage == "lora_lp":
+            if args.model == "BLIP":
+                model = BLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
+            else:
+                raise NotImplementedError()
     else:
         raise NotImplementedError()
 
