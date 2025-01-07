@@ -8,6 +8,8 @@ from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.clip_base import CLIPModel
 from model.lp_base import LPModel
+from model.lora_base import LoRALPModel
+from peft import LoftQConfig, LoraConfig, get_peft_model
 
 
 def visualize_tensor_image(tensor, unnormalize=True):
@@ -78,53 +80,48 @@ class BLIPForQA(ChatMetaModel):
         return answer
 
 
+class ImageProcessorLPCallable:
+    def __init__(self, image_processor):
+        self.image_processor = image_processor
+
+    def __call__(self, image):
+        return torch.tensor(self.image_processor(image)["pixel_values"])
+
+
 class BLIPLPForDiagnosis(LPModel):
-    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
+    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None: # We choose this implemention as the generative model and CLIP-based model are initialized differently.
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
         self.image_processor = BlipImageProcessor()
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
         self.model = BlipModel(self.blip_config)
         self.vision_model = self.model.vision_model
         self.vision_model.feat_dim = 768
-        if "lp" in self.args.usage:
+        if "lp" == self.args.usage:
             from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model)
-            self.image_processor_callable = ImageProcessorCallable(self.image_processor)
-        
-    def load_from_pretrained(self, model_path, device, **kwargs):
-        model_ckpt = torch.load(model_path)
-        self.model.load_state_dict(model_ckpt)
-        self.model.to(device)
+            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
+        else:
+            raise RuntimeError("Has to be linear probing in this submodule")
     
     def forward(self, x):
         return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
 
 
-class BLIPForDiagnosis(CLIPModel):
-    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+class BLIPLoRALPForDiagnosis(LoRALPModel):
+    def __init__(self, *args, **kwargs) -> None:
+        # TODO: refactor LP to be the following implementation, where lp is collectively added to base model. discard wrapper.
         self.blip_config = BlipConfig()
+        model = BlipModel(self.blip_config)
+        vision_model = model.vision_model
+        vision_model.feat_dim = 768
+        lora_config = LoraConfig(target_modules=["qkv"])
+        super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
+        
         self.image_processor = BlipImageProcessor()
-        self.model = BlipModel(self.blip_config)
-        self.vision_model = self.model.vision_model
-        self.vision_model.feat_dim = 768
-
-    def forward(self, images, text_features):
-        sample = {"image": images, "text_input": None}
-        image_features = self.model.extract_features(sample, mode="image").image_embeds_proj[:, 0]
-
-        text_features = F.normalize(text_features, dim=-1)
-
-        logits = (image_features @ text_features.T) / self.model.temp
-
-        return logits
-
-    def encode_text(self, text):
-        sample = {"image": None, "text_input": text}
-
-        text_features = self.model.extract_features(sample, mode="text").text_embeds_proj[:, 0, :]
-        return text_features
-
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+    
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
 
 # if __name__ == "__main__":
 #     # blip_caption = BLIP(mode="caption")

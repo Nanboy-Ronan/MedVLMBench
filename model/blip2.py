@@ -6,6 +6,7 @@ from transformers.tokenization_utils import AddedToken
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
+from model.lp_base import LPModel
 
 
 class ImageProcessorCallable:
@@ -45,6 +46,30 @@ class BLIP2(ChatMetaModel):
         outputs = self.model.generate(**inputs, max_new_tokens=768)
         answer = self.processor.decode(outputs[0], skip_special_tokens=True).strip()
         return answer
+
+
+class BLIP2LPForDiagnosis(LPModel):
+    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.blip_config = BlipConfig()
+        self.image_processor = BlipImageProcessor()
+        self.model = BlipModel(self.blip_config)
+        self.vision_model = self.model.vision_model
+        self.vision_model.feat_dim = 768
+        if "lp" in self.args.usage:
+            from wrappers import LinearProbeWrapper
+            self.model = LinearProbeWrapper(self.vision_model)
+    
+    def load_for_training(self, model_path):
+        pass
+        
+    def load_from_pretrained(self, model_path, device, **kwargs):
+        model_ckpt = torch.load(model_path)
+        self.model.load_state_dict(model_ckpt)
+        self.model.to(device)
+    
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
 
 
 if __name__ == "__main__":

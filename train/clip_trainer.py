@@ -73,9 +73,10 @@ class CLIPLPTrainer(Trainer):
         self.image_processor = image_processor
 
     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
-        pixel_values = self.image_processor(pixel_values, return_tensors="pt")["pixel_values"]
+
         logits = model(pixel_values)
 
         loss = F.cross_entropy(logits, labels)
@@ -99,6 +100,49 @@ class CLIPLPTrainer(Trainer):
 
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
+class XrayGPTLPTrainer(CLIPLPTrainer):
+    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
+        super().__init__(
+            model=model,
+            args=args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            **kwargs
+        )
+        self.image_processor = image_processor
+
+    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        device = inputs["pixel_values"].device
+        pixel_values = inputs["pixel_values"]
+        labels = inputs["labels"]
+
+        logits = model(pixel_values)
+
+        loss = F.cross_entropy(logits, labels)
+        
+        return (loss, logits) if return_outputs else loss
+
+class BioMedCLIPLPTrainer(CLIPLPTrainer):
+    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
+        super().__init__(
+            model=model,
+            args=args,
+            image_processor=image_processor,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            **kwargs
+        )
+
+    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        device = inputs["pixel_values"].device
+        pixel_values = inputs["pixel_values"]
+        labels = inputs["labels"]
+
+        logits = model(pixel_values)
+
+        loss = F.cross_entropy(logits, labels)
+        
+        return (loss, logits) if return_outputs else loss
 
 
 @dataclass
@@ -106,6 +150,13 @@ class LinearProbingDataCollator:
     def __call__(self, instances: Sequence[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
         images = [instance['pixel_values'] for instance in instances]    # List of image tensors
         labels = [instance['label'] for instance in instances]    # List of label arrays
+
+        # for idx, img in enumerate(images):
+        #     # print(f"Image {idx} type: {type(img)}")
+        #     if isinstance(img, torch.Tensor):
+        #         print(f"Image {idx} shape: {img.shape}")
+        #     else:
+        #         print(f"Image {idx} is not a tensor.")
 
         pixel_values = torch.stack(images)                        # Shape: (batch_size, C, H, W)
 
@@ -122,10 +173,13 @@ class LinearProbingDataCollator:
 
 def make_lp_data_module(args, dataset, image_processor):
     from dataset.diagnosis import PneumoniaMNIST
-    transform = transforms.Compose([
-        transforms.PILToTensor(),
-        # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
-    ])
+    if image_processor is None:
+        transform = transforms.Compose([
+            transforms.PILToTensor(),
+            # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
+        ])
+    else:
+        transform = image_processor
 
     data_collator = LinearProbingDataCollator()
     # TODO: check transform
@@ -140,20 +194,9 @@ def make_lp_data_module(args, dataset, image_processor):
         mmap_mode=None,
     )
 
-    # val_dataset = PneumoniaMNIST(
-    #     data_args=args,
-    #     split="val", # 'train', 'val' or 'test'
-    #     transform=image_processor,
-    #     target_transform=None,
-    #     download=True,
-    #     as_rgb=True,
-    #     size=224,
-    #     mmap_mode=None,
-    # )
-
     return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
 
-
+# TODO
 class CLIPTrainer(Trainer):
     def __init__(self, 
                  model, 

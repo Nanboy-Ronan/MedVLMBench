@@ -428,7 +428,7 @@ class MedMNIST(Dataset):
         transform=None,
         target_transform=None,
         download=True,
-        as_rgb=False,
+        as_rgb=True,
         size=224,
         mmap_mode=None,
     ):
