@@ -141,8 +141,8 @@ def get_trainer(args, model_wrapped, dataset):
             raise NotImplementedError()
     
     elif args.model == "BioMedCLIP":        
-        if args.usage == "lp":
-            from train.clip_trainer import BioMedCLIPLPTrainer
+        if args.usage == "lp" or args.usage == "lora_lp":
+            from train.clip_trainer import CLIPLPTrainer
             from train.clip_trainer import make_lp_data_module
 
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
@@ -152,7 +152,7 @@ def get_trainer(args, model_wrapped, dataset):
                 image_processor=model_wrapped.image_processor,
             )
 
-            trainer = BioMedCLIPLPTrainer(
+            trainer = CLIPLPTrainer(
                 model=model_wrapped,
                 args=args,
                 image_processor=model_wrapped.image_processor,
@@ -174,7 +174,7 @@ def get_trainer(args, model_wrapped, dataset):
                 image_processor=model_wrapped.image_processor,
             )
 
-            trainer = CLIPLPTrainer(
+            trainer = CLIPLPForDiagnosis(
                 model=model_wrapped,
                 args=args,
                 image_processor=model_wrapped.image_processor,

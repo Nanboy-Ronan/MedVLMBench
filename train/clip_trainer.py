@@ -76,12 +76,11 @@ class CLIPLPTrainer(Trainer):
         device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
-        
+
         if self.image_processor is not None and pixel_values.dtype == torch.uint8: # torch.uinit8 means the image is processed with PILToImage only
-            pixel_values =self.image_processor(pixel_values)
+            pixel_values = self.image_processor(pixel_values)
 
         logits = model(pixel_values)
-
         loss = F.cross_entropy(logits, labels)
         
         return (loss, logits) if return_outputs else loss
@@ -124,27 +123,27 @@ class CLIPLPTrainer(Trainer):
         
 #         return (loss, logits) if return_outputs else loss
 
-class BioMedCLIPLPTrainer(CLIPLPTrainer):
-    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
-        super().__init__(
-            model=model,
-            args=args,
-            image_processor=image_processor,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            **kwargs
-        )
+# class BioMedCLIPLPTrainer(CLIPLPTrainer):
+#     def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
+#         super().__init__(
+#             model=model,
+#             args=args,
+#             image_processor=image_processor,
+#             train_dataset=train_dataset,
+#             eval_dataset=eval_dataset,
+#             **kwargs
+#         )
 
-    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
-        device = inputs["pixel_values"].device
-        pixel_values = inputs["pixel_values"]
-        labels = inputs["labels"]
+#     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+#         device = inputs["pixel_values"].device
+#         pixel_values = inputs["pixel_values"]
+#         labels = inputs["labels"]
 
-        logits = model(pixel_values)
+#         logits = model(pixel_values)
 
-        loss = F.cross_entropy(logits, labels)
+#         loss = F.cross_entropy(logits, labels)
         
-        return (loss, logits) if return_outputs else loss
+#         return (loss, logits) if return_outputs else loss
 
 
 @dataclass

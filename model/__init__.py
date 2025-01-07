@@ -4,7 +4,7 @@ from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis, XGenGPTLoRALPForDiagnosis
-from model.biomedclip import BioMedCLIPLPForDiagnosis
+from model.biomedclip import BioMedCLIPLPForDiagnosis, BioMedCLIPLoRALPForDiagnosis
 from model.clip import CLIPLPForDiagnosis
 from model.medclip import MedCLIPLPForDiagnosis
 from dataset.diagnosis import INFO
@@ -66,6 +66,8 @@ def get_model(args, **kwargs):
                 model = BLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
             elif args.model == "XrayGPT":
                 model = XGenGPTLoRALPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "BioMedCLIP":
+                model = BioMedCLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
             else:
                 raise NotImplementedError()
     else:

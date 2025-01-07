@@ -33,4 +33,4 @@ class LoRALPModel(BaseModel, nn.Module):
         self.model.to(device)
 
     def forward(self, images):
-        self.model(images)
+        return self.model(images)

@@ -4,9 +4,11 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torchvision.transforms.functional import to_pil_image
 from open_clip import create_model_from_pretrained, get_tokenizer
+from transformers import BlipImageProcessor
 from model.clip_base import CLIPModel
 from model.lp_base import LPModel
-from transformers import BlipImageProcessor
+from model.lora_base import LoRALPModel
+from peft import LoftQConfig, LoraConfig, get_peft_model
 
 
 class BiomedCLIP(nn.Module):
@@ -42,9 +44,10 @@ class ImageProcessorLPCallable:
         self.image_processor = image_processor
 
     def __call__(self, image):
+        device = image.device
         image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
         image = [self.image_processor(pil_image) for pil_image in image_batch_pil]
-        image = torch.stack(image)
+        image = torch.stack(image).to(device)
         return image 
 
 class BioMedCLIPLPForDiagnosis(LPModel):
@@ -66,7 +69,8 @@ class BioMedCLIPLPForDiagnosis(LPModel):
                     normalize,
                 ]
             )
-        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor = ImageProcessorCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
         self.vision_model = self.model.visual
         self.vision_model.feat_dim = 512
 
@@ -74,13 +78,30 @@ class BioMedCLIPLPForDiagnosis(LPModel):
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
     
-    def load_for_training(self, model_path):
-        pass
-        
-    def load_from_pretrained(self, model_path, device, **kwargs):
-        model_ckpt = torch.load(model_path)
-        self.model.load_state_dict(model_ckpt)
-        self.model.to(device)
-    
     def forward(self, x):
         return self.model.head(self.model.encoder(x))
+
+
+class BioMedCLIPLoRALPForDiagnosis(LoRALPModel):
+    def __init__(self, *args, **kwargs) -> None:
+        model, _ = create_model_from_pretrained(
+            "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+        )  
+        vision_model = model.visual
+        vision_model.feat_dim = 512
+        lora_config = LoraConfig(target_modules=["qkv"])
+        super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
+        # TODO: different normalization for different dataset
+        mean = [0.48145466, 0.4578275, 0.40821073]
+        std = [0.26862954, 0.26130258, 0.27577711]
+        normalize = transforms.Normalize(mean=mean, std=std)
+        self.image_processor = transform = transforms.Compose(
+                [
+                    transforms.Resize(
+                        224, interpolation=transforms.InterpolationMode.BICUBIC),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                    normalize,
+                ]
+            )
+        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
