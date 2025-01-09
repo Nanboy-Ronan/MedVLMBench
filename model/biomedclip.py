@@ -4,40 +4,11 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torchvision.transforms.functional import to_pil_image
 from open_clip import create_model_from_pretrained, get_tokenizer
-from transformers import BlipImageProcessor
 from model.clip_base import CLIPBase
 from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
 from peft import LoftQConfig, LoraConfig, get_peft_model
 
-
-class BiomedCLIP(nn.Module):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.model, _ = create_model_from_pretrained(
-            "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
-        )
-        self.feat_dim = 512
-
-    def forward_clip(self, images, text_features):
-        image_features = self.model.encode_image(images, normalize=True)
-        text_features = F.normalize(text_features, dim=-1)
-
-        logit_scale = self.model.logit_scale.exp()
-
-        logits = logit_scale * image_features @ text_features.t()
-
-        return logits
-
-    def encode_text(self, text):
-        return self.model.encode_text(text.to(next(self.model.parameters()).device), normalize=False)
-
-    def forward(self, images):
-        return self.model.visual(images)
-
-    def from_pretrained(self, path):
-        pass
 
 class ImageProcessorLPCallable:
     def __init__(self, image_processor):
@@ -49,6 +20,35 @@ class ImageProcessorLPCallable:
         image = [self.image_processor(pil_image) for pil_image in image_batch_pil]
         image = torch.stack(image).to(device)
         return image 
+
+
+class BiomedCLIPForDiagnosis(CLIPBase):
+    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+        model, processor = create_model_from_pretrained(
+            "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+        )
+
+        super().__init__(text=text, num_classes=num_classes, model=model)
+        self.tokenizer = get_tokenizer('hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224')
+        self.image_processor = processor
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+        self.prototype = self.encode_text(self.prototype)
+
+    def encode_text(self, text):
+        inputs = self.tokenizer(text, context_length=256)
+        return self.model.encode_text(inputs, normalize=False).to(next(self.model.parameters()).device)
+    
+    def forward(self, images):    
+        image_outputs = self.model.encode_image(images)
+
+        image_features = F.normalize(image_outputs, dim=-1)
+        text_features = F.normalize(self.prototype, dim=-1).to(images.device)
+
+        logits = 100.0 * image_features @ text_features.T
+        
+        return logits
+
 
 class BioMedCLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
