@@ -34,22 +34,20 @@ class CLIPForDiagnosis(CLIPBase):
         self.prototype = self.encode_text(self.prototype)
     
     def encode_text(self, text):
+        assert len(text) == self.num_classes
         inputs = self.tokenizer(text, return_tensors='pt', padding=True, truncation=True)
 
         text_outputs = self.model.get_text_features(**inputs)
         return text_outputs
     
     def forward(self, images):    
-        # Compute image features
         image_outputs = self.model.get_image_features(images)
 
-        # Normalize image and text features
         image_features = F.normalize(image_outputs, dim=-1)
         text_features = F.normalize(self.prototype, dim=-1).to(images.device)
 
-        # Compute logits
         logits = 100.0 * image_features @ text_features.T
-
+        
         return logits
 
 

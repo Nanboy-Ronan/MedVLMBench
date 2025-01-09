@@ -1,4 +1,4 @@
-from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis
+from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis, BLIPForDiagnosis
 from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
@@ -75,10 +75,10 @@ def get_model(args, **kwargs):
             else:
                 raise NotImplementedError()
         elif args.usage == "clip-zs":
+            text = get_prototype(args)
             if args.model == "BLIP":
-                raise NotImplementedError()
+                model = BLIPForDiagnosis(text=text, num_classes=num_classes)
             elif args.model == "CLIP":
-                text = get_prototype(args)
                 model = CLIPForDiagnosis(text=text, num_classes=num_classes)
         else:
             raise NotImplementedError()
