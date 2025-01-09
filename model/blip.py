@@ -6,7 +6,7 @@ from transformers import BlipProcessor, BlipImageProcessor, BlipConfig, BlipForC
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
-from model.clip_base import CLIPModel
+from model.clip_base import CLIPBase
 from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
 from peft import LoftQConfig, LoraConfig, get_peft_model

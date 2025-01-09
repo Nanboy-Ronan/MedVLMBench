@@ -160,6 +160,8 @@ def get_trainer(args, model_wrapped, dataset):
             )
 
             return trainer
+        elif args.usage == "clip-adapt":
+            raise NotImplementedError()
         else:
             raise NotImplementedError()
 

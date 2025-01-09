@@ -79,7 +79,7 @@ def get_model(args, **kwargs):
                 raise NotImplementedError()
             elif args.model == "CLIP":
                 text = get_prototype(args)
-                model = CLIPForDiagnosis(text=text)
+                model = CLIPForDiagnosis(text=text, num_classes=num_classes)
         else:
             raise NotImplementedError()
     else:

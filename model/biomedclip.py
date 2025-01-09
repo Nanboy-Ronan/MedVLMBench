@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 from torchvision.transforms.functional import to_pil_image
 from open_clip import create_model_from_pretrained, get_tokenizer
 from transformers import BlipImageProcessor
-from model.clip_base import CLIPModel
+from model.clip_base import CLIPBase
 from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
 from peft import LoftQConfig, LoraConfig, get_peft_model

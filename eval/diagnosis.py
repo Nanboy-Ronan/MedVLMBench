@@ -65,6 +65,7 @@ class DiagnosisEvalEngine(EvalEngine):
         image = model.image_processor_evaluation(image)
 
         image = image.to(self.device, non_blocking=True)
+        model.to(self.device)
         true_label = true_label.to(self.device)
 
         output = model(image)
