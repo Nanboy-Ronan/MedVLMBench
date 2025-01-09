@@ -5,9 +5,11 @@ from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis, XGenGPTLoRALPForDiagnosis
 from model.biomedclip import BioMedCLIPLPForDiagnosis, BioMedCLIPLoRALPForDiagnosis
-from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis
+from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis, CLIPForDiagnosis
 from model.medclip import MedCLIPLPForDiagnosis
 from dataset.diagnosis import INFO
+
+from dataset.utils import get_prototype
 
 
 from easydict import EasyDict as edict
@@ -72,6 +74,14 @@ def get_model(args, **kwargs):
                 model = CLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
             else:
                 raise NotImplementedError()
+        elif args.usage == "clip-zs":
+            if args.model == "BLIP":
+                raise NotImplementedError()
+            elif args.model == "CLIP":
+                text = get_prototype(args)
+                model = CLIPForDiagnosis(text=text)
+        else:
+            raise NotImplementedError()
     else:
         raise NotImplementedError()
 

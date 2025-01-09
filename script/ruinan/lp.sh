@@ -107,7 +107,7 @@ python run_eval.py \
 
 # Train Xray
 # Done
-CUDA_VISIBLE_DEVICES=1 python run_train.py \
+CUDA_VISIBLE_DEVICES=2 python run_train.py \
     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
     --image_path ./data \
     --output_dir ./log \

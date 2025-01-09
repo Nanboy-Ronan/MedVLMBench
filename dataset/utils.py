@@ -1,5 +1,6 @@
 import torchvision.transforms as transforms
 
+from dataset.diagnosis import INFO
 from torch.utils.data import Dataset, WeightedRandomSampler
 
 
@@ -11,3 +12,7 @@ def get_transform(args):
         ]
     )
     return transform
+
+def get_prototype(args):
+    text_classes = INFO[args.dataset.lower()]["label"].values()
+    return text_classes

@@ -15,3 +15,5 @@ class CLIPModel(BaseModel, nn.Module):
 
     def encode_text(self, text):
         pass
+    
+    
