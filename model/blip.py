@@ -75,6 +75,34 @@ class BLIPForDiagnosis(CLIPBase):
         logits = 100.0 * image_features @ text_features.T
 
         return logits
+    
+
+class BLIPLoRAForDiagnosis(CLIPBase):
+    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+        blip_config = BlipConfig()
+        model = BlipModel(blip_config)
+        super().__init__(text=text, num_classes=num_classes, model=model)
+        self.tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip-vqa-base")
+        self.image_processor = BlipImageProcessor()
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+        self.prototype = self.encode_text(self.prototype)
+    
+    def encode_text(self, text):
+        assert len(text) == self.num_classes
+        text_inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True).to(self.model.device)
+        text_outputs = self.model.text_model(input_ids=text_inputs.input_ids, attention_mask=text_inputs.attention_mask)
+        return F.normalize(text_outputs.last_hidden_state[:, 0, :], dim=-1)
+    
+    def forward(self, images):    
+        image_features = self.model.vision_model(images)
+        image_features = F.normalize(image_features.last_hidden_state[:, 0, :], dim=-1)  # Normalize the image features
+
+        text_features = self.prototype.to(images.device)
+
+        logits = 100.0 * image_features @ text_features.T
+
+        return logits
 
 
 class BLIPForQA(ChatMetaModel):

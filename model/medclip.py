@@ -130,6 +130,35 @@ class MedCLIPForDiagnosis(CLIPBase):
         logits = 100.0 * image_features @ text_features.T
         
         return logits
+
+class MedCLIPLoRAForDiagnosis(CLIPBase):
+    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+        model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
+        model.from_pretrained()
+        super().__init__(text=text, num_classes=num_classes, model=model)
+    
+        self.processor = MedCLIPProcessor()
+        self.image_processor = self.processor.image_processor
+        self.tokenizer = self.processor.tokenizer
+        self.image_processor = ImageProcessorLPCallable(MedCLIPFeatureExtractor())
+        self.image_processor_evaluation = self.image_processor
+        self.model.cuda()
+        self.prototype = self.encode_text(self.prototype)
+
+    def encode_text(self, text):
+        assert len(text) == self.num_classes
+        inputs = self.tokenizer(text, return_tensors='pt', padding=True, truncation=True)
+        return self.model.encode_text(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"])
+    
+    def forward(self, images):
+        image_outputs = self.model.encode_image(images)
+
+        image_features = F.normalize(image_outputs, dim=-1)
+        text_features = F.normalize(self.prototype, dim=-1).to(images.device)
+
+        logits = 100.0 * image_features @ text_features.T
+        
+        return logits
     
 class MedCLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:

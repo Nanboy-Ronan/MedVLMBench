@@ -26,3 +26,14 @@ python run_eval.py \
     --exp_path ./log \
     --model MedCLIP --model_path "original_pretrained" \
     --cache_dir ./cache
+
+
+# Training
+CUDA_VISIBLE_DEVICES=4 python run_train.py \
+    --task diagnosis --usage clip-lora --dataset PneumoniaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model BLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 10 \
+    --learning_rate 5e-5
