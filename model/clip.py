@@ -51,6 +51,34 @@ class CLIPForDiagnosis(CLIPBase):
         return logits
 
 
+class CLIPLoRAForDiagnosis(CLIPBase):
+    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        super().__init__(text=text, num_classes=num_classes, model=model)
+        self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
+        self.image_processor = CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+        self.prototype = self.encode_text(self.prototype)
+    
+    def encode_text(self, text):
+        assert len(text) == self.num_classes
+        inputs = self.tokenizer(text, return_tensors='pt', padding=True, truncation=True)
+
+        text_outputs = self.model.get_text_features(**inputs)
+        return text_outputs
+    
+    def forward(self, images):    
+        image_outputs = self.model.get_image_features(images)
+
+        image_features = F.normalize(image_outputs, dim=-1)
+        text_features = F.normalize(self.prototype, dim=-1).to(images.device)
+
+        logits = 100.0 * image_features @ text_features.T
+        
+        return logits
+
+
 class CLIPLPForDiagnosis(LPModel):
     def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
         model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")

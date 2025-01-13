@@ -7,6 +7,7 @@ from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis, XGenGPTLoRALPForDiagno
 from model.biomedclip import BioMedCLIPLPForDiagnosis, BioMedCLIPLoRALPForDiagnosis, BiomedCLIPForDiagnosis, BiomedCLIPLoRAForDiagnosis
 from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis, CLIPForDiagnosis, CLIPLoRAForDiagnosis
 from model.medclip import MedCLIPLPForDiagnosis, MedCLIPForDiagnosis, MedCLIPLoRAForDiagnosis
+from model.pmcclip import PMCCLIPForDiagnosis
 from dataset.diagnosis import INFO
 
 from dataset.utils import get_prototype
@@ -84,6 +85,8 @@ def get_model(args, **kwargs):
                 model = BiomedCLIPForDiagnosis(text=text, num_classes=num_classes)
             elif args.model == "MedCLIP":
                 model = MedCLIPForDiagnosis(text=text, num_classes=num_classes)
+            elif args.model == "PMCCLIP":
+                model = PMCCLIPForDiagnosis(text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.model == "clip-lora":

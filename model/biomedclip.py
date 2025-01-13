@@ -50,6 +50,34 @@ class BiomedCLIPForDiagnosis(CLIPBase):
         return logits
 
 
+class BiomedCLIPLoRAForDiagnosis(CLIPBase):
+    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+        model, processor = create_model_from_pretrained(
+            "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
+        )
+
+        super().__init__(text=text, num_classes=num_classes, model=model)
+        self.tokenizer = get_tokenizer('hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224')
+        self.image_processor = processor
+        self.image_processor = ImageProcessorLPCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+        self.prototype = self.encode_text(self.prototype)
+
+    def encode_text(self, text):
+        inputs = self.tokenizer(text, context_length=256)
+        return self.model.encode_text(inputs, normalize=False).to(next(self.model.parameters()).device)
+    
+    def forward(self, images):    
+        image_outputs = self.model.encode_image(images)
+
+        image_features = F.normalize(image_outputs, dim=-1)
+        text_features = F.normalize(self.prototype, dim=-1).to(images.device)
+
+        logits = 100.0 * image_features @ text_features.T
+        
+        return logits
+
+
 class BioMedCLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
         model, _ = create_model_from_pretrained(
