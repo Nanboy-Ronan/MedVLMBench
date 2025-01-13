@@ -28,6 +28,19 @@ python run_eval.py \
     --model MedCLIP --model_path "original_pretrained" \
     --cache_dir ./cache
 
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset PneumoniaMNIST --split train \
+    --image_path ./data \
+    --exp_path ./log \
+    --model BLIP2-2.7b --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset PneumoniaMNIST --split train \
+    --image_path ./data \
+    --exp_path ./log \
+    --model PMCCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
 
 # BreastMNIST
 python run_eval.py \
@@ -56,6 +69,20 @@ python run_eval.py \
     --image_path ./data \
     --exp_path ./log \
     --model MedCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset BreastMNIST --split train \
+    --image_path ./data \
+    --exp_path ./log \
+    --model BLIP2-2.7b --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset BreastMNIST --split train \
+    --image_path ./data \
+    --exp_path ./log \
+    --model PMCCLIP --model_path "original_pretrained" \
     --cache_dir ./cache
 
 # DermaMNIST
