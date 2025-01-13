@@ -57,7 +57,7 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
 
 
-        elif args.usage == "clip-zs":
+        elif args.usage in ["clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             raise NotImplementedError("To implement")
             from train.blip_trainer import BLIPTrainer
             from train.blip_data import make_contrastive_data_module

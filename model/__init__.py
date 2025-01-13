@@ -91,10 +91,10 @@ def get_model(args, **kwargs):
                 model = BLIP2ForDiagnosis(text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
-        elif args.model == "clip-lora":
+        elif args.usage in ["clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             text = get_prototype(args)
             if args.model == "BLIP":
-                model = BLIPLoRAForDiagnosis(text=text, num_classes=num_classes)
+                model = BLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "CLIP":
                 model = CLIPLoRAForDiagnosis(text=text, num_classes=num_classes)
             elif args.model == "BioMedCLIP":

@@ -78,9 +78,16 @@ class BLIPForDiagnosis(CLIPBase):
     
 
 class BLIPLoRAForDiagnosis(CLIPBase):
-    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+    def __init__(self, args, text, num_classes) -> None:
         blip_config = BlipConfig()
         model = BlipModel(blip_config)
+
+        if args.usage == "clip-img-lora":
+            lora_config = LoraConfig(target_modules=["qkv"])
+            model.vision_model = get_peft_model(model.vision_model, lora_config)
+        else:
+            raise NotImplementedError()
+        
         super().__init__(text=text, num_classes=num_classes, model=model)
         self.tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip-vqa-base")
         self.image_processor = BlipImageProcessor()

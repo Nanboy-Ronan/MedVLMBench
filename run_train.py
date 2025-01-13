@@ -101,12 +101,16 @@ def setup_args(args):
         args.peft = ""
         print(args.peft)
 
-    save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
-    if args.model == "LLaVA-1.5":
-        save_folder_name += "_llava"
-    if args.model == "LLaVA-Med":
-        save_folder_name += "_llava_mistral"
+        if args.model == "LLaVA-1.5":
+            save_folder_name += "_llava"
+        if args.model == "LLaVA-Med":
+            save_folder_name += "_llava_mistral"
+    elif args.task == "diagnosis":
+        save_folder_name = f"train_{args.usage}_seed{args.seed}"
+    else:
+        raise NotImplementedError()
 
     args.output_dir = os.path.join(
         args.output_dir,
