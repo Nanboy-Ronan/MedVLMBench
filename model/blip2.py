@@ -1,12 +1,16 @@
 import torch
 from PIL import Image
 from easydict import EasyDict as edict
-from transformers import Blip2ForConditionalGeneration, Blip2Processor, Blip2Model, BatchEncoding
+from transformers import Blip2ForConditionalGeneration, Blip2Processor, Blip2Model, BatchEncoding, Blip2ForImageTextRetrieval
 from transformers.tokenization_utils import AddedToken
+import torch
+import torch.nn.functional as F
+from torchvision.transforms.functional import to_pil_image
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.lp_base import LPModel
+from model.clip_base import CLIPBase
 
 
 class ImageProcessorCallable:
@@ -48,8 +52,71 @@ class BLIP2(ChatMetaModel):
         return answer
 
 
+class ImageProcessorCallable:
+    def __init__(self, image_processor):
+        """
+        Wrapper around the Blip2Processor for image preprocessing.
+        Converts input images to the format required by Blip2.
+        """
+        self.image_processor = image_processor
+
+    def __call__(self, images):
+        """
+        Processes a batch of images and returns pixel values.
+        
+        Args:
+            images (torch.Tensor): Batch of image tensors (C, H, W).
+        
+        Returns:
+            torch.Tensor: Processed image tensors.
+        """
+        device = images.device
+        image_batch_pil = [to_pil_image(img_tensor) for img_tensor in images]
+        processed_images = [
+            torch.tensor(self.image_processor(pil_image)["pixel_values"][0])
+            for pil_image in image_batch_pil
+        ]
+        processed_images = torch.stack(processed_images).to(device)
+        return processed_images
+
+
+class BLIP2ForDiagnosis(CLIPBase):
+    def __init__(self, text, num_classes, model_name="Salesforce/blip2-itm-vit-g"):
+        """
+        Wrapper around Blip2ForImageTextRetrieval to simplify usage.
+        
+        Args:
+            text (list): List of text prototypes for each class.
+            num_classes (int): Number of classes.
+            model_name (str): Name of the pre-trained model.
+        """
+        model = Blip2ForImageTextRetrieval.from_pretrained(model_name)
+        super().__init__(text=text, num_classes=num_classes, model=model)
+        self.tokenizer = Blip2Processor.from_pretrained(model_name).tokenizer
+        self.image_processor = Blip2Processor.from_pretrained(model_name).image_processor
+        self.image_processor = ImageProcessorCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+        self.num_classes = num_classes
+        self.prototype = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+
+    def encode_text(self, text):
+        assert len(text) == self.num_classes
+        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+        with torch.no_grad():
+            text_outputs = self.model.text_model(**inputs)
+        return F.normalize(text_outputs.last_hidden_state[:, 0, :], dim=-1)
+
+    def forward(self, images):
+        device = images.device
+        self.model.to(device)
+        outputs = self.model(input_ids=self.prototype["input_ids"].to(device), attention_mask=self.prototype["attention_mask"].to(device), pixel_values=images)
+        image_features, text_features = outputs["image_embeds"], outputs["text_embeds"]
+        logits = outputs["logits_per_image"]
+        return logits
+
+
 class BLIP2LPForDiagnosis(LPModel):
-    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
         self.image_processor = BlipImageProcessor()

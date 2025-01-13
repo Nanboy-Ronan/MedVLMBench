@@ -1,6 +1,6 @@
 from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis, BLIPForDiagnosis, BLIPLoRAForDiagnosis
 from model.llava import LLaVA
-from model.blip2 import BLIP2
+from model.blip2 import BLIP2, BLIP2ForDiagnosis
 from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis, XGenGPTLoRALPForDiagnosis
@@ -87,6 +87,8 @@ def get_model(args, **kwargs):
                 model = MedCLIPForDiagnosis(text=text, num_classes=num_classes)
             elif args.model == "PMCCLIP":
                 model = PMCCLIPForDiagnosis(text=text, num_classes=num_classes)
+            elif args.model == "BLIP2-2.7b":
+                model = BLIP2ForDiagnosis(text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.model == "clip-lora":

@@ -94,6 +94,13 @@ python run_eval.py \
     --model PMCCLIP --model_path "original_pretrained" \
     --cache_dir ./cache
 
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --exp_path ./log \
+    --model BLIP2-2.7b --model_path "original_pretrained" \
+    --cache_dir ./cache
+
 # Training
 CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --task diagnosis --usage clip-lora --dataset PneumoniaMNIST --split train \
