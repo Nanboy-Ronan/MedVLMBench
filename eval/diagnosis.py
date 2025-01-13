@@ -31,6 +31,7 @@ class DiagnosisEvalEngine(EvalEngine):
 
     def evaluate(self, args, model):
         """Run evaluation on the classification dataset."""
+        args.logger.info("Length of the evaluation dataset: {}".format(len(self.dataset)))
         data_loader = DataLoader(self.dataset, batch_size=64, collate_fn=LinearProbingDataCollator(), shuffle=False)
         self.num_classes = model.num_classes
         self.init_metric_logger()
