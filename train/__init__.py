@@ -58,26 +58,18 @@ def get_trainer(args, model_wrapped, dataset):
 
 
         elif args.usage in ["clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
-            raise NotImplementedError("To implement")
-            from train.blip_trainer import BLIPTrainer
-            from train.blip_data import make_contrastive_data_module
-
-            train_dataset, eval_dataset = make_contrastive_data_module(
+            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
+            data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
-                tokenizer=model_wrapped.tokenizer,
-                image_processor=model_wrapped.image_processor,
-                model_constants=model_wrapped.constants,
+                image_processor=None,
             )
 
-            trainer = BLIPTrainer(
-                model=model_wrapped.model,
-                args=training_args,
-                tokenizer=model_wrapped.tokenizer,
+            trainer = CLIPLPTrainer(
+                model=model_wrapped,
+                args=args,
                 image_processor=model_wrapped.image_processor,
-                train_dataset=train_dataset,
-                eval_dataset=eval_dataset,
-                temperature=args.temperature if hasattr(args, 'temperature') else 0.07,
+                **data_module
             )
 
         else:

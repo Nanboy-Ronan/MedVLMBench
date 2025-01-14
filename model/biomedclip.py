@@ -35,6 +35,7 @@ class BiomedCLIPForDiagnosis(CLIPBase):
         self.image_processor_evaluation = self.image_processor
         self.prototype = self.encode_text(self.prototype)
 
+    @torch.no_grad()
     def encode_text(self, text):
         inputs = self.tokenizer(text, context_length=256)
         return self.model.encode_text(inputs, normalize=False).to(next(self.model.parameters()).device)
@@ -63,6 +64,7 @@ class BiomedCLIPLoRAForDiagnosis(CLIPBase):
         self.image_processor_evaluation = self.image_processor
         self.prototype = self.encode_text(self.prototype)
 
+    @torch.no_grad()
     def encode_text(self, text):
         inputs = self.tokenizer(text, context_length=256)
         return self.model.encode_text(inputs, normalize=False).to(next(self.model.parameters()).device)

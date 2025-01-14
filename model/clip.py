@@ -33,6 +33,7 @@ class CLIPForDiagnosis(CLIPBase):
         self.image_processor_evaluation = self.image_processor
         self.prototype = self.encode_text(self.prototype)
     
+    @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes
         inputs = self.tokenizer(text, return_tensors='pt', padding=True, truncation=True)
@@ -61,6 +62,7 @@ class CLIPLoRAForDiagnosis(CLIPBase):
         self.image_processor_evaluation = self.image_processor
         self.prototype = self.encode_text(self.prototype)
     
+    @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes
         inputs = self.tokenizer(text, return_tensors='pt', padding=True, truncation=True)

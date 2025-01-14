@@ -60,6 +60,7 @@ class BLIPForDiagnosis(CLIPBase):
         self.image_processor_evaluation = self.image_processor
         self.prototype = self.encode_text(self.prototype)
     
+    @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes
         text_inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True).to(self.model.device)
@@ -93,15 +94,16 @@ class BLIPLoRAForDiagnosis(CLIPBase):
         self.image_processor = BlipImageProcessor()
         self.image_processor = ImageProcessorLPCallable(self.image_processor)
         self.image_processor_evaluation = self.image_processor
-        self.prototype = self.encode_text(self.prototype)
+        self.prototype = self.encode_text(self.prototype).to(args.device)
     
+    @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes
         text_inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True).to(self.model.device)
         text_outputs = self.model.text_model(input_ids=text_inputs.input_ids, attention_mask=text_inputs.attention_mask)
         return F.normalize(text_outputs.last_hidden_state[:, 0, :], dim=-1)
     
-    def forward(self, images):    
+    def forward(self, images):
         image_features = self.model.vision_model(images)
         image_features = F.normalize(image_features.last_hidden_state[:, 0, :], dim=-1)  # Normalize the image features
 

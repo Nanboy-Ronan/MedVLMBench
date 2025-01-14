@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from model.base import BaseModel
 from easydict import EasyDict as edict
@@ -16,6 +17,7 @@ class CLIPBase(BaseModel, nn.Module):
     def encode_img(self, images):
         pass
 
+    @torch.no_grad()
     def encode_text(self, text):
         pass
     

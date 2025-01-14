@@ -303,7 +303,7 @@ class PMCCLIPForDiagnosis(CLIPBase):
         ])
         return Compose(transforms)
 
-
+    @torch.no_grad()
     def encode_text(self, text):
         """
         Encodes text descriptions into feature vectors using the text encoder and applies the text projection layer.

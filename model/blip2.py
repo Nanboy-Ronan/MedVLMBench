@@ -99,6 +99,7 @@ class BLIP2ForDiagnosis(CLIPBase):
         self.num_classes = num_classes
         self.prototype = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
 
+    @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes
         inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)

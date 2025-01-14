@@ -102,49 +102,6 @@ class CLIPLPTrainer(Trainer):
 
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
-# class XrayGPTLPTrainer(CLIPLPTrainer):
-#     def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
-#         super().__init__(
-#             model=model,
-#             args=args,
-#             train_dataset=train_dataset,
-#             eval_dataset=eval_dataset,
-#             image_processor=image_processor,
-#             **kwargs
-#         )
-
-#     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
-#         device = inputs["pixel_values"].device
-#         pixel_values = inputs["pixel_values"]
-#         labels = inputs["labels"]
-#         logits = model(pixel_values)
-
-#         loss = F.cross_entropy(logits, labels)
-        
-#         return (loss, logits) if return_outputs else loss
-
-# class BioMedCLIPLPTrainer(CLIPLPTrainer):
-#     def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
-#         super().__init__(
-#             model=model,
-#             args=args,
-#             image_processor=image_processor,
-#             train_dataset=train_dataset,
-#             eval_dataset=eval_dataset,
-#             **kwargs
-#         )
-
-#     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
-#         device = inputs["pixel_values"].device
-#         pixel_values = inputs["pixel_values"]
-#         labels = inputs["labels"]
-
-#         logits = model(pixel_values)
-
-#         loss = F.cross_entropy(logits, labels)
-        
-#         return (loss, logits) if return_outputs else loss
-
 
 @dataclass
 class LinearProbingDataCollator:

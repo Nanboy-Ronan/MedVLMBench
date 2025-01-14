@@ -96,11 +96,11 @@ def get_model(args, **kwargs):
             if args.model == "BLIP":
                 model = BLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "CLIP":
-                model = CLIPLoRAForDiagnosis(text=text, num_classes=num_classes)
+                model = CLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BioMedCLIP":
-                model = BiomedCLIPLoRAForDiagnosis(text=text, num_classes=num_classes)
+                model = BiomedCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "MedCLIP":
-                model = MedCLIPLoRAForDiagnosis(text=text, num_classes=num_classes)
+                model = MedCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         else:
