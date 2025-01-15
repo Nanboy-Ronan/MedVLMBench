@@ -4,61 +4,35 @@ import torch.nn.functional as F
 import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms
-from transformers import Trainer
+from transformers import Trainer, TrainerCallback
 from dataclasses import dataclass
 from typing import Any, Dict, List, Sequence, Optional
-
-class ContrastiveDataset(Dataset):
-    # TODO
-    def __init__(self, data, tokenizer, transform, max_length=128):
-        self.data = data
-        self.tokenizer = tokenizer
-        self.transform = transform
-        self.max_length = max_length
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        item = self.data[idx]
-        
-        image = self.transform(item['image'])
-
-        text = item['text']
-        encoding = self.tokenizer(
-            text,
-            padding='max_length',
-            truncation=True,
-            max_length=self.max_length,
-            return_tensors='pt'
-        )
-        
-        # Remove batch dimension
-        input_ids = encoding['input_ids'].squeeze()
-        attention_mask = encoding['attention_mask'].squeeze()
-
-        return {
-            'pixel_values': image,
-            'input_ids': input_ids,
-            'attention_mask': attention_mask
-        }
+from eval import get_eval_engine
+from dataset import get_dataset
+from dataset.utils import LinearProbingDataCollator
 
 
-def make_contrastive_data_module(args, dataset, tokenizer, image_processor, model_constants):
-    # TODO
-    transform = transforms.Compose([
-        transforms.Resize((args.image_size, args.image_size)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
-    ])
+class CustomCallback(TrainerCallback):
+    def __init__(self, trainer):
+        self.trainer = trainer
 
-    train_data = dataset['train']
-    val_data = dataset['val']
-
-    train_dataset = ContrastiveDataset(train_data, tokenizer, transform, max_length=args.max_length)
-    val_dataset = ContrastiveDataset(val_data, tokenizer, transform, max_length=args.max_length)
-
-    return train_dataset, val_dataset
+    def on_epoch_end(self, args, state, control, **kwargs):
+        """
+        This method is called at the end of each epoch.
+        """
+        if self.trainer.current_epoch % 10 == 0:
+            print(f"Running evaluation at epoch {self.trainer.current_epoch}...")
+            metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
+            print(f"Evaluation metrics at epoch {self.trainer.current_epoch}: {metrics}")
+        self.trainer.current_epoch += 1
+    
+    def on_train_end(self, args, state, control, **kwargs):
+        """
+        This method is called after the full training is complete.
+        """
+        print("Training complete. Running final evaluation...")
+        metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
+        print(f"Final evaluation metrics: {metrics}")
 
 
 class CLIPLPTrainer(Trainer):
@@ -70,7 +44,11 @@ class CLIPLPTrainer(Trainer):
             eval_dataset=eval_dataset,
             **kwargs
         )
+        dataset = get_dataset(args=args, split="test")
+        self.eval_engine = get_eval_engine(args=args, dataset=dataset)
         self.image_processor = image_processor
+        self.current_epoch = 0
+        self.add_callback(CustomCallback(self))
 
     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
         device = inputs["pixel_values"].device
@@ -101,32 +79,18 @@ class CLIPLPTrainer(Trainer):
             model_to_save = model_to_save.module
 
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
+    
+    def on_epoch_end(self):
+        """
+        Called at the end of each epoch.
+        Check if the current epoch is a multiple of 10, and if so, run evaluation.
+        """
+        if self.current_epoch % 10 == 0:  # Every 10 epochs
+            self.log(f"Running evaluation at epoch {self.current_epoch}...")
+            self.eval_engine.evaluate(args=args, model=model_wrapped)
+            self.log(f"Evaluation metrics at epoch {self.current_epoch}: {metrics}")
+        self.current_epoch += 1
 
-
-@dataclass
-class LinearProbingDataCollator:
-    def __call__(self, instances: Sequence[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
-        images = [instance['pixel_values'] for instance in instances]    # List of image tensors
-        labels = [instance['label'] for instance in instances]    # List of label arrays
-
-        # for idx, img in enumerate(images):
-        #     # print(f"Image {idx} type: {type(img)}")
-        #     if isinstance(img, torch.Tensor):
-        #         print(f"Image {idx} shape: {img.shape}")
-        #     else:
-        #         print(f"Image {idx} is not a tensor.")
-
-        pixel_values = torch.stack(images)                        # Shape: (batch_size, C, H, W)
-
-        labels = [int(label[0]) if isinstance(label, (list, tuple, np.ndarray, torch.Tensor)) else int(label) for label in labels]
-        labels = torch.tensor(labels, dtype=torch.long)           # Shape: (batch_size,)
-
-        batch = {
-            'pixel_values': pixel_values,
-            'labels': labels
-        }
-
-        return batch
 
 
 def make_lp_data_module(args, dataset, image_processor):

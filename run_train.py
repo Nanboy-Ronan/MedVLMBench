@@ -42,6 +42,10 @@ class Arguments(transformers.TrainingArguments):
     num_train_epochs: int = None
     learning_rate: float = 3e-5
 
+    # evaluation
+    eval_print_freq: int = 100
+    save_pred: bool = False
+
     mm_projector_lr: Optional[float] = None  # for LLMs
     remove_unused_columns: bool = field(default=False)
     mpt_attn_impl: Optional[str] = field(default="triton")

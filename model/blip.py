@@ -85,6 +85,8 @@ class BLIPLoRAForDiagnosis(CLIPBase):
 
         if args.usage == "clip-img-lora":
             lora_config = LoraConfig(target_modules=["qkv"])
+            for name, para in model.named_parameters():
+                para.requires_grad = False
             model.vision_model = get_peft_model(model.vision_model, lora_config)
         else:
             raise NotImplementedError()

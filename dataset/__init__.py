@@ -22,7 +22,7 @@ datasets = {
 }
 
 
-def get_dataset(args, image_processor_callable=None):
+def get_dataset(args, image_processor_callable=None, split=None):
 
     g = torch.Generator()
     g.manual_seed(args.seed)
@@ -32,16 +32,20 @@ def get_dataset(args, image_processor_callable=None):
         random.seed(args.seed)
 
     dataset_name = datasets[args.dataset]
-
+    
     assert args.split in ["train", "validation", "test", "all"]
+
+    if split is None:
+        assert args.split in ["train", "validation", "test", "all"]
+        split = args.split
 
     if image_processor_callable is not None:
         transform = image_processor_callable
     else:
         transform = get_transform(args)
-
+        
     dataset = dataset_name(
-        data_args=edict(image_path=args.image_path, size=224), split=args.split, transform=transform
+        data_args=edict(image_path=args.image_path, size=224), split=split, transform=transform
     )
 
     print("Loaded dataset: " + dataset.name)

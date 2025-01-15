@@ -8,9 +8,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelBinarizer
 from torch.utils.data import DataLoader
-from train.clip_trainer import LinearProbingDataCollator
 from torchvision.transforms.functional import to_pil_image
 from eval.base import EvalEngine
+from dataset.utils import LinearProbingDataCollator
 
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
