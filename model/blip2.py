@@ -6,6 +6,7 @@ from transformers.tokenization_utils import AddedToken
 import torch
 import torch.nn.functional as F
 from torchvision.transforms.functional import to_pil_image
+from peft import LoftQConfig, LoraConfig, get_peft_model
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
@@ -115,6 +116,50 @@ class BLIP2ForDiagnosis(CLIPBase):
         logits = outputs["logits_per_image"]
         return logits
 
+
+class BLIP2LoRAForDiagnosis(CLIPBase):
+    def __init__(self, args, text, num_classes, model_name="Salesforce/blip2-itm-vit-g"):
+        """
+        Wrapper around Blip2ForImageTextRetrieval to simplify usage.
+        
+        Args:
+            text (list): List of text prototypes for each class.
+            num_classes (int): Number of classes.
+            model_name (str): Name of the pre-trained model.
+        """
+        model = Blip2ForImageTextRetrieval.from_pretrained(model_name)
+
+        if args.usage == "clip-img-lora":
+            lora_config = LoraConfig(target_modules=["qkv"])
+            for name, para in model.named_parameters():
+                para.requires_grad = False
+            model.vision_model = get_peft_model(model.vision_model, lora_config)
+        else:
+            raise NotImplementedError()
+
+        super().__init__(text=text, num_classes=num_classes, model=model)
+        self.tokenizer = Blip2Processor.from_pretrained(model_name).tokenizer
+        self.image_processor = Blip2Processor.from_pretrained(model_name).image_processor
+        self.image_processor = ImageProcessorCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+        self.num_classes = num_classes
+        self.prototype = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+
+    @torch.no_grad()
+    def encode_text(self, text):
+        assert len(text) == self.num_classes
+        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+        with torch.no_grad():
+            text_outputs = self.model.text_model(**inputs)
+        return F.normalize(text_outputs.last_hidden_state[:, 0, :], dim=-1)
+
+    def forward(self, images):
+        device = images.device
+        self.model.to(device)
+        outputs = self.model(input_ids=self.prototype["input_ids"].to(device), attention_mask=self.prototype["attention_mask"].to(device), pixel_values=images)
+        image_features, text_features = outputs["image_embeds"], outputs["text_embeds"]
+        logits = outputs["logits_per_image"]
+        return logits
 
 class BLIP2LPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:

@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
 from transformers import AutoTokenizer
 from transformers import BlipProcessor, BlipImageProcessor, BlipConfig, BlipForConditionalGeneration, BlipForQuestionAnswering, BlipModel
+from peft import LoftQConfig, LoraConfig, get_peft_model
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.clip_base import CLIPBase
 from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
-from peft import LoftQConfig, LoraConfig, get_peft_model
 
 
 def visualize_tensor_image(tensor, unnormalize=True):

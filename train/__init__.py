@@ -21,7 +21,7 @@ def get_trainer(args, model_wrapped, dataset):
         trainer = LLaVATrainer(model=model_wrapped.model, args=args, tokenizer=model_wrapped.tokenizer, **data_module)
 
         return trainer
-    elif args.model == "BLIP":
+    elif args.model == "BLIP" or args.model == "BLIP2-2.7b":
         if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
@@ -84,6 +84,7 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
         else:
             raise NotImplementedError()
+            
     elif args.model == "CLIP" or args.model == "MedCLIP":        
         if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
@@ -103,7 +104,6 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
         else:
             raise NotImplementedError()
-
     else:
         raise NotImplementedError("Trainer not supported for {}".format(args.model))
 

@@ -8,6 +8,7 @@ from torch import nn
 from torch.utils.checkpoint import checkpoint
 from torchvision.transforms import Normalize, Compose, RandomResizedCrop, InterpolationMode, ToTensor, Resize, CenterCrop
 from torchvision.transforms.functional import to_pil_image
+from peft import LoftQConfig, LoraConfig, get_peft_model
 
 from transformers import AutoTokenizer, AutoModel
 from model.clip_base import CLIPBase
@@ -263,6 +264,107 @@ class PMCCLIPForDiagnosis(CLIPBase):
         logit_scale = 4.4292  # Initialize logit scaling factor
         
         model = CLIPModel(image_encoder, text_encoder)
+
+        # Call the parent class initializer
+        super().__init__(text=text, num_classes=num_classes, model=model)
+
+        self.image_encoder = self.model.image_encoder
+        self.text_encoder = self.model.text_encoder
+        self.text_projection_layer = text_projection_layer
+        self.logit_scale = nn.Parameter(torch.tensor(logit_scale))
+        self.tokenizer = tokenizer
+        
+        self.prototype = self.encode_text(self.prototype)
+        self.image_processor = ImageProcessorLPCallable(self.image_transform(image_size=224))
+        self.image_processor_evaluation = self.image_processor
+
+    @staticmethod
+    def image_transform(
+        image_size: int,
+        mean: Optional[Tuple[float, ...]] = None,
+        std: Optional[Tuple[float, ...]] = None,
+        fill_color: int = 0,
+    ):
+        if isinstance(image_size, (list, tuple)) and image_size[0] == image_size[1]:
+            # for square size, pass size as int so that Resize() uses aspect preserving shortest edge
+            image_size = image_size[0]
+
+        mean = mean or (0.48145466, 0.4578275, 0.40821073)  # OpenAI dataset mean
+        std = std or (0.26862954, 0.26130258, 0.27577711)  # OpenAI dataset std
+        normalize = Normalize(mean=mean, std=std)
+
+        transforms = [
+            Resize(image_size, interpolation=InterpolationMode.BICUBIC),
+            CenterCrop(image_size),
+        ]
+        transforms.extend([
+            _convert_to_rgb,
+            ToTensor(),
+            normalize,
+        ])
+        return Compose(transforms)
+
+    @torch.no_grad()
+    def encode_text(self, text):
+        """
+        Encodes text descriptions into feature vectors using the text encoder and applies the text projection layer.
+        """
+        assert len(text) == self.num_classes
+        
+        text_inputs = self.tokenizer(
+            text,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            max_length=512
+        )
+        self.text_encoder.to(next(self.text_encoder.parameters()).device)
+        text_outputs = self.text_encoder(**text_inputs).last_hidden_state[:, 0, :]  # Extract [CLS] token outputs
+        projected_text_features = F.normalize(text_outputs @ self.text_projection_layer.to(next(self.text_encoder.parameters()).device), dim=-1)
+
+        return projected_text_features
+
+    def forward(self, images):
+        """
+        Forward pass to compute logits based on image and text features.
+        """
+        image_features = self.image_encoder(images)["image_features"]
+        image_features = F.normalize(image_features, dim=-1)
+
+        text_features = self.prototype.to(images.device)
+
+        logit_scale = self.logit_scale.exp()
+        logits = logit_scale * image_features @ text_features.T
+
+        return logits
+
+
+class PMCCLIPLoRAForDiagnosis(CLIPBase):
+    def __init__(self, args, text, num_classes, **kwargs) -> None:
+        # Initialize encoders and projection layers
+        image_encoder = ModifiedResNet(layers=[3, 4, 6, 3], output_dim=768, heads=8, image_size=224, width=64)
+        image_encoder.load_state_dict(torch.load('./pretrained_models/pmcclip/image_encoder(resnet50).pth'))
+        
+        tokenizer = AutoTokenizer.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract')
+        text_encoder = AutoModel.from_pretrained('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract')
+        text_encoder.load_state_dict(torch.load('./pretrained_models/pmcclip/text_encoder.pth'))
+
+        text_projection_layer = torch.load('./pretrained_models/pmcclip/text_projection_layer.pth')
+        text_projection_layer = nn.Parameter(text_projection_layer)
+
+        logit_scale = 4.4292  # Initialize logit scaling factor
+        
+        model = CLIPModel(image_encoder, text_encoder)
+
+        if args.usage == "clip-img-lora":
+            raise RuntimeError("Image encoder is resnet")
+        elif args.usage == "clip-txt_lora":
+            lora_config = LoraConfig(target_modules=["query", "key", "value"])
+            for name, para in model.named_parameters():
+                para.requires_grad = False
+            model.text_encoder = get_peft_model(model.text_encoder, lora_config)
+        else:
+            raise NotImplementedError()
 
         # Call the parent class initializer
         super().__init__(text=text, num_classes=num_classes, model=model)

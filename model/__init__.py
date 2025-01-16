@@ -1,13 +1,13 @@
 from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis, BLIPForDiagnosis, BLIPLoRAForDiagnosis
 from model.llava import LLaVA
-from model.blip2 import BLIP2, BLIP2ForDiagnosis
+from model.blip2 import BLIP2, BLIP2ForDiagnosis, BLIP2LoRAForDiagnosis
 from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis, XGenGPTLoRALPForDiagnosis
 from model.biomedclip import BioMedCLIPLPForDiagnosis, BioMedCLIPLoRALPForDiagnosis, BiomedCLIPForDiagnosis, BiomedCLIPLoRAForDiagnosis
 from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis, CLIPForDiagnosis, CLIPLoRAForDiagnosis
 from model.medclip import MedCLIPLPForDiagnosis, MedCLIPForDiagnosis, MedCLIPLoRAForDiagnosis
-from model.pmcclip import PMCCLIPForDiagnosis
+from model.pmcclip import PMCCLIPForDiagnosis, PMCCLIPLoRAForDiagnosis
 from dataset.diagnosis import INFO
 
 from dataset.utils import get_prototype
@@ -95,12 +95,16 @@ def get_model(args, **kwargs):
             text = get_prototype(args)
             if args.model == "BLIP":
                 model = BLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "BLIP2-2.7b":
+                model = BLIP2LoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "CLIP":
                 model = CLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BioMedCLIP":
                 model = BiomedCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "MedCLIP":
                 model = MedCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "PMCCLIP":
+                model = PMCCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         else:

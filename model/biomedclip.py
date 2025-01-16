@@ -52,10 +52,19 @@ class BiomedCLIPForDiagnosis(CLIPBase):
 
 
 class BiomedCLIPLoRAForDiagnosis(CLIPBase):
-    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+    def __init__(self, args, text, num_classes, **kwargs) -> None:
         model, processor = create_model_from_pretrained(
             "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
         )
+
+        if args.usage == "clip-img-lora":
+            lora_config = LoraConfig(target_modules=["qkv"])
+            for name, para in model.named_parameters():
+                para.requires_grad = False
+            model.visual = get_peft_model(model.visual, lora_config)
+        else:
+            raise NotImplementedError()
+
 
         super().__init__(text=text, num_classes=num_classes, model=model)
         self.tokenizer = get_tokenizer('hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224')

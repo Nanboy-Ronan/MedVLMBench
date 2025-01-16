@@ -133,11 +133,19 @@ class MedCLIPForDiagnosis(CLIPBase):
         return logits
 
 class MedCLIPLoRAForDiagnosis(CLIPBase):
-    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+    def __init__(self, args, text, num_classes, **kwargs) -> None:
         model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
         model.from_pretrained()
         super().__init__(text=text, num_classes=num_classes, model=model)
-    
+
+        if args.usage == "clip-img-lora":
+            lora_config = LoraConfig(target_modules=["queyr", "key", "value"])
+            for name, para in model.named_parameters():
+                para.requires_grad = False
+            model.vision_model = get_peft_model(model.vision_model, lora_config)
+        else:
+            raise NotImplementedError()
+
         self.processor = MedCLIPProcessor()
         self.image_processor = self.processor.image_processor
         self.tokenizer = self.processor.tokenizer
