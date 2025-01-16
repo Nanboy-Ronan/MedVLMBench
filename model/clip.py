@@ -53,8 +53,18 @@ class CLIPForDiagnosis(CLIPBase):
 
 
 class CLIPLoRAForDiagnosis(CLIPBase):
-    def __init__(self, text, num_classes, *args, **kwargs) -> None:
+    def __init__(self, args, text, num_classes, **kwargs) -> None:
         model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+
+        if args.usage == "clip-img-lora":
+            lora_config = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
+            for name, para in model.named_parameters():
+                para.requires_grad = False
+            model.vision_model = get_peft_model(model.vision_model, lora_config)
+        else:
+            raise NotImplementedError()
+
+
         super().__init__(text=text, num_classes=num_classes, model=model)
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
         self.image_processor = CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")

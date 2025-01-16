@@ -22,7 +22,7 @@ def get_trainer(args, model_wrapped, dataset):
 
         return trainer
     elif args.model == "BLIP":
-        if args.usage == "lp":
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -38,40 +38,6 @@ def get_trainer(args, model_wrapped, dataset):
             )
 
             return trainer
-        
-        elif args.usage == "lora_lp":
-            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-            data_module = make_lp_data_module(
-                args,
-                dataset=dataset,
-                image_processor=None,
-            )
-
-            trainer = CLIPLPTrainer(
-                model=model_wrapped,
-                args=args,
-                image_processor=model_wrapped.image_processor,
-                **data_module
-            )
-
-            return trainer
-
-
-        elif args.usage in ["clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
-            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-            data_module = make_lp_data_module(
-                args,
-                dataset=dataset,
-                image_processor=None,
-            )
-
-            trainer = CLIPLPTrainer(
-                model=model_wrapped,
-                args=args,
-                image_processor=model_wrapped.image_processor,
-                **data_module
-            )
-
         else:
             raise NotImplementedError()
 
@@ -79,24 +45,7 @@ def get_trainer(args, model_wrapped, dataset):
 
 
     elif args.model == "XrayGPT":
-        if args.usage == "lp":
-            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-            data_module = make_lp_data_module(
-                args,
-                dataset=dataset,
-                image_processor=None,
-            )
-
-            trainer = CLIPLPTrainer(
-                model=model_wrapped,
-                args=args,
-                image_processor=model_wrapped.image_processor,
-                **data_module
-            )
-
-            return trainer
-        
-        elif args.usage == "lora_lp":
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -117,7 +66,7 @@ def get_trainer(args, model_wrapped, dataset):
             raise NotImplementedError()
     
     elif args.model == "BioMedCLIP":        
-        if args.usage == "lp" or args.usage == "lora_lp":
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -136,7 +85,7 @@ def get_trainer(args, model_wrapped, dataset):
         else:
             raise NotImplementedError()
     elif args.model == "CLIP" or args.model == "MedCLIP":        
-        if args.usage == "lp" or args.usage == "lora_lp":
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -152,8 +101,6 @@ def get_trainer(args, model_wrapped, dataset):
             )
 
             return trainer
-        elif args.usage == "clip-adapt":
-            raise NotImplementedError()
         else:
             raise NotImplementedError()
 
