@@ -445,7 +445,6 @@ class MedMNIST(Dataset):
             root (string, optional): Root directory of dataset. Default: `~/.medmnist`.
 
         """
-
         # Here, `size_flag` is blank for 28 images, and `_size` for larger images, e.g., "_64".
         if (size is None) or (size == 28):
             self.size = 28
