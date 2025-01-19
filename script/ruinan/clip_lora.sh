@@ -191,11 +191,11 @@ date
 #     --learning_rate 5e-5
 
 
-python run_train.py \
-    --task diagnosis --usage clip-img-lora --dataset DermaMNIST --split train \
-    --image_path ./data \
-    --output_dir ./log \
-    --model MedCLIP --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 50 \
-    --learning_rate 5e-5
+# python run_train.py \
+#     --task diagnosis --usage clip-img-lora --dataset DermaMNIST --split train \
+#     --image_path ./data \
+#     --output_dir ./log \
+#     --model MedCLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5

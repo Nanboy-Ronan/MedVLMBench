@@ -45,6 +45,7 @@ class Arguments(transformers.TrainingArguments):
     # evaluation
     eval_print_freq: int = 100
     save_pred: bool = False
+    save_total_limit: int = 2
 
     mm_projector_lr: Optional[float] = None  # for LLMs
     remove_unused_columns: bool = field(default=False)
