@@ -1,6 +1,6 @@
 from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis, BLIPForDiagnosis, BLIPLoRAForDiagnosis
 from model.llava import LLaVA
-from model.blip2 import BLIP2, BLIP2ForDiagnosis, BLIP2LoRAForDiagnosis
+from model.blip2 import BLIP2, BLIP2ForDiagnosis, BLIP2LoRAForDiagnosis, BLIP2LPForDiagnosis
 from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis, XGenGPTLoRALPForDiagnosis
@@ -62,6 +62,8 @@ def get_model(args, **kwargs):
                 model = CLIPLPForDiagnosis(args=args, num_classes=num_classes)
             elif args.model == "MedCLIP":
                 model = MedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "BLIP2-2.7b":
+                model = BLIP2LPForDiagnosis(args=args, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.usage == "lora_lp":
@@ -73,6 +75,8 @@ def get_model(args, **kwargs):
                 model = BioMedCLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
             elif args.model == "CLIP":
                 model = CLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "BLIP2-2.7b":
+                model = BLIP2LPLoRAForDiagnosis(args=args, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.usage == "clip-zs":

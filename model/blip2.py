@@ -162,6 +162,21 @@ class BLIP2LoRAForDiagnosis(CLIPBase):
         return logits
 
 class BLIP2LPForDiagnosis(LPModel):
+    def __init__(self, model_name="Salesforce/blip2-itm-vit-g", *args, **kwargs) -> None:
+        model = Blip2ForImageTextRetrieval.from_pretrained(model_name)
+        vision_model = model.vision_model
+        vision_model.feat_dim = 1408
+
+        super().__init__(encoder=vision_model, *args, **kwargs)
+        self.image_processor = Blip2Processor.from_pretrained(model_name).image_processor
+        self.image_processor = ImageProcessorCallable(self.image_processor)
+        self.image_processor_evaluation = self.image_processor
+    
+    def forward(self, x):
+        return self.model.head(self.model.encoder(x)["last_hidden_state"][:, 0, :])
+
+
+class BLIP2LPLoRAForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.blip_config = BlipConfig()
@@ -169,6 +184,8 @@ class BLIP2LPForDiagnosis(LPModel):
         self.model = BlipModel(self.blip_config)
         self.vision_model = self.model.vision_model
         self.vision_model.feat_dim = 768
+
+        lora_config = LoraConfig(target_modules=["qkv"])
         if "lp" in self.args.usage:
             from wrappers import LinearProbeWrapper
             self.model = LinearProbeWrapper(self.vision_model)
