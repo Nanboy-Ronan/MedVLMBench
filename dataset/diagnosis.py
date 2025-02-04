@@ -1,10 +1,12 @@
 import os
 import warnings
+import kagglehub
 import numpy as np
-from os.path import expanduser
 from PIL import Image
-from torch.utils.data import Dataset
+from os.path import expanduser
 from torchvision import transforms
+from torch.utils.data import Dataset
+from sklearn.model_selection import train_test_split
 
 
 def get_default_root():
@@ -738,6 +740,37 @@ class VesselMNIST3D(MedMNIST3D):
 
 class SynapseMNIST3D(MedMNIST3D):
     flag = "synapsemnist3d"
+
+
+# Camelyon17 Dataset
+class Camelyon17Dataset(Dataset):
+    def __init__(self, metadata_path_train="./data/camelyon17_v1.0/train_metadata.csv", metadata_path_test="./data/camelyon17_v1.0/test_metadata.csv", image_root="./data/camelyon17_v1.0/patches", split="train", transform=None):
+        self.image_root = image_root
+        self.transform = transform
+        self.train = train
+        
+        # Load the appropriate dataset
+        metadata_path = metadata_path_train if split == "train" else metadata_path_test
+        self.data = pd.read_csv(metadata_path)
+        
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self, idx):
+        row = self.data.iloc[idx]
+        image_path = os.path.join(self.image_root, f"patient_{row['patient']:03d}_node_{row['node']}", f"{row['x_coord']}_{row['y_coord']}.png")
+        img = Image.open(image_path).convert('RGB')
+        
+        if self.transform:
+            img = self.transform(img)
+        
+        label = torch.tensor(row['tumor'], dtype=torch.long)
+        
+        return {
+            "pixel_values": img,
+            "label": label,
+            "image_path": image_path
+        }
 
 
 # backward-compatible aliases

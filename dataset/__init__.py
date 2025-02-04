@@ -8,7 +8,7 @@ from easydict import EasyDict as edict
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD
 from dataset.caption import HarvardFairVLMed10k, MIMIC_CXR
-from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST
+from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17Dataset
 
 datasets = {
     "SLAKE": SLAKE,
@@ -19,6 +19,7 @@ datasets = {
     "PneumoniaMNIST": PneumoniaMNIST,
     "BreastMNIST": BreastMNIST,
     "DermaMNIST": DermaMNIST
+    "Camelyon17": Camelyon17Dataset
 }
 
 
