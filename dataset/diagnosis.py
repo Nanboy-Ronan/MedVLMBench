@@ -1,7 +1,8 @@
 import os
 import warnings
-import kagglehub
 import numpy as np
+import pandas as pd
+import torch
 from PIL import Image
 from os.path import expanduser
 from torchvision import transforms
@@ -418,6 +419,9 @@ INFO = {
         "n_samples": {"train": 1230, "val": 177, "test": 352},
         "license": "CC BY 4.0",
     },
+    "camelyon17": {
+        "label": {"0": "negative tumor", "1": "positive tumor"}
+    }
 }
 
 class MedMNIST(Dataset):
@@ -743,14 +747,15 @@ class SynapseMNIST3D(MedMNIST3D):
 
 
 # Camelyon17 Dataset
-class Camelyon17Dataset(Dataset):
-    def __init__(self, metadata_path_train="./data/camelyon17_v1.0/train_metadata.csv", metadata_path_test="./data/camelyon17_v1.0/test_metadata.csv", image_root="./data/camelyon17_v1.0/patches", split="train", transform=None):
-        self.image_root = image_root
+class Camelyon17(Dataset):
+    def __init__(self, data_args, metadata_path_train="./data/camelyon17_v1.0/train_metadata.csv", metadata_path_test="./data/camelyon17_v1.0/test_metadata.csv", split="train", transform=None):
+        self.image_root = data_args.image_path
         self.transform = transform
-        self.train = train
+        self.split = split
+        self.name = "Camelyon17"
         
         # Load the appropriate dataset
-        metadata_path = metadata_path_train if split == "train" else metadata_path_test
+        metadata_path = metadata_path_train if self.split == "train" else metadata_path_test
         self.data = pd.read_csv(metadata_path)
         
     def __len__(self):
@@ -758,7 +763,7 @@ class Camelyon17Dataset(Dataset):
     
     def __getitem__(self, idx):
         row = self.data.iloc[idx]
-        image_path = os.path.join(self.image_root, f"patient_{row['patient']:03d}_node_{row['node']}", f"{row['x_coord']}_{row['y_coord']}.png")
+        image_path = os.path.join(self.image_root, f"patient_{row['patient']:03d}_node_{row['node']}", f"patch_patient_{row['patient']:03d}_node_{row['node']}_x_{row['x_coord']}_y_{row['y_coord']}.png")
         img = Image.open(image_path).convert('RGB')
         
         if self.transform:

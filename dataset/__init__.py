@@ -4,11 +4,12 @@ import numpy as np
 import pandas as pd
 import torch
 from easydict import EasyDict as edict
+from collections import Counter
 
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD
 from dataset.caption import HarvardFairVLMed10k, MIMIC_CXR
-from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17Dataset
+from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17
 
 datasets = {
     "SLAKE": SLAKE,
@@ -18,8 +19,8 @@ datasets = {
     "MIMIC_CXR": MIMIC_CXR,
     "PneumoniaMNIST": PneumoniaMNIST,
     "BreastMNIST": BreastMNIST,
-    "DermaMNIST": DermaMNIST
-    "Camelyon17": Camelyon17Dataset
+    "DermaMNIST": DermaMNIST,
+    "Camelyon17": Camelyon17
 }
 
 
@@ -44,11 +45,29 @@ def get_dataset(args, image_processor_callable=None, split=None):
         transform = image_processor_callable
     else:
         transform = get_transform(args)
-        
+
     dataset = dataset_name(
         data_args=edict(image_path=args.image_path, size=224), split=split, transform=transform
     )
 
-    print("Loaded dataset: " + dataset.name)
+    args.logger.info("Loaded dataset: " + dataset.name)
+
+    if args.task == "diagnosis":
+        report_label_distribution(dataset, args)
+
 
     return dataset
+
+
+def report_label_distribution(dataset, args):
+    label_counts = Counter()
+    for i in range(len(dataset)):
+        label = dataset[i]["label"].item()
+        label_counts[label] += 1
+    
+    total = sum(label_counts.values())
+    distribution = {label: count / total for label, count in label_counts.items()}
+    
+    args.logger.info("Label Distribution:")
+    for label, freq in distribution.items():
+        args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")

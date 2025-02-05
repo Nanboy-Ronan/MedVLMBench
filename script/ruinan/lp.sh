@@ -295,3 +295,13 @@ CUDA_VISIBLE_DEVICES=6 python run_train.py \
     --cache_dir ./cache \
     --num_train_epochs 50 \
     --learning_rate 5e-5
+
+# Camelyon17
+CUDA_VISIBLE_DEVICES=6 python run_train.py \
+    --task diagnosis --usage lp --dataset Camelyon17 --split train \
+    --image_path ./data/camelyon17_v1.0/patches \
+    --output_dir ./log \
+    --model CLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5

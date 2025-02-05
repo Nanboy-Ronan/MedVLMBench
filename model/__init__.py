@@ -51,6 +51,7 @@ def get_model(args, **kwargs):
             raise NotImplementedError()
     elif args.task == "diagnosis":
         num_classes = len(INFO[args.dataset.lower()]["label"])
+
         if args.usage == "lp":
             if args.model == "BLIP":
                 model = BLIPLPForDiagnosis(args=args, num_classes=num_classes)
