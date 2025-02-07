@@ -778,6 +778,45 @@ class Camelyon17(Dataset):
         }
 
 
+
+class DrishtiDataset(torch.utils.data.Dataset):
+    def __init__(self, dataset_path, transform, split="train"):
+        self.CLASSES = 2
+        self.class_dict = {'Normal': 0, 'Glaucomatous': 1}
+        self.transform = transform
+        if split == "train":
+            self.file = os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Training', 'Images')
+        elif split == "test":
+            self.file = os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Test', 'Images')
+        else:
+            raise RuntimeError("Split must be one of train and test.")
+            
+        self.labels = get_label(os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_diagnosis.csv'))
+        self.image_names = []
+        self.label_tensors = []
+        for img_name in os.listdir(self.file):
+            self.image_names.append(os.path.join(self.file,img_name))
+            self.label_tensors.append(torch.tensor(self.class_dict[self.labels[img_name[:-4]]], dtype=torch.long))
+
+    def __len__(self):
+        return len(self.image_names)
+
+    def __getitem__(self, index):
+        image_tensor = self.load_image(self.image_names[index])
+
+        return image_tensor, self.label_tensors[index]
+
+    def load_image(self, img_path):
+        if not os.path.exists(img_path):
+            print("IMAGE DOES NOT EXIST {}".format(img_path))
+        image = Image.open(img_path).convert('RGB')
+
+        image_tensor = self.transform(image)
+
+        return image_tensor
+
+
+
 # backward-compatible aliases
 OrganMNISTAxial = OrganAMNIST
 OrganMNISTCoronal = OrganCMNIST
