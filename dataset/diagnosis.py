@@ -422,6 +422,10 @@ INFO = {
     "camelyon17": {
         "label": {"0": "negative tumor", "1": "positive tumor"}
     }
+
+    "drishti"{
+        "label": {"0": "normal retina ", "1": "glaucomatous retina"}
+    }
 }
 
 class MedMNIST(Dataset):
@@ -790,7 +794,7 @@ class DrishtiDataset(torch.utils.data.Dataset):
             self.file = os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Test', 'Images')
         else:
             raise RuntimeError("Split must be one of train and test.")
-            
+
         self.labels = get_label(os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_diagnosis.csv'))
         self.image_names = []
         self.label_tensors = []

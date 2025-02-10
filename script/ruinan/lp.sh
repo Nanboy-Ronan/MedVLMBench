@@ -305,3 +305,14 @@ CUDA_VISIBLE_DEVICES=6 python run_train.py \
     --cache_dir ./cache \
     --num_train_epochs 50 \
     --learning_rate 5e-5
+
+
+# Drishti
+CUDA_VISIBLE_DEVICES=1 python run_train.py \
+    --task diagnosis --usage lp --dataset Drishti --split train \
+    --image_path ./DataSets/Drishti-GS1_files \
+    --output_dir ./log \
+    --model CLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
