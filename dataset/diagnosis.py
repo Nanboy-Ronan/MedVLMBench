@@ -421,9 +421,8 @@ INFO = {
     },
     "camelyon17": {
         "label": {"0": "negative tumor", "1": "positive tumor"}
-    }
-
-    "drishti"{
+    },
+    "drishti": {
         "label": {"0": "normal retina ", "1": "glaucomatous retina"}
     }
 }
