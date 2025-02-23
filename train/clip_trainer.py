@@ -26,6 +26,37 @@ class CustomCallback(TrainerCallback):
             metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
             print(f"Evaluation metrics at epoch {self.trainer.current_epoch}: {metrics}")
         self.trainer.current_epoch += 1
+
+        total_epoch_forward = self.trainer.epoch_forward_flops
+        total_epoch_backward = self.trainer.epoch_backward_flops
+        total_epoch_flops = total_epoch_forward + total_epoch_backward
+
+        avg_epoch_forward = total_epoch_forward / self.batch_count if self.batch_count > 0 else 0
+        avg_epoch_backward = total_epoch_backward / self.batch_count if self.batch_count > 0 else 0
+
+        self.total_train_forward_flops += total_epoch_forward
+        self.total_train_backward_flops += total_epoch_backward
+        total_train_flops = self.total_train_forward_flops + self.total_train_backward_flops
+
+        self.trainer.args.logger.log(
+            f"Epoch {self.current_epoch} FLOPs: "
+            f"Total Forward: {total_epoch_forward/1e9:.2f} GFLOPS, "
+            f"Total Backward: {total_epoch_backward/1e9:.2f} GFLOPS, "
+            f"Combined: {total_epoch_flops/1e9:.2f} GFLOPS "
+            f"(Avg per batch: Forward: {avg_epoch_forward/1e9:.2f} GFLOPS, "
+            f"Backward: {avg_epoch_backward/1e9:.2f} GFLOPS)"
+        )
+
+        self.trainer.args.logger.log(
+            f"Total training FLOPs up to epoch {self.current_epoch}: "
+            f"Forward: {self.total_train_forward_flops/1e9:.2f} GFLOPS, "
+            f"Backward: {self.total_train_backward_flops/1e9:.2f} GFLOPS, "
+            f"Combined: {total_train_flops/1e9:.2f} GFLOPS"
+        )
+
+        self.trainer.epoch_forward_flops = 0
+        self.trainer.epoch_backward_flops = 0
+        self.trainer.batch_count = 0
     
     def on_train_end(self, args, state, control, **kwargs):
         """
@@ -49,6 +80,16 @@ class CLIPLPTrainer(Trainer):
         self.eval_engine = get_eval_engine(args=args, dataset=dataset)
         self.image_processor = image_processor
         self.current_epoch = 0
+
+        # Accumulators for per-epoch FLOPs
+        self.epoch_forward_flops = 0
+        self.epoch_backward_flops = 0
+        self.batch_count = 0
+        
+        # Global accumulators for the entire training process
+        self.total_train_forward_flops = 0
+        self.total_train_backward_flops = 0
+
         self.add_callback(CustomCallback(self))
 
     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
@@ -84,9 +125,10 @@ class CLIPLPTrainer(Trainer):
 
         # Extract Forward FLOPS
         flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+        self.epoch_forward_flops += flops_forward
 
-        print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
-        print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
+        # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
+        # print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
 
         return (loss, logits) if return_outputs else loss
     
@@ -111,13 +153,13 @@ class CLIPLPTrainer(Trainer):
 
         # Extract Backward FLOPS
         flops_backward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+        self.epoch_backward_flops += flops_backward
+        self.batch_count += 1
 
-        print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
-        print(f"🔹 Backward FLOPS per batch: {flops_backward / 1e9:.2f} GFLOPS")
+        # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
+        # print(f"🔹 Backward FLOPS per batch: {flops_backward / 1e9:.2f} GFLOPS")
 
         return loss
-
-
     
     def get_labels(self, eval_preds):
         logits, labels = eval_preds
@@ -135,17 +177,6 @@ class CLIPLPTrainer(Trainer):
             model_to_save = model_to_save.module
 
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
-    
-    def on_epoch_end(self):
-        """
-        Called at the end of each epoch.
-        Check if the current epoch is a multiple of 10, and if so, run evaluation.
-        """
-        if self.current_epoch % 10 == 0:  # Every 10 epochs
-            self.log(f"Running evaluation at epoch {self.current_epoch}...")
-            self.eval_engine.evaluate(args=args, model=model_wrapped)
-            self.log(f"Evaluation metrics at epoch {self.current_epoch}: {metrics}")
-        self.current_epoch += 1
 
 
 
