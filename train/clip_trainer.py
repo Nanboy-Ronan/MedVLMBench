@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Sequence, Optional
 from eval import get_eval_engine
 from dataset import get_dataset
 from dataset.utils import LinearProbingDataCollator
+from torch.profiler import profile, record_function, ProfilerActivity
 
 
 class CustomCallback(TrainerCallback):
@@ -51,18 +52,73 @@ class CLIPLPTrainer(Trainer):
         self.add_callback(CustomCallback(self))
 
     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        """
+        Computes loss while tracking only forward FLOPS using torch.profiler.
+
+        Args:
+            model: The PyTorch model.
+            inputs: Dictionary containing pixel_values and labels.
+            num_items_in_batch: Number of items in batch (for normalization if needed).
+            return_outputs: Whether to return logits with loss.
+
+        Returns:
+            Loss value (and logits if return_outputs=True).
+        """
         device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
 
-        if self.image_processor is not None and pixel_values.dtype == torch.uint8: # torch.uinit8 means the image is processed with PILToImage only
+        if self.image_processor is not None and pixel_values.dtype == torch.uint8:
             pixel_values = self.image_processor(pixel_values)
 
-        logits = model(pixel_values)
-        loss = F.cross_entropy(logits, labels)
-        
-        return (loss, logits) if return_outputs else loss
+        # Profile the Forward Pass ONLY
+        with profile(
+            activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+            record_shapes=True,
+            with_flops=True,  
+            profile_memory=True  
+        ) as prof:
+            with record_function("forward_pass"):
+                logits = model(pixel_values)
+                loss = F.cross_entropy(logits, labels)
 
+        # Extract Forward FLOPS
+        flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+
+        print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
+        print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
+
+        return (loss, logits) if return_outputs else loss
+    
+    
+    def training_step(self, model, inputs, *_args):
+        """
+        Runs a single training step, tracking FLOPS for both forward and backward passes.
+        Hugging Face's Trainer calls this with (model, inputs, num_items_in_batch),
+        so we use *_args to ignore additional parameters.
+        """
+        loss = self.compute_loss(model, inputs, num_items_in_batch=len(inputs))
+
+        # Profile Backward Pass Separately
+        with profile(
+            activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+            record_shapes=True,
+            with_flops=True,
+            profile_memory=True
+        ) as prof:
+            with record_function("backward_pass"):
+                loss.backward()  # Backward happens here, so we track FLOPS here
+
+        # Extract Backward FLOPS
+        flops_backward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+
+        print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
+        print(f"🔹 Backward FLOPS per batch: {flops_backward / 1e9:.2f} GFLOPS")
+
+        return loss
+
+
+    
     def get_labels(self, eval_preds):
         logits, labels = eval_preds
         return labels

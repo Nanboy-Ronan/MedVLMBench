@@ -6,7 +6,7 @@ from transformers.tokenization_utils import AddedToken
 import torch
 import torch.nn.functional as F
 from torchvision.transforms.functional import to_pil_image
-from peft import LoftQConfig, LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel

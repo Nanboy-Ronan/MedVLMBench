@@ -85,7 +85,7 @@ def get_trainer(args, model_wrapped, dataset):
         else:
             raise NotImplementedError()
             
-    elif args.model == "CLIP" or args.model == "MedCLIP":        
+    elif args.model == "CLIP" or args.model == "MedCLIP" or args.model == "PMCCLIP":        
         if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(

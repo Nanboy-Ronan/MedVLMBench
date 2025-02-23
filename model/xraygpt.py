@@ -10,7 +10,7 @@ from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
-from peft import LoftQConfig, LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model
 
 
 class XrayGPT(ChatMetaModel):

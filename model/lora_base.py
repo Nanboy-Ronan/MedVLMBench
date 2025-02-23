@@ -4,7 +4,7 @@ import copy
 from collections import OrderedDict
 from model.base import BaseModel
 from easydict import EasyDict as edict
-from peft import LoftQConfig, LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model
 
 
 class LoRALPModel(BaseModel, nn.Module):

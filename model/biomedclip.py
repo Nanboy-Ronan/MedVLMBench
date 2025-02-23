@@ -7,7 +7,7 @@ from open_clip import create_model_from_pretrained, get_tokenizer
 from model.clip_base import CLIPBase
 from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
-from peft import LoftQConfig, LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model
 
 
 class ImageProcessorLPCallable:

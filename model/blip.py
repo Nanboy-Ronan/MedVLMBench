@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from easydict import EasyDict as edict
 from transformers import AutoTokenizer
 from transformers import BlipProcessor, BlipImageProcessor, BlipConfig, BlipForConditionalGeneration, BlipForQuestionAnswering, BlipModel
-from peft import LoftQConfig, LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model
 
 from model.base import BaseModel
 from model.chat import ChatMetaModel

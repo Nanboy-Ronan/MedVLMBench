@@ -8,7 +8,7 @@ from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
 from model.clip_base import CLIPBase
 from torchvision.transforms.functional import to_pil_image
-from peft import LoftQConfig, LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model
 
 
 class ImageProcessorLPCallable:

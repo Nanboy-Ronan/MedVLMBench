@@ -31,6 +31,13 @@ python run_eval.py \
     --model CLIP --model_path "/fast/rjin02/MedVLMBench/log/diagnosis/PneumoniaMNIST/CLIP/train_None_VML_seed42/checkpoint-5890/pytorch_model.bin" \
     --cache_dir ./cache
 
+python run_eval.py \
+    --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+    --image_path ./data \
+    --exp_path ./log \
+    --model PMCCLIP --model_path original_pretrained \
+    --cache_dir ./cache
+
 # BREAST
 python run_eval.py \
     --task diagnosis --usage lp --dataset BreastMNIST --split train \
@@ -169,6 +176,14 @@ CUDA_VISIBLE_DEVICES=3 python run_train.py \
     --num_train_epochs 50 \
     --learning_rate 5e-5
 
+CUDA_VISIBLE_DEVICES=5 python run_train.py \
+    --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model PMCCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
 
 # Train BREAST
 # Ongoing
@@ -229,6 +244,16 @@ CUDA_VISIBLE_DEVICES=7 python run_train.py \
     --image_path ./data \
     --output_dir ./log \
     --model XrayGPT --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+
+CUDA_VISIBLE_DEVICES=6 python run_train.py \
+    --task diagnosis --usage lp --dataset BreastMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model PMCCLIP --model_path not_given \
     --cache_dir ./cache \
     --num_train_epochs 50 \
     --learning_rate 5e-5
@@ -296,12 +321,79 @@ CUDA_VISIBLE_DEVICES=6 python run_train.py \
     --num_train_epochs 50 \
     --learning_rate 5e-5
 
+CUDA_VISIBLE_DEVICES=1 python run_train.py \
+    --task diagnosis --usage lp --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model PMCCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
 # Camelyon17
-CUDA_VISIBLE_DEVICES=6 python run_train.py \
+CUDA_VISIBLE_DEVICES=1 python run_train.py \
     --task diagnosis --usage lp --dataset Camelyon17 --split train \
     --image_path ./data/camelyon17_v1.0/patches \
     --output_dir ./log \
     --model CLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+CUDA_VISIBLE_DEVICES=5 python run_train.py \
+    --task diagnosis --usage lp --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model BLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+# Ongoing
+CUDA_VISIBLE_DEVICES=6 python run_train.py \
+    --task diagnosis --usage lp --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model BLIP2-2.7b --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+# Ongoing
+CUDA_VISIBLE_DEVICES=1 python run_train.py \
+    --task diagnosis --usage lp --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model BioMedCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+# Ongoing
+CUDA_VISIBLE_DEVICES=5 python run_train.py \
+    --task diagnosis --usage lp --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model XrayGPT --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+# Ongoing
+CUDA_VISIBLE_DEVICES=6 python run_train.py \
+    --task diagnosis --usage lp --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model MedCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+CUDA_VISIBLE_DEVICES=1 python run_train.py \
+    --task diagnosis --usage lp --dataset DermaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model PMCCLIP --model_path not_given \
     --cache_dir ./cache \
     --num_train_epochs 50 \
     --learning_rate 5e-5

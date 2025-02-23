@@ -8,10 +8,11 @@ from torch import nn
 from torch.utils.checkpoint import checkpoint
 from torchvision.transforms import Normalize, Compose, RandomResizedCrop, InterpolationMode, ToTensor, Resize, CenterCrop
 from torchvision.transforms.functional import to_pil_image
-from peft import LoftQConfig, LoraConfig, get_peft_model
+from peft import LoraConfig, get_peft_model
 
 from transformers import AutoTokenizer, AutoModel
 from model.clip_base import CLIPBase
+from model.lp_base import LPModel
 
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -438,3 +439,48 @@ class PMCCLIPLoRAForDiagnosis(CLIPBase):
         logits = logit_scale * image_features @ text_features.T
 
         return logits
+
+
+class PMCCLIPLPForDiagnosis(LPModel):
+    def __init__(self, backbone="ViT-B/32", *args, **kwargs) -> None:
+        # Initialize encoders and projection layers
+        image_encoder = ModifiedResNet(layers=[3, 4, 6, 3], output_dim=768, heads=8, image_size=224, width=64)
+        image_encoder.load_state_dict(torch.load('./pretrained_models/pmcclip/image_encoder(resnet50).pth'))
+        image_encoder.feat_dim = 768
+
+        logit_scale = 4.4292  # Initialize logit scaling factor
+
+        # Call the parent class initializer
+        super().__init__(encoder=image_encoder, *args, **kwargs)
+        
+        self.image_processor = ImageProcessorLPCallable(self.image_transform(image_size=224))
+        self.image_processor_evaluation = self.image_processor
+    
+    @staticmethod
+    def image_transform(
+        image_size: int,
+        mean: Optional[Tuple[float, ...]] = None,
+        std: Optional[Tuple[float, ...]] = None,
+        fill_color: int = 0,
+    ):
+        if isinstance(image_size, (list, tuple)) and image_size[0] == image_size[1]:
+            # for square size, pass size as int so that Resize() uses aspect preserving shortest edge
+            image_size = image_size[0]
+
+        mean = mean or (0.48145466, 0.4578275, 0.40821073)  # OpenAI dataset mean
+        std = std or (0.26862954, 0.26130258, 0.27577711)  # OpenAI dataset std
+        normalize = Normalize(mean=mean, std=std)
+
+        transforms = [
+            Resize(image_size, interpolation=InterpolationMode.BICUBIC),
+            CenterCrop(image_size),
+        ]
+        transforms.extend([
+            _convert_to_rgb,
+            ToTensor(),
+            normalize,
+        ])
+        return Compose(transforms)
+    
+    def forward(self, images):
+        return self.head(self.encoder(images)['image_features'])
