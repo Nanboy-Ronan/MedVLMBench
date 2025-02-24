@@ -36,7 +36,10 @@ class LinearProbingDataCollator:
 
         pixel_values = torch.stack(images)                        # Shape: (batch_size, C, H, W)
 
-        labels = [int(label[0]) if isinstance(label, (list, tuple, np.ndarray, torch.Tensor)) else int(label) for label in labels]
+        if isinstance(labels[0], torch.Tensor) and labels[0].ndim == 0:
+            labels = [int(label) for label in labels]
+        else:
+            labels = [int(label[0]) if isinstance(label, (list, tuple, np.ndarray, torch.Tensor)) else int(label) for label in labels]
         labels = torch.tensor(labels, dtype=torch.long)           # Shape: (batch_size,)
 
         batch = {

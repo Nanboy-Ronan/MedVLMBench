@@ -31,12 +31,12 @@ class CustomCallback(TrainerCallback):
         total_epoch_backward = self.trainer.epoch_backward_flops
         total_epoch_flops = total_epoch_forward + total_epoch_backward
 
-        avg_epoch_forward = total_epoch_forward / self.batch_count if self.batch_count > 0 else 0
-        avg_epoch_backward = total_epoch_backward / self.batch_count if self.batch_count > 0 else 0
+        avg_epoch_forward = total_epoch_forward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
+        avg_epoch_backward = total_epoch_backward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
 
-        self.total_train_forward_flops += total_epoch_forward
-        self.total_train_backward_flops += total_epoch_backward
-        total_train_flops = self.total_train_forward_flops + self.total_train_backward_flops
+        self.trainer.total_train_forward_flops += total_epoch_forward
+        self.trainer.total_train_backward_flops += total_epoch_backward
+        total_train_flops = self.trainer.total_train_forward_flops + self.trainer.total_train_backward_flops
 
         self.trainer.args.logger.log(
             f"Epoch {self.current_epoch} FLOPs: "
