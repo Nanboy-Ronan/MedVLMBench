@@ -215,6 +215,49 @@ python run_eval.py \
     --model PMCCLIP --model_path "original_pretrained" \
     --cache_dir ./cache
 
+# ChestXray
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset ChestXray --split test \
+    --image_path /mnt/sdc/rjin02/DataSets/chest_xray \
+    --exp_path ./log \
+    --model CLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset ChestXray --split test \
+    --image_path /mnt/sdc/rjin02/DataSets/chest_xray \
+    --exp_path ./log \
+    --model BLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset ChestXray --split test \
+    --image_path /mnt/sdc/rjin02/DataSets/chest_xray \
+    --exp_path ./log \
+    --model BioMedCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset ChestXray --split test \
+    --image_path /mnt/sdc/rjin02/DataSets/chest_xray \
+    --exp_path ./log \
+    --model MedCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset ChestXray --split test \
+    --image_path /mnt/sdc/rjin02/DataSets/chest_xray \
+    --exp_path ./log \
+    --model BLIP2-2.7b --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset ChestXray --split test \
+    --image_path /mnt/sdc/rjin02/DataSets/chest_xray \
+    --exp_path ./log \
+    --model PMCCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
 # DermaMNIST
 # python run_eval.py \
 #     --task diagnosis --usage clip-zs --dataset DermaMNIST --split test \

@@ -428,6 +428,11 @@ INFO = {
     },
     "ham10000": {
         "label": {"0": "benign keratosis-like lesions", "1": "actinic keratoses or melanoma"}
+    },
+    "chestxray": {
+        "label": {
+            "0": "an chexray with no finding", "1": "an xray with pneumonia"
+        }
     }
 }
 
@@ -851,7 +856,7 @@ class DrishtiDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         image = Image.open(self.image_names[index]).convert('RGB')
         label = self.label_tensors[index]
-        
+
         if self.transform is not None:
             image = self.transform(image)
 
@@ -861,6 +866,51 @@ class DrishtiDataset(torch.utils.data.Dataset):
         }
 
 
+class ChestXrayDataset(Dataset):
+    def __init__(self, data_args, transform=None, split="test"):
+        """
+        Args:
+            root_dir (str): Path to the dataset root directory (e.g., 'chest_xray').
+            transform (callable, optional): Transform to be applied to the images.
+            split (str): The dataset split to load ('train' or 'test').
+        """
+        self.root_dir = os.path.join(data_args.image_path, split)
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor()
+        ])
+        
+        # Class mapping
+        self.class_dict = {'NORMAL': 0, 'PNEUMONIA': 1}
+        
+        # Collect image paths and labels
+        self.image_paths = []
+        self.labels = []
+        self.name = "ChestXray"
+        
+        for class_name, label in self.class_dict.items():
+            class_dir = os.path.join(self.root_dir, class_name)
+            if os.path.exists(class_dir):
+                for img_name in os.listdir(class_dir):
+                    img_path = os.path.join(class_dir, img_name)
+                    self.image_paths.append(img_path)
+                    self.labels.append(label)
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, index):
+        img_path = self.image_paths[index]
+        image = Image.open(img_path).convert('RGB')
+        label = torch.tensor(self.labels[index], dtype=torch.long)
+
+        if self.transform:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
 
 # backward-compatible aliases
 OrganMNISTAxial = OrganAMNIST
