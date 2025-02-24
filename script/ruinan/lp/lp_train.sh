@@ -42,7 +42,7 @@ date
 
 # Train Xray
 # Ongoing
-CUDA_VISIBLE_DEVICES=5 python run_train.py \
+python run_train.py \
     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
     --image_path ./data \
     --output_dir ./log \

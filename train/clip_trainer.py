@@ -38,8 +38,8 @@ class CustomCallback(TrainerCallback):
         self.trainer.total_train_backward_flops += total_epoch_backward
         total_train_flops = self.trainer.total_train_forward_flops + self.trainer.total_train_backward_flops
 
-        self.trainer.args.logger.log(
-            f"Epoch {self.current_epoch} FLOPs: "
+        self.trainer.args.logger.info(
+            f"Epoch {self.trainer.current_epoch} FLOPs: "
             f"Total Forward: {total_epoch_forward/1e9:.2f} GFLOPS, "
             f"Total Backward: {total_epoch_backward/1e9:.2f} GFLOPS, "
             f"Combined: {total_epoch_flops/1e9:.2f} GFLOPS "
@@ -47,7 +47,7 @@ class CustomCallback(TrainerCallback):
             f"Backward: {avg_epoch_backward/1e9:.2f} GFLOPS)"
         )
 
-        self.trainer.args.logger.log(
+        self.trainer.args.logger.info(
             f"Total training FLOPs up to epoch {self.current_epoch}: "
             f"Forward: {self.total_train_forward_flops/1e9:.2f} GFLOPS, "
             f"Backward: {self.total_train_backward_flops/1e9:.2f} GFLOPS, "
