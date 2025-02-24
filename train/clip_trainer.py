@@ -48,9 +48,9 @@ class CustomCallback(TrainerCallback):
         )
 
         self.trainer.args.logger.info(
-            f"Total training FLOPs up to epoch {self.current_epoch}: "
-            f"Forward: {self.total_train_forward_flops/1e9:.2f} GFLOPS, "
-            f"Backward: {self.total_train_backward_flops/1e9:.2f} GFLOPS, "
+            f"Total training FLOPs up to epoch {self.trainer.current_epoch}: "
+            f"Forward: {self.trainer.total_train_forward_flops/1e9:.2f} GFLOPS, "
+            f"Backward: {self.trainer.total_train_backward_flops/1e9:.2f} GFLOPS, "
             f"Combined: {total_train_flops/1e9:.2f} GFLOPS"
         )
 
