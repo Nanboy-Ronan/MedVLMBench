@@ -1,4 +1,5 @@
 import os
+import csv
 import warnings
 import numpy as np
 import pandas as pd
@@ -424,6 +425,9 @@ INFO = {
     },
     "drishti": {
         "label": {"0": "normal retina ", "1": "glaucomatous retina"}
+    },
+    "ham10000": {
+        "label": {"0": "benign keratosis-like lesions", "1": "actinic keratoses or melanoma"}
     }
 }
 
@@ -781,42 +785,80 @@ class Camelyon17(Dataset):
         }
 
 
+class HAM10000Dataset(torch.utils.data.Dataset):
+    def __init__(self, data_args, transform, split="train"):
+        self.CLASSES = 2
+        self.class_dict = {'benign keratosis-like lesions': 0, 'actinic keratoses or melanoma': 1}
+        self.transform = transform
+        self.meta_path = os.path.join(data_args.image_path, "HAM10000", "split", "{}.csv".format(split))
+        self.df = pd.read_csv(self.meta_path)
+        self.Y = self.df["dx"].values.copy()
+        self.Y[self.Y == "akiec"] = 1
+        self.Y[self.Y == "mel"] = 1
+        self.Y[self.Y != 1] = 0
+        self.path_to_images = os.path.join(data_args.image_path, "HAM10000", "HAM10000_images")
+        self.name = "HAM10000"
 
+    def __len__(self):
+        return len(self.df)
+    
+    def __getitem__(self, idx):
+        image = Image.open(os.path.join(self.path_to_images, f"{self.df.iloc[idx]['image_id']}.jpg"))
+        label = torch.tensor(self.Y[idx])
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
+
+    
 class DrishtiDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset_path, transform, split="train"):
+    def __init__(self, data_args, transform, split="train"):
+        self.name = 'DrishtiDataset'
         self.CLASSES = 2
         self.class_dict = {'Normal': 0, 'Glaucomatous': 1}
-        self.transform = transform
+        self.transform = transforms.Compose([
+            transforms.PILToTensor(),  # Convert PIL Image to Tensor
+            transforms.Resize((224, 224))  # Resize the Tensor to 128x128
+        ])
         if split == "train":
-            self.file = os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Training', 'Images')
+            self.file = os.path.join(data_args.image_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Training', 'Images')
         elif split == "test":
-            self.file = os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Test', 'Images')
+            self.file = os.path.join(data_args.image_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Test', 'Images')
         else:
             raise RuntimeError("Split must be one of train and test.")
 
-        self.labels = get_label(os.path.join(dataset_path, 'Drishti-GS1_files', 'Drishti-GS1_diagnosis.csv'))
+        self.labels = self.get_label(os.path.join(data_args.image_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Drishti-GS1_diagnosis.csv'))
         self.image_names = []
         self.label_tensors = []
+
         for img_name in os.listdir(self.file):
             self.image_names.append(os.path.join(self.file,img_name))
             self.label_tensors.append(torch.tensor(self.class_dict[self.labels[img_name[:-4]]], dtype=torch.long))
+
+    def get_label(self, file):
+        retVal = {}
+        lines = list(csv.reader(open(file)))
+        for line in lines[1:]:
+            retVal[line[0][:-1]] = line[-2]
+        return retVal
 
     def __len__(self):
         return len(self.image_names)
 
     def __getitem__(self, index):
-        image_tensor = self.load_image(self.image_names[index])
+        image = Image.open(self.image_names[index]).convert('RGB')
+        label = self.label_tensors[index]
+        
+        if self.transform is not None:
+            image = self.transform(image)
 
-        return image_tensor, self.label_tensors[index]
-
-    def load_image(self, img_path):
-        if not os.path.exists(img_path):
-            print("IMAGE DOES NOT EXIST {}".format(img_path))
-        image = Image.open(img_path).convert('RGB')
-
-        image_tensor = self.transform(image)
-
-        return image_tensor
+        return {
+            "pixel_values": image,
+            "label": label
+        }
 
 
 
