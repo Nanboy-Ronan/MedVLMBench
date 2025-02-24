@@ -9,7 +9,8 @@ CLIP_MODELS = [
     "BioMedCLIP",
     "CLIP",
     "MedCLIP",
-    "PMCCLIP"
+    "PMCCLIP",
+    "PLIP"
 ]
 
 LANGUAGE_MODELS = ["LLaVA-1.5", "LLaVA-Med", "XGenMiniV1", "XrayGPT"]

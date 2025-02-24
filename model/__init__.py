@@ -8,6 +8,7 @@ from model.biomedclip import BioMedCLIPLPForDiagnosis, BioMedCLIPLoRALPForDiagno
 from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis, CLIPForDiagnosis, CLIPLoRAForDiagnosis
 from model.medclip import MedCLIPLPForDiagnosis, MedCLIPForDiagnosis, MedCLIPLoRAForDiagnosis
 from model.pmcclip import PMCCLIPForDiagnosis, PMCCLIPLoRAForDiagnosis, PMCCLIPLPForDiagnosis
+from model.plip import PLIPForDiagnosis
 from dataset.diagnosis import INFO
 
 from dataset.utils import get_prototype
@@ -96,6 +97,8 @@ def get_model(args, **kwargs):
                 model = PMCCLIPForDiagnosis(text=text, num_classes=num_classes)
             elif args.model == "BLIP2-2.7b":
                 model = BLIP2ForDiagnosis(text=text, num_classes=num_classes)
+            elif args.model == "PLIP":
+                model = PLIPForDiagnosis(text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.usage in ["clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
