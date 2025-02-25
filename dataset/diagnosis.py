@@ -431,7 +431,12 @@ INFO = {
     },
     "chestxray": {
         "label": {
-            "0": "an chexray with no finding", "1": "an xray with pneumonia"
+            "0": "chest x with no finding", "1": " chest xray with pneumonia"
+        }
+    },
+    "gf3300":{
+        "label" : {
+            "0" : "normal retina image", "1": "glaucomatous retina image"
         }
     }
 }
@@ -819,6 +824,46 @@ class HAM10000Dataset(torch.utils.data.Dataset):
         }
 
     
+class GF3300Dataset(torch.utils.data.Dataset):
+    def __init__(self, data_args, transform, split="train"):
+        self.CLASSES = 2
+        self.class_dict = {'benign retina': 0, 'glaucoma retina': 1}
+        self.transform = transform
+        self.meta_path = os.path.join(data_args.image_path, "GF3300", "split", "{}.csv".format(split))
+        self.df = pd.read_csv(self.meta_path)
+        self.Y = np.where(
+            self.df["glaucoma"] == "yes",
+            1,
+            0,
+        )
+        self.class_nums = 2
+        self.path_to_images = os.path.join(data_args.image_path, "GF3300", "data")
+        self.name = "GF3300"
+
+    def __len__(self):
+        return len(self.df)
+    
+    def __getitem__(self, idx):
+        item = self.df.iloc[idx]
+
+        # if self.path_to_labels is not None:
+        #     image = Image.fromarray(self.tol_images[idx])
+        # else:
+        image = np.load(os.path.join(self.path_to_images, item["path"]))["rnflt"]
+        image = (image - (-2)) / (350 - (-2)) * 255
+        image = Image.fromarray(image.astype(np.uint8)).convert("RGB")
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        label = torch.tensor(self.Y[idx])
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
+
+
 class DrishtiDataset(torch.utils.data.Dataset):
     def __init__(self, data_args, transform, split="train"):
         self.name = 'DrishtiDataset'

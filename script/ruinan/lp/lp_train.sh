@@ -299,15 +299,71 @@ date
 #     --learning_rate 5e-5
 
 
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --image_path ./data/camelyon17_v1.0/patches \
+#     --output_dir ./log \
+#     --model PMCCLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5
+
+
+# GF3300
 python run_train.py \
-    --task diagnosis --usage lp --dataset Camelyon17 --split train \
-    --image_path ./data/camelyon17_v1.0/patches \
+    --task diagnosis --usage lp --dataset GF3300 --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model CLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+python run_train.py \
+    --task diagnosis --usage lp --dataset GF3300 --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model BLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+python run_train.py \
+    --task diagnosis --usage lp --dataset GF3300 --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model BLIP2-2.7b --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+python run_train.py \
+    --task diagnosis --usage lp --dataset GF3300 --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model BioMedCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+python run_train.py \
+    --task diagnosis --usage lp --dataset GF3300 --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model MedCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+
+
+python run_train.py \
+    --task diagnosis --usage lp --dataset GF3300 --split train \
+    --image_path ./data \
     --output_dir ./log \
     --model PMCCLIP --model_path not_given \
     --cache_dir ./cache \
     --num_train_epochs 50 \
     --learning_rate 5e-5
-
 
 
 
@@ -449,17 +505,6 @@ python run_train.py \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 50 \
-#     --learning_rate 5e-5
-
-
-# # Drishti
-# CUDA_VISIBLE_DEVICES=1 python run_train.py \
-#     --task diagnosis --usage lp --dataset Drishti --split train \
-#     --image_path ./DataSets/Drishti-GS1_files \
-#     --output_dir ./log \
-#     --model CLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 50 \
 #     --learning_rate 5e-5
