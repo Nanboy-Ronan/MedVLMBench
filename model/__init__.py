@@ -9,6 +9,7 @@ from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis, CLIPForDiagno
 from model.medclip import MedCLIPLPForDiagnosis, MedCLIPForDiagnosis, MedCLIPLoRAForDiagnosis
 from model.pmcclip import PMCCLIPForDiagnosis, PMCCLIPLoRAForDiagnosis, PMCCLIPLPForDiagnosis
 from model.plip import PLIPForDiagnosis
+from model.clip_adapter import CLIPAdapterWrapper
 from dataset.diagnosis import INFO
 
 from dataset.utils import get_prototype
@@ -85,6 +86,7 @@ def get_model(args, **kwargs):
                 raise NotImplementedError()
         elif args.usage == "clip-zs":
             text = get_prototype(args)
+            text = ["a photo of {}".format(txt) for txt in text]
             if args.model == "BLIP":
                 model = BLIPForDiagnosis(text=text, num_classes=num_classes)
             elif args.model == "CLIP":
@@ -103,6 +105,7 @@ def get_model(args, **kwargs):
                 raise NotImplementedError()
         elif args.usage in ["clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             text = get_prototype(args)
+            text = ["a photo of {}".format(txt) for txt in text]
             if args.model == "BLIP":
                 model = BLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BLIP2-2.7b":
@@ -117,6 +120,15 @@ def get_model(args, **kwargs):
                 model = PMCCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
+        elif args.usage in ["clip-adapter"]:
+            text = get_prototype(args)
+            text = ["a photo of {}".format(txt) for txt in text]
+            if args.model == "BLIP":
+                raise RuntimeError()
+                model = BLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "CLIP":
+                model = CLIPForDiagnosis(text=text, num_classes=num_classes)
+                model = CLIPAdapterWrapper(text=text, num_classes=num_classes, clip_model=model)
         else:
             raise NotImplementedError()
     else:
