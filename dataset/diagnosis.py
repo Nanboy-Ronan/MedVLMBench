@@ -765,7 +765,7 @@ class SynapseMNIST3D(MedMNIST3D):
 
 # Camelyon17 Dataset
 class Camelyon17(Dataset):
-    def __init__(self, data_args, metadata_path_train="./data/camelyon17_v1.0/sample_train_metadata.csv", metadata_path_test="./data/camelyon17_v1.0/sample_test_metadata.csv", split="train", transform=None):
+    def __init__(self, data_args, metadata_path_train="./data/camelyon17_v1.0/sample3680_train_metadata.csv", metadata_path_test="./data/camelyon17_v1.0/sample920_test_metadata.csv", split="train", transform=None):
         self.image_root = data_args.image_path
         self.transform = transform
         self.split = split

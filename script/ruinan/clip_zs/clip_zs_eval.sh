@@ -299,6 +299,56 @@ python run_eval.py \
     --model PLIP --model_path "original_pretrained" \
     --cache_dir ./cache
 
+# GF3300
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset GF3300 --split test \
+    --image_path ./data \
+    --exp_path ./log \
+    --model CLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset GF3300 --split test \
+    --image_path ./data \
+    --exp_path ./log \
+    --model BLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset GF3300 --split test \
+    --image_path ./data \
+    --exp_path ./log \
+    --model BioMedCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset GF3300 --split test \
+    --image_path ./data \
+    --exp_path ./log \
+    --model MedCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset GF3300 --split test \
+    --image_path ./data \
+    --exp_path ./log \
+    --model BLIP2-2.7b --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset GF3300 --split test \
+    --image_path ./data \
+    --exp_path ./log \
+    --model PMCCLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset GF3300 --split test \
+    --image_path ./data \
+    --exp_path ./log \
+    --model PLIP --model_path "original_pretrained" \
+    --cache_dir ./cache
+
 
 # DermaMNIST
 # python run_eval.py \

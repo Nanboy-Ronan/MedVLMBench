@@ -50,14 +50,14 @@
 #     --num_train_epochs 50 \
 #     --learning_rate 5e-5
 
-# python run_train.py \
-#     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
-#     --image_path ./data \
-#     --output_dir ./log \
-#     --model BLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 50 \
-#     --learning_rate 5e-5
+python run_train.py \
+    --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log_blip \
+    --model BLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \

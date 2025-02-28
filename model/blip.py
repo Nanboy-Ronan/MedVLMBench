@@ -52,9 +52,9 @@ class ImageProcessorCallable:
 class BLIPForDiagnosis(CLIPBase):
     def __init__(self, text, num_classes, *args, **kwargs) -> None:
         blip_config = BlipConfig()
-        model = BlipModel(blip_config)
+        model = BlipModel.from_pretrained("Salesforce/blip-image-captioning-base")
         super().__init__(text=text, num_classes=num_classes, model=model)
-        self.tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip-vqa-base")
+        self.tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip-image-captioning-base")
         self.image_processor = BlipImageProcessor()
         self.image_processor = ImageProcessorLPCallable(self.image_processor)
         self.image_processor_evaluation = self.image_processor
@@ -80,8 +80,7 @@ class BLIPForDiagnosis(CLIPBase):
 
 class BLIPLoRAForDiagnosis(CLIPBase):
     def __init__(self, args, text, num_classes) -> None:
-        blip_config = BlipConfig()
-        model = BlipModel(blip_config)
+        model = BlipModel.from_pretrained("Salesforce/blip-image-captioning-base")
 
         if args.usage == "clip-img-lora":
             lora_config = LoraConfig(target_modules=["qkv"])
@@ -92,7 +91,7 @@ class BLIPLoRAForDiagnosis(CLIPBase):
             raise NotImplementedError()
         
         super().__init__(text=text, num_classes=num_classes, model=model)
-        self.tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip-vqa-base")
+        self.tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip-image-captioning-base")
         self.image_processor = BlipImageProcessor()
         self.image_processor = ImageProcessorLPCallable(self.image_processor)
         self.image_processor_evaluation = self.image_processor

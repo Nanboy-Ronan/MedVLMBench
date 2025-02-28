@@ -55,7 +55,7 @@ class DiagnosisEvalEngine(EvalEngine):
         
 
         results = {k: meter.global_avg for k, meter in self.metric_logger.meters.items()}
-        self.logger.info("\nEvaluation results:\n" + "\n".join(f"{k} {v:.3f}" for k, v in results.items()))
+        self.logger.info("\nEvaluation results:\n" + "\n".join(f"{k} {v:.8f}" for k, v in results.items()))
 
         return results
 
