@@ -1,13 +1,13 @@
-from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis, BLIPForDiagnosis, BLIPLoRAForDiagnosis
+from model.blip import BLIPForQA, BLIPLPForDiagnosis, BLIPLoRALPForDiagnosis, BLIPForDiagnosis
 from model.llava import LLaVA
-from model.blip2 import BLIP2, BLIP2ForDiagnosis, BLIP2LoRAForDiagnosis, BLIP2LPForDiagnosis
+from model.blip2 import BLIP2, BLIP2ForDiagnosis, BLIP2LPForDiagnosis, BLIP2LPLoRAForDiagnosis
 from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
 from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis, XGenGPTLoRALPForDiagnosis
-from model.biomedclip import BioMedCLIPLPForDiagnosis, BioMedCLIPLoRALPForDiagnosis, BiomedCLIPForDiagnosis, BiomedCLIPLoRAForDiagnosis
-from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis, CLIPForDiagnosis, CLIPLoRAForDiagnosis
-from model.medclip import MedCLIPLPForDiagnosis, MedCLIPForDiagnosis, MedCLIPLoRAForDiagnosis
-from model.pmcclip import PMCCLIPForDiagnosis, PMCCLIPLoRAForDiagnosis, PMCCLIPLPForDiagnosis
+from model.biomedclip import BioMedCLIPLPForDiagnosis, BioMedCLIPLoRALPForDiagnosis, BiomedCLIPForDiagnosis
+from model.clip import CLIPLPForDiagnosis, CLIPLoRALPForDiagnosis, CLIPForDiagnosis
+from model.medclip import MedCLIPLPForDiagnosis, MedCLIPForDiagnosis, MedCLIPLoRALPForDiagnosis
+from model.pmcclip import PMCCLIPForDiagnosis, PMCCLIPLPForDiagnosis
 from model.plip import PLIPForDiagnosis
 from model.clip_adapter import CLIPAdapterWrapper
 from dataset.diagnosis import INFO
@@ -19,7 +19,7 @@ from easydict import EasyDict as edict
 
 
 def get_model(args, **kwargs):
-    if args.task == "vqa":
+    if args.task == "vqa" or args.task == "caption":
         if args.model == "BLIP":
             model = BLIPForQA(args=args)
         elif args.model == "LLaVA-1.5":
@@ -31,26 +31,10 @@ def get_model(args, **kwargs):
         elif args.model == "XGenMiniV1":
             model = XGenMiniV1(args=args)
         elif args.model == "XrayGPT":
-            from model.xraygpt import XrayGPT
             model = XrayGPT(args=args)
         else:
             raise NotImplementedError()
-    elif args.task == "caption":
-        if args.model == "BLIP":
-            model = BLIPForQA(args=args)
-        elif args.model == "LLaVA-1.5":
-            model = LLaVA(args=args)
-        elif args.model == "BLIP2-2.7b":
-            model = BLIP2(args=args)
-        elif args.model == "LLaVA-Med":
-            model = LLaVAMed(args=args)
-        elif args.model == "XGenMiniV1":
-            model = XGenMiniV1(args=args)
-        elif args.model == "XrayGPT":
-            from model.xraygpt import XrayGPT
-            model = XrayGPT(args=args)
-        else:
-            raise NotImplementedError()
+            
     elif args.task == "diagnosis":
         num_classes = len(INFO[args.dataset.lower()]["label"])
 
@@ -84,51 +68,34 @@ def get_model(args, **kwargs):
                 model = BLIP2LPLoRAForDiagnosis(args=args, num_classes=num_classes)
             else:
                 raise NotImplementedError()
-        elif args.usage == "clip-zs":
+        elif args.usage in ["clip-zs", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             text = get_prototype(args)
             text = ["a photo of {}".format(txt) for txt in text]
             if args.model == "BLIP":
-                model = BLIPForDiagnosis(text=text, num_classes=num_classes)
+                model = BLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "CLIP":
-                model = CLIPForDiagnosis(text=text, num_classes=num_classes)
+                model = CLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BioMedCLIP":
-                model = BiomedCLIPForDiagnosis(text=text, num_classes=num_classes)
+                model = BiomedCLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "MedCLIP":
-                model = MedCLIPForDiagnosis(text=text, num_classes=num_classes)
+                model = MedCLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "PMCCLIP":
-                model = PMCCLIPForDiagnosis(text=text, num_classes=num_classes)
+                model = PMCCLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BLIP2-2.7b":
-                model = BLIP2ForDiagnosis(text=text, num_classes=num_classes)
+                model = BLIP2ForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "PLIP":
-                model = PLIPForDiagnosis(text=text, num_classes=num_classes)
-            else:
-                raise NotImplementedError()
-        elif args.usage in ["clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
-            text = get_prototype(args)
-            text = ["a photo of {}".format(txt) for txt in text]
-            if args.model == "BLIP":
-                model = BLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
-            elif args.model == "BLIP2-2.7b":
-                model = BLIP2LoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
-            elif args.model == "CLIP":
-                model = CLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
-            elif args.model == "BioMedCLIP":
-                model = BiomedCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
-            elif args.model == "MedCLIP":
-                model = MedCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
-            elif args.model == "PMCCLIP":
-                model = PMCCLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
+                model = PLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.usage in ["clip-adapter"]:
             text = get_prototype(args)
             text = ["a photo of {}".format(txt) for txt in text]
-            if args.model == "BLIP":
-                raise RuntimeError()
-                model = BLIPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
-            elif args.model == "CLIP":
-                model = CLIPForDiagnosis(text=text, num_classes=num_classes)
-                model = CLIPAdapterWrapper(text=text, num_classes=num_classes, clip_model=model)
+            if args.model == "CLIP":
+                # CLIPAdapterWrapper needs the base CLIP model instance
+                clip_model_instance = CLIPForDiagnosis(text=text, num_classes=num_classes)
+                model = CLIPAdapterWrapper(text=text, num_classes=num_classes, clip_model=clip_model_instance.model)
+            else:
+                raise NotImplementedError(f"CLIP-Adapter not implemented for model {args.model}")
         else:
             raise NotImplementedError()
     else:

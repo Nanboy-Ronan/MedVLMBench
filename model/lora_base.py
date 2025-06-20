@@ -12,9 +12,11 @@ class LoRALPModel(BaseModel, nn.Module):
         super().__init__(args)
         self.num_classes = num_classes
         self.lora_config = lora_config
-        self.encoder = encoder
+        # Apply LoRA to a deepcopy of the encoder
+        self.encoder = get_peft_model(copy.deepcopy(encoder), lora_config)
         self.head = torch.nn.Linear(encoder.feat_dim, num_classes)
-        self.encoder = copy.deepcopy(get_peft_model(self.encoder, lora_config))
+        
+        # Combine encoder and head into a single model attribute for consistent interface
         self.model = nn.Sequential(
             OrderedDict(
                     [
@@ -24,13 +26,21 @@ class LoRALPModel(BaseModel, nn.Module):
                 )
         )
     
+    def extract_features(self, images):
+        """
+        Subclasses must implement this method to extract features from the encoder's output.
+        """
+        raise NotImplementedError
+
+    def forward(self, images):
+        features = self.extract_features(images)
+        return self.head(features)
+
     def load_for_training(self, model_path):
         pass
         
     def load_from_pretrained(self, model_path, device, **kwargs):
+        # The model's state_dict is now from the nn.Sequential wrapper
         model_ckpt = torch.load(model_path)
         self.model.load_state_dict(model_ckpt)
         self.model.to(device)
-
-    def forward(self, images):
-        return self.model(images)

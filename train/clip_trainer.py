@@ -89,6 +89,7 @@ class CLIPLPTrainer(Trainer):
         # Global accumulators for the entire training process
         self.total_train_forward_flops = 0
         self.total_train_backward_flops = 0
+        self.profile = False
 
         self.add_callback(CustomCallback(self))
 
@@ -112,23 +113,27 @@ class CLIPLPTrainer(Trainer):
         if self.image_processor is not None and pixel_values.dtype == torch.uint8:
             pixel_values = self.image_processor(pixel_values)
 
-        # Profile the Forward Pass ONLY
-        with profile(
-            activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-            record_shapes=True,
-            with_flops=True,  
-            profile_memory=True  
-        ) as prof:
-            with record_function("forward_pass"):
-                logits = model(pixel_values)
-                loss = F.cross_entropy(logits, labels)
+        if self.profile:
+            # Profile the Forward Pass ONLY
+            with profile(
+                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                record_shapes=True,
+                with_flops=True,  
+                profile_memory=True  
+            ) as prof:
+                with record_function("forward_pass"):
+                    logits = model(pixel_values)
+                    loss = F.cross_entropy(logits, labels)
 
-        # Extract Forward FLOPS
-        flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
-        self.epoch_forward_flops += flops_forward
+            # Extract Forward FLOPS
+            flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+            self.epoch_forward_flops += flops_forward
 
-        # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
-        # print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
+            # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
+            # print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
+        else:
+            logits = model(pixel_values)
+            loss = F.cross_entropy(logits, labels)
 
         return (loss, logits) if return_outputs else loss
     
@@ -142,18 +147,22 @@ class CLIPLPTrainer(Trainer):
         loss = self.compute_loss(model, inputs, num_items_in_batch=len(inputs))
 
         # Profile Backward Pass Separately
-        with profile(
-            activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-            record_shapes=True,
-            with_flops=True,
-            profile_memory=True
-        ) as prof:
-            with record_function("backward_pass"):
-                loss.backward()  # Backward happens here, so we track FLOPS here
+        if self.profile:
+            with profile(
+                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                record_shapes=True,
+                with_flops=True,
+                profile_memory=True
+            ) as prof:
+                with record_function("backward_pass"):
+                    loss.backward()  # Backward happens here, so we track FLOPS here
 
-        # Extract Backward FLOPS
-        flops_backward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
-        self.epoch_backward_flops += flops_backward
+            # Extract Backward FLOPS
+            flops_backward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+            self.epoch_backward_flops += flops_backward
+
+        else:
+            loss.backward()
         self.batch_count += 1
 
         # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
