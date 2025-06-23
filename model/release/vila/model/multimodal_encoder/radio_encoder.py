@@ -24,8 +24,8 @@ import torch
 from PIL import Image
 from transformers import AutoConfig, AutoModel, CLIPVisionConfig
 
-from llava.model.multimodal_encoder.vision_encoder import VisionTower
-from llava.train.utils import mprint, rprint
+from model.release.vila.model.multimodal_encoder.vision_encoder import VisionTower
+from model.release.vila.train.utils import mprint, rprint
 
 from .image_processor import ImageProcessor
 from .visualize_features import get_pca_map

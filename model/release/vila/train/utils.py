@@ -28,7 +28,7 @@ from accelerate.hooks import add_hook_to_module
 from transformers import PretrainedConfig, PreTrainedModel
 from transformers.integrations.deepspeed import is_deepspeed_zero3_enabled
 
-from llava.train.sequence_parallel.globals import get_pg_manager, get_ulysses_sp_pg
+from model.release.vila.train.sequence_parallel.globals import get_pg_manager, get_ulysses_sp_pg
 
 
 def rprint(*args, **kwargs):
@@ -170,7 +170,7 @@ def reshard_hiddne_states_and_labels(hidden_states, labels):
     sp_degree = PROCESS_GROUP_MANAGER.sp_degree
     sp_rank = PROCESS_GROUP_MANAGER.sp_rank
     sp_group = PROCESS_GROUP_MANAGER.ulysses_pg
-    from llava.constants import IGNORE_INDEX
+    from model.release.vila.constants import IGNORE_INDEX
 
     # Get the seq len on different sp ranks
     bs, shard_seqlen = labels.shape
@@ -242,7 +242,7 @@ def reshard_hiddne_states_and_labels(hidden_states, labels):
 
 
 def sp_loss_rescale(shift_labels, loss):
-    from llava.constants import IGNORE_INDEX
+    from model.release.vila.constants import IGNORE_INDEX
 
     PROCESS_GROUP_MANAGER = get_pg_manager()
     labels_mask = shift_labels.ne(IGNORE_INDEX)  # IGNORE_INDEX = -100 by default

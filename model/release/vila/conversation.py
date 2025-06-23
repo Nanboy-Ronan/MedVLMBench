@@ -19,7 +19,7 @@ import dataclasses
 from enum import Enum, auto
 from typing import List
 
-from llava.utils.logging import logger
+from model.release.vila.utils.logging import logger
 
 
 class SeparatorStyle(Enum):

@@ -20,8 +20,8 @@ import warnings
 import torch
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, PretrainedConfig
 
-from llava.model import LlavaLlamaModel, LlavaTopDownLlamaModel
-from llava.model.utils import is_mm_model
+from ..model import LlavaLlamaModel, LlavaTopDownLlamaModel
+from .utils import is_mm_model
 
 
 def load_pretrained_model(
