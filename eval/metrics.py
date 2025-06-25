@@ -8,6 +8,8 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch import inf
+from bert_score import score as bertscore
+from nltk.translate.meteor_score import meteor_score, single_meteor_score
 
 from eval.utils import normalize_word, split_sentence, brevity_penalty, modified_precision
 
@@ -315,3 +317,47 @@ def calculate_f1score(candidate, reference):
             return 0, 0, 0
         else:
             return 2 * precision * recall / (precision + recall), precision, recall
+
+def calculate_bertscore(
+    candidate: str,
+    references: str,
+    model_type: str = "emilyalsentzer/Bio_ClinicalBERT",
+    device: str | None = None,
+    reduction: str = "max",
+):
+    
+    if bertscore is None:
+        raise ImportError(
+            "bert_score library not found. Install it with:  pip install bert-score"
+        )
+
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    P, R, F1 = bertscore(
+        [candidate], [references],
+        model_type=model_type,
+        num_layers=12,        # Bio_ClinicalBERT has 12 Transformer blocks
+        device=device,
+    )
+
+    if reduction == "mean":
+        return F1.mean().item()
+    elif reduction == "max":
+        return F1.max().item()
+    else:
+        raise ValueError("reduction must be either 'max' or 'mean'")
+
+
+def calculate_meteor(
+    candidate: str,
+    references: str,
+    alpha: float = 0.9,            # precision/recall balance; 0.9 is the default
+    beta:  float = 3.0,            # fragmentation penalty weight
+    gamma: float = 0.5,            # synonym/Stem penalty
+) -> float:
+
+    return single_meteor_score(
+        [references], [candidate],
+        alpha=alpha, beta=beta, gamma=gamma
+    )
