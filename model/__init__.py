@@ -26,6 +26,9 @@ def get_model(args, **kwargs):
         elif args.model == "XrayGPT":
             from model.xraygpt import XrayGPT
             model = XrayGPT(args=args)
+        elif args.model == "NVILA":
+            from model.vila import VILA
+            model = VILA(args=args)
         else:
             raise NotImplementedError()
             

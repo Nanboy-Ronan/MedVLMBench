@@ -27,6 +27,33 @@ python run_eval.py \
     --cache_dir ./cache \
     --save_pred
 
+# SLAKE, NVILA-8B 
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model NVILA --model_path Efficient-Large-Model/NVILA-8B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# PathVQA, NVILA-8B
+python run_eval.py \
+    --task vqa --dataset PathVQA --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model NVILA --model_path Efficient-Large-Model/NVILA-8B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# VQARAD, NVILA-8B
+python run_eval.py \
+    --task vqa --dataset VQARAD --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model NVILA --model_path Efficient-Large-Model/NVILA-8B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
 # SLAKE, BLIP
 python run_eval.py \
     --task vqa --dataset SLAKE --split test \

@@ -4,6 +4,7 @@ import warnings
 import torch
 import transformers
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig, LlamaForCausalLM
+from torchvision import transforms
 from model.release.vila.model import LlavaLlamaModel, LlavaTopDownLlamaModel
 from model.release.vila.model.utils import is_mm_model
 from model.release.vila.model.builder import prepare_config_for_eval
@@ -19,17 +20,19 @@ class ImageProcessorCallable:
     def __init__(self, image_processor, model_cfg):
         self.image_processor = image_processor
         self.model_cfg = model_cfg
+        self.to_pil = transforms.ToPILImage()
 
     def __call__(self, image):
-        return process_images([image], self.image_processor, self.model_cfg)[0]
+        if isinstance(image, torch.Tensor):
+            image = self.to_pil(image)
+        return image
     
 
 class VILA(ChatMetaModel):
     def __init__(self, args):
         super().__init__(args)
 
-        self.conv_mode = args.conv_mode if hasattr(args, "conv_mode") else "llava_v1" # TODO: correct it
-        self.name = model_name
+        self.name = args.model_path
         self.model_type = "medical"
 
     def load_for_training(self, model_name_or_path):
@@ -38,7 +41,6 @@ class VILA(ChatMetaModel):
     def load_from_pretrained(
         self,
         model_path,
-        model_name,
         model_base=None,
         load_8bit=False,
         load_4bit=False,
@@ -47,6 +49,11 @@ class VILA(ChatMetaModel):
         use_flash_attn=False,
         **kwargs,
     ):
+        if "NVILA-8B" in model_path:
+            model_name = "NVILA-8B"
+        else:
+            raise NotImplementedError
+        
         kwargs = {"device_map": device_map, **kwargs}
 
         if device != "cuda":
@@ -174,51 +181,12 @@ class VILA(ChatMetaModel):
     def infer_vision_language(self, image, qs, temperature=0, image_size=None):
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
-        qs = qs.replace(self.constants.DEFAULT_IMAGE_TOKEN, "").strip()
-        if self.model.config.mm_use_im_start_end:
-            qs = (
-                self.constants.DEFAULT_IM_START_TOKEN
-                + self.constants.DEFAULT_IMAGE_TOKEN
-                + self.constants.DEFAULT_IM_END_TOKEN
-                + "\n"
-                + qs
-            )
-        else:
-            qs = self.constants.DEFAULT_IMAGE_TOKEN + "\n" + qs
+        image = transforms.ToPILImage()(image)
+        prompt = [image, qs]
+        answer_generated = self.model.generate_content(prompt)
+        return answer_generated
 
-        conv = conv_templates[self.conv_mode].copy()
-        conv.append_message(conv.roles[0], qs)
-        conv.append_message(conv.roles[1], None)
-        prompt = conv.get_prompt()
 
-        input_ids = (
-            tokenizer_image_token(prompt, self.tokenizer, self.constants.IMAGE_TOKEN_INDEX, return_tensors="pt")
-            .unsqueeze(0)
-            .to(self.model.device)
-        )
-
-        if type(image) is Image.Image:
-            image_tensor = process_images([image], self.image_processor, self.model.config)[0]
-            image_size = image.size
-        else:
-            image_tensor = image
-
-        with torch.inference_mode():
-            output_ids = self.model.generate(
-                input_ids,
-                images=image_tensor.unsqueeze(0).half().cuda(),
-                image_sizes=[image_size],
-                do_sample=True if temperature > 0 else False,
-                temperature=temperature,
-                top_p=None,
-                num_beams=1,
-                # no_repeat_ngram_size=3,
-                max_new_tokens=1024,
-                use_cache=True,
-            )
-
-        outputs = self.tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
-        return outputs
 
     def infer_language(self, qs, temperature=0):
         raise NotImplementedError
@@ -259,6 +227,6 @@ if __name__ == "__main__":
 
     llava_model = VILA(args=edict(model_path=model_path, model_name=model_name, model_base=None))
     llava_model.load_from_pretrained(model_path=model_path, model_name=model_name, model_base=None)
-
+    
     output = llava_model.infer_vision_language(img, prompt)
     print(output)
