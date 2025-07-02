@@ -1,9 +1,4 @@
-from dataset.diagnosis import INFO
-
 from dataset.utils import get_prototype
-
-
-from easydict import EasyDict as edict
 
 
 def get_model(args, **kwargs):
@@ -25,14 +20,34 @@ def get_model(args, **kwargs):
             model = XGenMiniV1(args=args)
         elif args.model == "XrayGPT":
             from model.xraygpt import XrayGPT
+
             model = XrayGPT(args=args)
         elif args.model in ["NVILA", "VILA-M3"]:
             from model.vila import VILA
             model = VILA(args=args)
         else:
             raise NotImplementedError()
+    elif args.task == "caption":
+        if args.model == "BLIP":
+            model = BLIPForQA(args=args)
+        elif args.model == "LLaVA-1.5":
+            model = LLaVA(args=args)
+        elif args.model == "BLIP2-2.7b":
+            model = BLIP2(args=args)
+        elif args.model == "LLaVA-Med":
+            model = LLaVAMed(args=args)
+        elif args.model == "XGenMiniV1":
+            model = XGenMiniV1(args=args)
+        elif args.model == "XrayGPT":
+            from model.xraygpt import XrayGPT
+
+            model = XrayGPT(args=args)
+        else:
+            raise NotImplementedError()
             
     elif args.task == "diagnosis":
+        from dataset.diagnosis import INFO
+
         num_classes = len(INFO[args.dataset.lower()]["label"])
 
         if args.usage == "lp":

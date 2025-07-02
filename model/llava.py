@@ -161,7 +161,7 @@ class LLaVA(ChatMetaModel):
 
         self.conv_mode = "vicuna_v1"
         self.name = "LLaVA-1.5"
-        self.model_type = "medical"
+        self.model_type = "general"
 
     def load_for_training(self, model_name_or_path):
         compute_dtype = torch.float16 if self.args.fp16 else (torch.bfloat16 if self.args.bf16 else torch.float32)

@@ -19,7 +19,7 @@ MODELS = CLIP_MODELS + LANGUAGE_MODELS
 
 
 # datasets
-VQA_DATASETS = ["SLAKE", "PathVQA", "VQA-RAD"]
+VQA_DATASETS = ["SLAKE", "PathVQA", "VQA-RAD", "Harvard-FairVLMed10k"]
 CAPTION_DATASETS = ["Harvard-FairVLMed10k", "MIMIC_CXR"]
 DIAGNOSIS_DATASETS = ["PneumoniaMNIST", "BreastMNIST", "DermaMNIST", "Camelyon17", "Drishti", "HAM10000", "ChestXray", "GF3300"]
 
