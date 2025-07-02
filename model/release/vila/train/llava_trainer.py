@@ -32,8 +32,8 @@ from transformers.modeling_utils import unwrap_model
 from transformers.trainer import ALL_LAYERNORM_LAYERS  # ShardedDDPOption,
 from transformers.trainer import get_parameter_names, has_length, is_sagemaker_mp_enabled, logger
 
-from llava.train.sequence_parallel import get_pg_manager
-from llava.trl.trainer import DPOTrainer
+from model.release.vila.train.sequence_parallel import get_pg_manager
+from model.release.vila.trl.trainer import DPOTrainer
 
 
 def maybe_zero_3(param, ignore_status=False, name=None):
@@ -597,7 +597,7 @@ class LLaVATrainer(Trainer):
             return None
 
         # Always using Jason's sampler.
-        sample_len_list = self.args.sample_lens
+        sample_len_list = [len(self.train_dataset)]
         seed = self.args.data_seed if self.args.data_seed is not None else self.args.seed
         num_replicas = self.args.world_size
         rank = self.args.process_index

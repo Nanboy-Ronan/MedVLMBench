@@ -2,7 +2,7 @@ from torchvision.transforms.functional import to_pil_image
 from torchmetrics.functional.text import bleu_score, rouge_score
 
 from eval.base import EvalEngine
-from eval.metrics import calculate_exactmatch, calculate_f1score, calculate_appearance_with_normalization
+from eval.metrics import calculate_exactmatch, calculate_f1score, calculate_appearance_with_normalization, calculate_bertscore, calculate_meteor
 from eval.utils import normalize_word
 
 
@@ -58,6 +58,8 @@ class VQAEvalEngine(EvalEngine):
                 "precision",
                 "f1_score",
                 "accuracy",
+                "bertscore",
+                "meteor"
             ]
             bleu1 = bleu_score([output_normed], [[answer_normed]], n_gram=1).item()
             bleu2 = bleu_score([output_normed], [[answer_normed]], n_gram=2).item()
@@ -71,6 +73,8 @@ class VQAEvalEngine(EvalEngine):
             )
             # accuracy = calculate_appearance_with_normalization(output_l, answer_l)
             accuracy = float(recall >= 0.75)
+            bertscore = calculate_bertscore(output_normed, answer_normed)
+            meteor = calculate_meteor(output_normed, answer_normed)
 
             for metric in open_metrics:
                 self.metric_logger.meters[f"{metric}_open"].update(eval(metric), n=1)

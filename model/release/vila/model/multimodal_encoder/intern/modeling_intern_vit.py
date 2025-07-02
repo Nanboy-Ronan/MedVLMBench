@@ -15,7 +15,7 @@ from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPo
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
-from llava.model.multimodal_encoder.intern.configuration_intern_vit import InternVisionConfig
+from model.release.vila.model.multimodal_encoder.intern.configuration_intern_vit import InternVisionConfig
 
 from .flash_attention import FlashAttention
 

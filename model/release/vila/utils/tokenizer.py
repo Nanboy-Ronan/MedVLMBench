@@ -19,10 +19,10 @@ from typing import Any, Dict, List, Optional, Sequence
 import torch
 import transformers
 
-from llava import conversation as conversation_lib
-from llava.constants import IGNORE_INDEX, SENTINEL_TOKEN
-from llava.mm_utils import tokenizer_image_token
-from llava.utils.logging import logger
+from model.release.vila import conversation as conversation_lib
+from model.release.vila.constants import IGNORE_INDEX, SENTINEL_TOKEN
+from model.release.vila.mm_utils import tokenizer_image_token
+from model.release.vila.utils.logging import logger
 
 __all__ = [
     "tokenize_conversation",

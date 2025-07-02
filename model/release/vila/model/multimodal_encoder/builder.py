@@ -22,7 +22,7 @@ from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
 
 from .clip_encoder import CLIPVisionTower, CLIPVisionTowerS2
 from .intern_encoder import InternVisionTower, InternVisionTowerS2
-from .ps3_encoder import PS3VisionTower
+# from .ps3_encoder import PS3VisionTower
 from .radio_encoder import RADIOVisionTower
 from .siglip_encoder import SiglipVisionTower, SiglipVisionTowerDynamicS2, SiglipVisionTowerS2
 

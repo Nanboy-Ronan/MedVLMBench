@@ -29,7 +29,7 @@ from PIL import Image
 from torchvision import tv_tensors
 from transformers import StoppingCriteria
 
-from llava.constants import DEFAULT_IMAGE_TOKEN
+from model.release.vila.constants import DEFAULT_IMAGE_TOKEN
 
 
 def get_frame_from_vcap(vidcap, num_frames=10, max_fps=0.0, fps=None, frame_count=None, video_file_name=None):

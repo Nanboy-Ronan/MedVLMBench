@@ -18,7 +18,7 @@
 import torch
 from transformers import CLIPImageProcessor, CLIPVisionModel, PretrainedConfig
 
-from llava.model.multimodal_encoder.vision_encoder import VisionTower, VisionTowerS2
+from model.release.vila.model.multimodal_encoder.vision_encoder import VisionTower, VisionTowerS2
 
 
 class CLIPVisionTower(VisionTower):

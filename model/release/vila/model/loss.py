@@ -3,7 +3,7 @@ from typing import List, Union
 import torch
 from torch.nn.functional import cross_entropy
 
-from llava.constants import IGNORE_INDEX
+from model.release.vila.constants import IGNORE_INDEX
 
 __all__ = ["soft_cross_entropy"]
 

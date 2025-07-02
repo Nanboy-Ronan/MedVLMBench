@@ -22,9 +22,9 @@ try:
 except ImportError:
     print("PS3 is not installed. Please install it using the following command:")
     print("pip install ps3")
-    raise
+    pass
 
-from llava.model.multimodal_encoder.vision_encoder import VisionTower
+from model.release.vila.model.multimodal_encoder.vision_encoder import VisionTower
 
 
 class PS3VisionTower(VisionTower):

@@ -6,8 +6,8 @@ try:
     from .FloatPointQuantizeTorch import *
     from .FloatPointQuantizeTriton import *
 except:
-    from FloatPointQuantizeTorch import *
-    from FloatPointQuantizeTriton import *
+    from model.release.vila.model.FloatPointQuantizeTorch import *
+    from model.release.vila.model.FloatPointQuantizeTriton import *
 
 
 def block_cut(input, row_block, column_block, pad_block=False):

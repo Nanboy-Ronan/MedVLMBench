@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 import torch
 
-from llava.model.encoders.base import BaseEncoder
+from model.release.vila.model.encoders.base import BaseEncoder
 
 __all__ = ["BasicVideoEncoder"]
 
