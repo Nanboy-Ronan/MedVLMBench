@@ -1,4 +1,5 @@
 import os
+import math
 import shutil
 import warnings
 import torch
@@ -14,6 +15,7 @@ from model.release.vila.mm_utils import tokenizer_image_token, process_images, g
 from model.chat import ChatMetaModel
 from utils.utils import maybe_zero_3
 from PIL import Image
+from typing import Dict
 
 
 class ImageProcessorCallable:
@@ -36,7 +38,96 @@ class VILA(ChatMetaModel):
         self.model_type = "medical"
 
     def load_for_training(self, model_name_or_path):
-        raise NotImplementedError
+        self.load_from_pretrained(model_name_or_path)
+        if self.args.lora_enable:
+            from peft import LoraConfig, PeftModel, get_peft_model
+
+            lora_llm = "L" in self.args.tune_modules
+            lora_vt = "V" in self.args.tune_modules
+
+            lora_config = LoraConfig(
+                r=self.args.lora_r,
+                lora_alpha=self.args.lora_alpha,
+                target_modules=self.find_all_linear_names(model=self.model, lora_llm=lora_llm, lora_vt=lora_vt),
+                lora_dropout=self.args.lora_dropout,
+                bias=self.args.lora_bias,
+                task_type="CAUSAL_LM",
+            )
+            if self.args.bits == 16:
+                if self.args.bf16:
+                    self.model.to(torch.bfloat16)
+                if self.args.fp16:
+                    self.model.to(torch.float16)
+
+            self.args.logger.info("Adding LoRA adapters...")
+            self.model = get_peft_model(self.model, lora_config)
+
+        else:
+            if "M" in self.args.tune_modules:
+                for param in self.model.parameters():
+                    param.requires_grad = False
+                self.model.get_mm_projector().requires_grad_(True)
+            else:
+                raise NotImplementedError("Only LoRA is supported for training.")
+    
+        tokenizer = self.model.tokenizer
+
+        if tokenizer.bos_token is None:
+            self.smart_tokenizer_and_embedding_resize(
+                special_tokens_dict=dict(bos_token="[BOS]"),
+                tokenizer=tokenizer,
+                model=self.model.llm,
+            )
+        
+        tokenizer.pad_token = tokenizer.unk_token
+        if tokenizer.pad_token is None:
+            self.smart_tokenizer_and_embedding_resize(
+                special_tokens_dict=dict(pad_token="[PAD]"),
+                tokenizer=tokenizer,
+                model=self.model.llm,
+            )
+
+        vision_tower = self.model.get_vision_tower()
+        if vision_tower is not None:
+            self.args.image_processor = vision_tower.image_processor
+            self.args.is_multimodal = True
+
+            # if hasattr(data_args, "num_video_frames") and data_args.num_video_frames != None:
+            #     model.config.num_video_frames = data_args.num_video_frames
+            # else:
+            #     model.config.num_video_frames = 8
+
+            # if hasattr(self.args, "fps"):
+            #     self.model.config.fps = self.args.fps
+            # else:
+            #     self.model.config.fps = 0.0
+
+            self.model.config.image_aspect_ratio = self.args.image_aspect_ratio
+            self.model.config.mm_projector_lr = self.args.mm_projector_lr
+            self.model.config.vision_tower_lr = self.args.vision_tower_lr
+            if self.args.mm_use_im_start_end:
+                num_new_tokens = tokenizer.add_tokens([DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN], special_tokens=True)
+            assert not self.args.mm_use_im_patch_token
+
+            self.model.config.num_time_tokens = self.args.num_time_tokens
+            self.model.config.time_token_format = self.args.time_token_format
+            if self.args.num_time_tokens > 0:
+                time_tokens = [self.model.config.time_token_format.format(t=t) for t in range(self.model.config.num_time_tokens)]
+                num_new_tokens = tokenizer.add_tokens(time_tokens)
+                assert len(time_tokens) == num_new_tokens or num_new_tokens == 0
+                self.model.resize_token_embeddings(len(tokenizer))
+                self.model.config.time_token_ids = tokenizer.convert_tokens_to_ids(time_tokens)
+            else:
+                self.model.config.time_token_ids = []
+            self.model.config.soft_ce_std = self.args.soft_ce_std
+
+            num_patches = self.model.get_vision_tower().num_patches
+            downsample_rate = self.model.get_mm_projector().downsample_rate
+            num_image_tokens = math.ceil(num_patches**0.5 / downsample_rate) ** 2
+            self.args.num_image_tokens = num_image_tokens
+        else:
+            raise RuntimeError("VILA family is designed for multi-modal tasks. Please provide a model with vision tower.")
+
 
     def load_from_pretrained(
         self,
@@ -51,10 +142,13 @@ class VILA(ChatMetaModel):
     ):
         if "NVILA-8B" in model_path:
             model_name = "NVILA-8B"
+        elif "VILA-M3" in model_path:
+            model_name = "VILA-M3"
         else:
             raise NotImplementedError
         
-        kwargs = {"device_map": device_map, **kwargs}
+        # kwargs = {"device_map": device_map, **kwargs}
+        kwargs = {**kwargs}
 
         if device != "cuda":
             kwargs["device_map"] = {"": device}
@@ -177,6 +271,54 @@ class VILA(ChatMetaModel):
         self.model = model
         self.image_processor = image_processor
         self.context_len = context_len
+    
+    def find_all_linear_names(self, model, lora_llm, lora_vt):
+        cls = torch.nn.Linear
+        lora_module_names = set()
+        multimodal_keywords = ["mm_projector", "vision_resampler"]
+        assert lora_llm or lora_vt, "Not applying LoRA to any of the modules..."
+
+        if not lora_llm:
+            multimodal_keywords += ["llm"]
+        if not lora_vt:
+            multimodal_keywords += ["vision_tower"]
+
+        for name, module in model.named_modules():
+            if any(mm_keyword in name for mm_keyword in multimodal_keywords):
+                continue
+            if isinstance(module, cls):
+                if not "lm_head" in name:
+                    lora_module_names.add(name)
+                # names = name.split(".")
+                # lora_module_names.add(names[0] if len(names) == 1 else names[-1])
+
+        # if "lm_head" in lora_module_names:  # needed for 16-bit
+        #     lora_module_names.remove("lm_head")
+        return list(lora_module_names)
+
+    def smart_tokenizer_and_embedding_resize(
+            self,
+            special_tokens_dict: Dict,
+            tokenizer: transformers.PreTrainedTokenizer,
+            model: transformers.PreTrainedModel,
+        ):
+        """Resize tokenizer and embedding.
+
+        Note: This is the unoptimized version that may make your embedding size not be divisible by 64.
+        """
+        num_new_tokens = tokenizer.add_special_tokens(special_tokens_dict)
+        model.resize_token_embeddings(len(tokenizer))
+
+        if num_new_tokens > 0:
+            input_embeddings = model.get_input_embeddings().weight.data
+            output_embeddings = model.get_output_embeddings().weight.data
+
+            input_embeddings_avg = input_embeddings[:-num_new_tokens].mean(dim=0, keepdim=True)
+            output_embeddings_avg = output_embeddings[:-num_new_tokens].mean(dim=0, keepdim=True)
+
+            input_embeddings[-num_new_tokens:] = input_embeddings_avg
+            output_embeddings[-num_new_tokens:] = output_embeddings_avg
+
 
     def infer_vision_language(self, image, qs, temperature=0, image_size=None):
         # Model inference for vision-language tasks
