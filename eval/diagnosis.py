@@ -8,9 +8,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelBinarizer
 from torch.utils.data import DataLoader
-from train.clip_trainer import LinearProbingDataCollator
 from torchvision.transforms.functional import to_pil_image
 from eval.base import EvalEngine
+from dataset.utils import LinearProbingDataCollator
 
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
@@ -31,6 +31,7 @@ class DiagnosisEvalEngine(EvalEngine):
 
     def evaluate(self, args, model):
         """Run evaluation on the classification dataset."""
+        args.logger.info("Length of the evaluation dataset: {}".format(len(self.dataset)))
         data_loader = DataLoader(self.dataset, batch_size=64, collate_fn=LinearProbingDataCollator(), shuffle=False)
         self.num_classes = model.num_classes
         self.init_metric_logger()
@@ -54,7 +55,7 @@ class DiagnosisEvalEngine(EvalEngine):
         
 
         results = {k: meter.global_avg for k, meter in self.metric_logger.meters.items()}
-        self.logger.info("\nEvaluation results:\n" + "\n".join(f"{k} {v:.3f}" for k, v in results.items()))
+        self.logger.info("\nEvaluation results:\n" + "\n".join(f"{k} {v:.8f}" for k, v in results.items()))
 
         return results
 
@@ -65,6 +66,7 @@ class DiagnosisEvalEngine(EvalEngine):
         image = model.image_processor_evaluation(image)
 
         image = image.to(self.device, non_blocking=True)
+        model.to(self.device)
         true_label = true_label.to(self.device)
 
         output = model(image)

@@ -1,14 +1,11 @@
 import torch
-from PIL import Image
-from easydict import EasyDict as edict
-from torchvision.transforms.functional import to_pil_image
 from model.release.xraygpt.models.mini_gpt4 import MiniGPT4
 from model.release.xraygpt.processors.blip_processors import Blip2ImageEvalProcessor
-
-
-from model.base import BaseModel
 from model.chat import ChatMetaModel
 from model.lp_base import LPModel
+from model.lora_base import LoRALPModel
+from model.clip_base import ImageProcessorCallable
+from peft import LoraConfig
 
 
 class XrayGPT(ChatMetaModel):
@@ -16,7 +13,6 @@ class XrayGPT(ChatMetaModel):
         super().__init__(args)
         self.name = "XrayGPT-mini"
         self.model_type = "medical"
-        # self.processor = Blip2Processor.from_pretrained(self.model_name)
         self.model = MiniGPT4(
             vit_model="eva_clip_g",
             q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
@@ -34,144 +30,65 @@ class XrayGPT(ChatMetaModel):
             low_resource=True,
             end_sym="###",
         )
-
         ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
-        msg = self.model.load_state_dict(ckpt['model'], strict=False)
-        all_ckpt_keys = set(ckpt['model'].keys())
-        missing_keys = set(msg.missing_keys)
-        unexpected_keys = set(msg.unexpected_keys)
-        loaded_keys = all_ckpt_keys - unexpected_keys  # keys from checkpoint that aren't unexpected
-        loaded_keys = loaded_keys - missing_keys
+        self.model.load_state_dict(ckpt['model'], strict=False)
         self.model.to(self.args.device)
-
-        print(f"Number of keys successfully loaded: {len(loaded_keys)}")
-        assert len(loaded_keys) == len(all_ckpt_keys)
-
-        self.processor = Blip2ImageEvalProcessor() # TODO: wrap it. Tried wrap it on 1220 but get size issue due to loader.
-
+        self.processor = Blip2ImageEvalProcessor()
+        self.image_processor_callable = ImageProcessorCallable(self.processor)
 
     def infer_vision_language(self, image, qs, image_size=None):
-        """
-        Generates answers based on input image and text prompt.
-        :param image: The image tensor (preprocessed)
-        :param qs: The input question/prompt as a string
-        :param image_size: Optional parameter for image size
-        :return: Generated text output
-        """
-        if image.dim() == 3:
-            image = image.unsqueeze(0)
-        else:
-            assert image.dim() == 4
-
-        image = torch.stack([self.processor(to_pil_image(img_tensor)) for img_tensor in image], dim=0).to(self.args.device)
-        img_embeds, atts_img = self.model.encode_img(image)
-        
+        # image is already pre-processed by the callable
+        img_embeds, _ = self.model.encode_img(image.to(self.args.device))
         prompt = f"###Patient: <Img><ImageHere></Img> {qs}###Doctor:"
-
-        # Wrap the image embeddings with the prompt text
-        img_embeds, atts_img = self.model.prompt_wrap(img_embeds, atts_img, prompt)
-
-        # Prepare the model inputs for generation
-        # Add a BOS token at the beginning
+        img_embeds, _ = self.model.prompt_wrap(img_embeds, None, prompt)
         bos = torch.ones((img_embeds.size(0), 1), dtype=torch.long, device=self.args.device) * self.model.llama_tokenizer.bos_token_id
         bos_embeds = self.model.llama_model.model.embed_tokens(bos)
-
-        # Concatenate BOS embedding with image+prompt embeddings
         inputs_embeds = torch.cat([bos_embeds, img_embeds], dim=1)
         attention_mask = torch.ones(inputs_embeds.size()[:-1], dtype=torch.long, device=self.args.device)
-
-        # Generate the output from the model
-        # You can adjust parameters like max_new_tokens, top_p, temperature, etc. as needed.
         outputs = self.model.llama_model.generate(
-            inputs_embeds=inputs_embeds,
-            attention_mask=attention_mask,
-            max_new_tokens=300,
-            num_beams=1,
-            do_sample=True,
-            top_p=0.9,
-            repetition_penalty=1.0,
-            length_penalty=1,
-            temperature=1.0,
-            eos_token_id=self.model.llama_tokenizer.eos_token_id,
+            inputs_embeds=inputs_embeds, attention_mask=attention_mask, max_new_tokens=300,
+            num_beams=1, do_sample=True, top_p=0.9, repetition_penalty=1.0, length_penalty=1,
+            temperature=1.0, eos_token_id=self.model.llama_tokenizer.eos_token_id,
             pad_token_id=self.model.llama_tokenizer.eos_token_id
         )
-        
         output_token = outputs[0]
-        if output_token[0] == 0:  # Remove initial <unk> token if present
-            output_token = output_token[1:]
-        if output_token[0] == 1:  # Remove <s> token if present
-            output_token = output_token[1:]
-        
+        if output_token[0] == 0: output_token = output_token[1:]
+        if output_token[0] == 1: output_token = output_token[1:]
         output_text = self.model.llama_tokenizer.decode(output_token, add_special_tokens=False)
-        # The prompt uses '###' as a separator and 'Doctor:' to initiate the response.
-        # We remove any trailing segments after '###' and strip extra whitespace.
-        output_text = output_text.split('###')[0]
-        answer = output_text.split('Doctor:')[-1].strip()
-        return answer
-
-class ImageProcessorLPCallable:
-    def __init__(self, image_processor):
-        self.image_processor = image_processor
-
-    def __call__(self, image):
-        image_batch_pil = [to_pil_image(img_tensor) for img_tensor in image]
-        image = [self.image_processor(pil_image) for pil_image in image_batch_pil]
-        image = torch.stack(image)
-        return image
-
+        return output_text.split('###')[0].split('Doctor:')[-1].strip()
 
 class XGenGPTLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.name = "XrayGPT-mini"
-        self.model_type = "medical"
-        self.model = MiniGPT4(
-            vit_model="eva_clip_g",
-            q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
-            img_size=224,
-            drop_path_rate=0,
-            use_grad_checkpoint=False,
-            vit_precision="fp32",
-            freeze_vit=True,
-            freeze_qformer=True,
-            num_query_token=32,
-            llama_model='./pretrained_models/Vicuna_Radiology_fp16/',
-            prompt_path='./model/release/xraygpt/prompts/alignment.txt',
-            prompt_template='###Patient: {} ###Doctor: ',
-            max_txt_len=160,
-            low_resource=True,
-            end_sym="###",
-        )
-
+        model = MiniGPT4(vit_model="eva_clip_g", q_former_model="...", llama_model='./pretrained_models/Vicuna_Radiology_fp16/')
         ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
-        msg = self.model.load_state_dict(ckpt['model'], strict=False)
-        all_ckpt_keys = set(ckpt['model'].keys())
-        missing_keys = set(msg.missing_keys)
-        unexpected_keys = set(msg.unexpected_keys)
-        loaded_keys = all_ckpt_keys - unexpected_keys  # keys from checkpoint that aren't unexpected
-        loaded_keys = loaded_keys - missing_keys
+        model.load_state_dict(ckpt['model'], strict=False)
+        
+        vision_model = model.visual_encoder
+        vision_model.feat_dim = 1408
+        super().__init__(encoder=vision_model, *args, **kwargs)
+        
+        self.image_processor = ImageProcessorCallable(Blip2ImageEvalProcessor())
+        self.image_processor_evaluation = self.image_processor
 
-        self.model.to(self.args.device)
+    def extract_features(self, images):
+        # The visual_encoder in MiniGPT4/XrayGPT returns features directly
+        # and we take the CLS token representation.
+        return self.encoder(images)[:, 0, :]
 
-        self.vision_model = self.model.visual_encoder
-        self.vision_model.feat_dim = 1408
+
+class XGenGPTLoRALPForDiagnosis(LoRALPModel):
+    def __init__(self, args, *kargs, **kwargs) -> None:
+        model = MiniGPT4(vit_model="eva_clip_g", q_former_model="...", llama_model='./pretrained_models/Vicuna_Radiology_fp16/')
+        ckpt = torch.load("./pretrained_models/xraygpt_pretrained1.pth", map_location="cpu")
+        model.load_state_dict(ckpt['model'], strict=False)
         
-        if "lp" in self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
-            # self.image_processor_callable = ImageProcessorCallable(self.image_processor)
+        vision_model = model.visual_encoder
+        vision_model.feat_dim = 1408
+        lora_config = LoraConfig(target_modules=["qkv"])
+        super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
         
-        self.image_processor = Blip2ImageEvalProcessor()
-        self.image_processor_evaluation = ImageProcessorLPCallable(self.image_processor)
-        
-    
-    def load_for_training(self, model_path):
-        pass
-        
-    def load_from_pretrained(self, model_path, device, **kwargs):
-        model_ckpt = torch.load(model_path)
-        self.model.load_state_dict(model_ckpt)
-        self.model.to(device)
-    
-    def forward(self, x):
-        return self.model.head(self.model.encoder(x)[:, 0, :])
+        self.image_processor = ImageProcessorCallable(Blip2ImageEvalProcessor())
+        self.image_processor_evaluation = self.image_processor
+
+    def extract_features(self, images):
+        return self.encoder(images)[:, 0, :]

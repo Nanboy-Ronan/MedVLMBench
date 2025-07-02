@@ -1,69 +1,112 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import clip
+from peft import LoraConfig, get_peft_model
+from torchvision import transforms
+from medclip import MedCLIPModel, MedCLIPVisionModelViT, MedCLIPProcessor
+from model.clip_base import CLIPBase, ImageProcessorCallable
 from model.lp_base import LPModel
-
-from medclip import MedCLIPModel, MedCLIPVisionModelViT
-from medclip import MedCLIPProcessor
+from model.lora_base import LoRALPModel
 
 
-# class MedCLIP(nn.Module):
-#     def __init__(self, *args, **kwargs) -> None:
-#         super().__init__(*args, **kwargs)
+class MedCLIPFeatureExtractor:
+    """Custom feature extractor for MedCLIP to match its original preprocessing."""
+    def __init__(self, 
+                 crop_size=(224, 224),
+                 do_center_crop=True,
+                 do_convert_rgb=True,
+                 do_normalize=True,
+                 do_pad_square=True,
+                 do_rescale=True,
+                 do_resize=True,
+                 image_mean=(0, 0, 0),
+                 image_std=(0.26862954, 0.26130258, 0.27577711),
+                 rescale_factor=0.5862785803043838,
+                 size=224):
+        transform_list = []
+        if do_convert_rgb:
+            transform_list.append(transforms.Lambda(lambda img: img.convert('RGB')))
+        if do_pad_square:
+            transform_list.append(transforms.Lambda(self.pad_to_square))
+        if do_resize:
+            transform_list.append(transforms.Resize(size))
+        if do_center_crop:
+            transform_list.append(transforms.CenterCrop(crop_size))
+        transform_list.append(transforms.ToTensor())
+        if do_rescale:
+            transform_list.append(transforms.Lambda(lambda tensor: tensor * rescale_factor))
+        if do_normalize:
+            transform_list.append(transforms.Normalize(mean=image_mean, std=image_std))
+        self.transform = transforms.Compose(transform_list)
 
-#         self.model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
-#         self.model.from_pretrained()
-#         self.vision_model = self.model.vision_model
-#         self.feat_dim = 512
+    def pad_to_square(self, img):
+        max_dim = max(img.size)
+        padding = [(max_dim - img.size[0]) // 2, (max_dim - img.size[1]) // 2]
+        padding += [max_dim - img.size[0] - padding[0], max_dim - img.size[1] - padding[1]]
+        return transforms.functional.pad(img, padding, fill=0, padding_mode='constant')
 
-#     def forward_clip(self, images, text_features):
-#         image_features = self.model.encode_image(images)
-#         text_features = F.normalize(text_features, dim=-1)
-#         logit_scale = self.model.logit_scale.exp()
+    def __call__(self, image):
+        return self.transform(image)
 
-#         logits = logit_scale * image_features @ text_features.T
+class MedCLIPForDiagnosis(CLIPBase):
+    def __init__(self, text, num_classes, args=None, *kargs, **kwargs) -> None:
+        model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
+        model.from_pretrained()
 
-#         return logits
+        if args and args.usage == "clip-img-lora":
+            lora_config = LoraConfig(target_modules=["query", "key", "value"])
+            for name, para in model.named_parameters():
+                para.requires_grad = False
+            model.vision_model = get_peft_model(model.vision_model, lora_config)
+        
+        super().__init__(text=text, num_classes=num_classes, model=model, args=args, **kwargs)
+    
+        self.processor = MedCLIPProcessor()
+        self.tokenizer = self.processor.tokenizer
+        self.image_processor = ImageProcessorCallable(MedCLIPFeatureExtractor())
+        self.image_processor_evaluation = self.image_processor
 
-#     def encode_text(self, text):
-#         input_ids = text["input_ids"].to(next(self.model.parameters()).device)
+        self.logit_scale = nn.Parameter(torch.log(torch.tensor(100.0)))
+        
+        self.initialize_prototypes()
 
-#         if "attention_mask" in text.keys():
-#             attention_mask = text["attention_mask"].to(next(self.model.parameters()).device)
-#         else:
-#             attention_mask = None
-
-#         return self.model.text_model(input_ids, attention_mask)
-
-#     def forward(self, images):
-#         return self.vision_model(images)
-
-#     def from_pretrained(self, path):
-#         self.model.from_pretrained() # cannot be used given path is not given
-
+    @torch.no_grad()
+    def encode_text(self, text):
+        assert len(text) == self.num_classes
+        device = next(self.model.parameters()).device
+        inputs = self.tokenizer(text, return_tensors='pt', padding=True, truncation=True).to(device)
+        return self.model.encode_text(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"])
+    
+    def encode_image(self, images):
+        return self.model.encode_image(images)
 
 class MedCLIPLPForDiagnosis(LPModel):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
+        model.from_pretrained()
+        vision_model = model.vision_model
+        vision_model.feat_dim = 512
+        super().__init__(encoder=vision_model, *args, **kwargs)
+        
+        self.image_processor = ImageProcessorCallable(MedCLIPFeatureExtractor())
+        self.image_processor_evaluation = self.image_processor
 
-        self.model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
-        self.model.from_pretrained()
-        self.image_processor = MedCLIPProcessor()
-        self.vision_model = self.model.vision_model
-        self.vision_model.feat_dim = 512
-        if "lp" in self.args.usage:
-            from wrappers import LinearProbeWrapper
-            self.model = LinearProbeWrapper(self.vision_model, self.num_classes)
+    def extract_features(self, images):
+        # MedCLIP vision encoder returns a tensor directly
+        return self.encoder(images)
 
-
-    def forward(self, images):
-        return self.model.head(self.model.encoder(images))
-
-    def load_for_training(self, path):
-        pass
+class MedCLIPLoRALPForDiagnosis(LoRALPModel):
+    def __init__(self, args, *kargs, **kwargs) -> None:
+        model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
+        model.from_pretrained()
+        vision_model = model.vision_model
+        vision_model.feat_dim = 512
+        lora_config = LoraConfig(target_modules=["qkv"])
+        super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
+        
+        self.image_processor = ImageProcessorCallable(MedCLIPFeatureExtractor())
+        self.image_processor_evaluation = self.image_processor
     
-    def load_from_pretrained(self, model_path, device, **kwargs):
-        model_ckpt = torch.load(model_path)
-        self.model.load_state_dict(model_ckpt)
-        self.model.to(device)
+    def extract_features(self, images):
+        # MedCLIP vision encoder returns a tensor directly
+        return self.encoder(images)

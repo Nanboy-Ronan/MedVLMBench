@@ -4,61 +4,67 @@ import torch.nn.functional as F
 import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms
-from transformers import Trainer
+from transformers import Trainer, TrainerCallback
 from dataclasses import dataclass
 from typing import Any, Dict, List, Sequence, Optional
+from eval import get_eval_engine
+from dataset import get_dataset
+from dataset.utils import LinearProbingDataCollator
+from torch.profiler import profile, record_function, ProfilerActivity
 
-class ContrastiveDataset(Dataset):
-    # TODO
-    def __init__(self, data, tokenizer, transform, max_length=128):
-        self.data = data
-        self.tokenizer = tokenizer
-        self.transform = transform
-        self.max_length = max_length
 
-    def __len__(self):
-        return len(self.data)
+class CustomCallback(TrainerCallback):
+    def __init__(self, trainer):
+        self.trainer = trainer
 
-    def __getitem__(self, idx):
-        item = self.data[idx]
-        
-        image = self.transform(item['image'])
+    def on_epoch_end(self, args, state, control, **kwargs):
+        """
+        This method is called at the end of each epoch.
+        """
+        if self.trainer.current_epoch % 10 == 0:
+            print(f"Running evaluation at epoch {self.trainer.current_epoch}...")
+            metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
+            print(f"Evaluation metrics at epoch {self.trainer.current_epoch}: {metrics}")
+        self.trainer.current_epoch += 1
 
-        text = item['text']
-        encoding = self.tokenizer(
-            text,
-            padding='max_length',
-            truncation=True,
-            max_length=self.max_length,
-            return_tensors='pt'
+        total_epoch_forward = self.trainer.epoch_forward_flops
+        total_epoch_backward = self.trainer.epoch_backward_flops
+        total_epoch_flops = total_epoch_forward + total_epoch_backward
+
+        avg_epoch_forward = total_epoch_forward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
+        avg_epoch_backward = total_epoch_backward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
+
+        self.trainer.total_train_forward_flops += total_epoch_forward
+        self.trainer.total_train_backward_flops += total_epoch_backward
+        total_train_flops = self.trainer.total_train_forward_flops + self.trainer.total_train_backward_flops
+
+        self.trainer.args.logger.info(
+            f"Epoch {self.trainer.current_epoch} FLOPs: "
+            f"Total Forward: {total_epoch_forward/1e9:.2f} GFLOPS, "
+            f"Total Backward: {total_epoch_backward/1e9:.2f} GFLOPS, "
+            f"Combined: {total_epoch_flops/1e9:.2f} GFLOPS "
+            f"(Avg per batch: Forward: {avg_epoch_forward/1e9:.2f} GFLOPS, "
+            f"Backward: {avg_epoch_backward/1e9:.2f} GFLOPS)"
         )
-        
-        # Remove batch dimension
-        input_ids = encoding['input_ids'].squeeze()
-        attention_mask = encoding['attention_mask'].squeeze()
 
-        return {
-            'pixel_values': image,
-            'input_ids': input_ids,
-            'attention_mask': attention_mask
-        }
+        self.trainer.args.logger.info(
+            f"Total training FLOPs up to epoch {self.trainer.current_epoch}: "
+            f"Forward: {self.trainer.total_train_forward_flops/1e9:.2f} GFLOPS, "
+            f"Backward: {self.trainer.total_train_backward_flops/1e9:.2f} GFLOPS, "
+            f"Combined: {total_train_flops/1e9:.2f} GFLOPS"
+        )
 
-
-def make_contrastive_data_module(args, dataset, tokenizer, image_processor, model_constants):
-    # TODO
-    transform = transforms.Compose([
-        transforms.Resize((args.image_size, args.image_size)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
-    ])
-
-    train_data = dataset['train']
-    val_data = dataset['val']
-
-    train_dataset = ContrastiveDataset(train_data, tokenizer, transform, max_length=args.max_length)
-    val_dataset = ContrastiveDataset(val_data, tokenizer, transform, max_length=args.max_length)
-
-    return train_dataset, val_dataset
+        self.trainer.epoch_forward_flops = 0
+        self.trainer.epoch_backward_flops = 0
+        self.trainer.batch_count = 0
+    
+    def on_train_end(self, args, state, control, **kwargs):
+        """
+        This method is called after the full training is complete.
+        """
+        print("Training complete. Running final evaluation...")
+        metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
+        print(f"Final evaluation metrics: {metrics}")
 
 
 class CLIPLPTrainer(Trainer):
@@ -70,19 +76,100 @@ class CLIPLPTrainer(Trainer):
             eval_dataset=eval_dataset,
             **kwargs
         )
+        dataset = get_dataset(args=args, split="test")
+        self.eval_engine = get_eval_engine(args=args, dataset=dataset)
         self.image_processor = image_processor
+        self.current_epoch = 0
+
+        # Accumulators for per-epoch FLOPs
+        self.epoch_forward_flops = 0
+        self.epoch_backward_flops = 0
+        self.batch_count = 0
+        
+        # Global accumulators for the entire training process
+        self.total_train_forward_flops = 0
+        self.total_train_backward_flops = 0
+        self.profile = False
+
+        self.add_callback(CustomCallback(self))
 
     def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
+        """
+        Computes loss while tracking only forward FLOPS using torch.profiler.
+
+        Args:
+            model: The PyTorch model.
+            inputs: Dictionary containing pixel_values and labels.
+            num_items_in_batch: Number of items in batch (for normalization if needed).
+            return_outputs: Whether to return logits with loss.
+
+        Returns:
+            Loss value (and logits if return_outputs=True).
+        """
         device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
 
-        logits = model(pixel_values)
+        if self.image_processor is not None and pixel_values.dtype == torch.uint8:
+            pixel_values = self.image_processor(pixel_values)
 
-        loss = F.cross_entropy(logits, labels)
-        
+        if self.profile:
+            # Profile the Forward Pass ONLY
+            with profile(
+                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                record_shapes=True,
+                with_flops=True,  
+                profile_memory=True  
+            ) as prof:
+                with record_function("forward_pass"):
+                    logits = model(pixel_values)
+                    loss = F.cross_entropy(logits, labels)
+
+            # Extract Forward FLOPS
+            flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+            self.epoch_forward_flops += flops_forward
+
+            # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
+            # print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
+        else:
+            logits = model(pixel_values)
+            loss = F.cross_entropy(logits, labels)
+
         return (loss, logits) if return_outputs else loss
+    
+    
+    def training_step(self, model, inputs, *_args):
+        """
+        Runs a single training step, tracking FLOPS for both forward and backward passes.
+        Hugging Face's Trainer calls this with (model, inputs, num_items_in_batch),
+        so we use *_args to ignore additional parameters.
+        """
+        loss = self.compute_loss(model, inputs, num_items_in_batch=len(inputs))
 
+        # Profile Backward Pass Separately
+        if self.profile:
+            with profile(
+                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+                record_shapes=True,
+                with_flops=True,
+                profile_memory=True
+            ) as prof:
+                with record_function("backward_pass"):
+                    loss.backward()  # Backward happens here, so we track FLOPS here
+
+            # Extract Backward FLOPS
+            flops_backward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
+            self.epoch_backward_flops += flops_backward
+
+        else:
+            loss.backward()
+        self.batch_count += 1
+
+        # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
+        # print(f"🔹 Backward FLOPS per batch: {flops_backward / 1e9:.2f} GFLOPS")
+
+        return loss
+    
     def get_labels(self, eval_preds):
         logits, labels = eval_preds
         return labels
@@ -100,75 +187,6 @@ class CLIPLPTrainer(Trainer):
 
         torch.save(model_to_save.state_dict(), os.path.join(output_dir, 'pytorch_model.bin'))
 
-class XrayGPTLPTrainer(CLIPLPTrainer):
-    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
-        super().__init__(
-            model=model,
-            args=args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            **kwargs
-        )
-        self.image_processor = image_processor
-
-    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
-        device = inputs["pixel_values"].device
-        pixel_values = inputs["pixel_values"]
-        labels = inputs["labels"]
-
-        logits = model(pixel_values)
-
-        loss = F.cross_entropy(logits, labels)
-        
-        return (loss, logits) if return_outputs else loss
-
-class BioMedCLIPLPTrainer(CLIPLPTrainer):
-    def __init__(self, model, args, image_processor, train_dataset, eval_dataset, **kwargs):
-        super().__init__(
-            model=model,
-            args=args,
-            image_processor=image_processor,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            **kwargs
-        )
-
-    def compute_loss(self, model, inputs, num_items_in_batch, return_outputs=False):
-        device = inputs["pixel_values"].device
-        pixel_values = inputs["pixel_values"]
-        labels = inputs["labels"]
-
-        logits = model(pixel_values)
-
-        loss = F.cross_entropy(logits, labels)
-        
-        return (loss, logits) if return_outputs else loss
-
-
-@dataclass
-class LinearProbingDataCollator:
-    def __call__(self, instances: Sequence[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
-        images = [instance['pixel_values'] for instance in instances]    # List of image tensors
-        labels = [instance['label'] for instance in instances]    # List of label arrays
-
-        # for idx, img in enumerate(images):
-        #     # print(f"Image {idx} type: {type(img)}")
-        #     if isinstance(img, torch.Tensor):
-        #         print(f"Image {idx} shape: {img.shape}")
-        #     else:
-        #         print(f"Image {idx} is not a tensor.")
-
-        pixel_values = torch.stack(images)                        # Shape: (batch_size, C, H, W)
-
-        labels = [int(label[0]) if isinstance(label, (list, tuple, np.ndarray, torch.Tensor)) else int(label) for label in labels]
-        labels = torch.tensor(labels, dtype=torch.long)           # Shape: (batch_size,)
-
-        batch = {
-            'pixel_values': pixel_values,
-            'labels': labels
-        }
-
-        return batch
 
 
 def make_lp_data_module(args, dataset, image_processor):

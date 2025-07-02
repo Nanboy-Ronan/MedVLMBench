@@ -60,7 +60,7 @@ def collect_args():
     assert args.dataset in getattr(
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
-
+    
     args.save_folder = os.path.join(
         args.exp_path, args.task, args.dataset, args.model, f"eval_seed{args.seed}", os.path.basename(args.model_path)
     )
@@ -94,7 +94,9 @@ if __name__ == "__main__":
         torch.backends.cudnn.benchmark = False
 
     model_wrapped = get_model(args=args, device=args.device)
-    model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
+
+    if args.model_path != "original_pretrained":
+        model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
 
     dataset = get_dataset(args, image_processor_callable=model_wrapped.image_processor_callable)
 

@@ -1,5 +1,7 @@
 from train.vqa import VQATrainEngine
 from train.lp import DiagnosisLPTrainEngine
+from train.clip_trainer import CLIPLPTrainer, make_lp_data_module
+from train.clip_trainer import make_lp_data_module
 
 task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine}
 
@@ -19,11 +21,8 @@ def get_trainer(args, model_wrapped, dataset):
         trainer = LLaVATrainer(model=model_wrapped.model, args=args, tokenizer=model_wrapped.tokenizer, **data_module)
 
         return trainer
-    elif args.model == "BLIP":
-        if args.usage == "lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
+    elif args.model == "BLIP" or args.model == "BLIP2-2.7b":
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
@@ -39,51 +38,6 @@ def get_trainer(args, model_wrapped, dataset):
             )
 
             return trainer
-        
-        elif args.usage == "lora_lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
-            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-            data_module = make_lp_data_module(
-                args,
-                dataset=dataset,
-                image_processor=None,
-            )
-
-            trainer = CLIPLPTrainer(
-                model=model_wrapped,
-                args=args,
-                image_processor=model_wrapped.image_processor,
-                **data_module
-            )
-
-            return trainer
-
-
-        elif args.usage == "clip-zs":
-            raise NotImplementedError("To implement")
-            from train.blip_trainer import BLIPTrainer
-            from train.blip_data import make_contrastive_data_module
-
-            train_dataset, eval_dataset = make_contrastive_data_module(
-                args,
-                dataset=dataset,
-                tokenizer=model_wrapped.tokenizer,
-                image_processor=model_wrapped.image_processor,
-                model_constants=model_wrapped.constants,
-            )
-
-            trainer = BLIPTrainer(
-                model=model_wrapped.model,
-                args=training_args,
-                tokenizer=model_wrapped.tokenizer,
-                image_processor=model_wrapped.image_processor,
-                train_dataset=train_dataset,
-                eval_dataset=eval_dataset,
-                temperature=args.temperature if hasattr(args, 'temperature') else 0.07,
-            )
-
         else:
             raise NotImplementedError()
 
@@ -91,18 +45,15 @@ def get_trainer(args, model_wrapped, dataset):
 
 
     elif args.model == "XrayGPT":
-        if args.usage == "lp":
-            from train.clip_trainer import XrayGPTLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
-                image_processor=model_wrapped.image_processor,
+                image_processor=None,
             )
 
-            trainer = XrayGPTLPTrainer(
+            trainer = CLIPLPTrainer(
                 model=model_wrapped,
                 args=args,
                 image_processor=model_wrapped.image_processor,
@@ -110,41 +61,17 @@ def get_trainer(args, model_wrapped, dataset):
             )
 
             return trainer
+
         else:
             raise NotImplementedError()
     
     elif args.model == "BioMedCLIP":        
-        if args.usage == "lp":
-            from train.clip_trainer import BioMedCLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
             data_module = make_lp_data_module(
                 args,
                 dataset=dataset,
-                image_processor=model_wrapped.image_processor,
-            )
-
-            trainer = BioMedCLIPLPTrainer(
-                model=model_wrapped,
-                args=args,
-                image_processor=model_wrapped.image_processor,
-                **data_module
-            )
-
-            return trainer
-        else:
-            raise NotImplementedError()
-    elif args.model == "CLIP" or args.model == "MedCLIP":        
-        if args.usage == "lp":
-            from train.clip_trainer import CLIPLPTrainer
-            from train.clip_trainer import make_lp_data_module
-
-            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
-            data_module = make_lp_data_module(
-                args,
-                dataset=dataset,
-                image_processor=model_wrapped.image_processor,
+                image_processor=None,
             )
 
             trainer = CLIPLPTrainer(
@@ -157,7 +84,26 @@ def get_trainer(args, model_wrapped, dataset):
             return trainer
         else:
             raise NotImplementedError()
+            
+    elif args.model == "CLIP" or args.model == "MedCLIP" or args.model == "PMCCLIP":        
+        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
+            num_classes = args.num_classes if hasattr(args, 'num_classes') else 10
+            data_module = make_lp_data_module(
+                args,
+                dataset=dataset,
+                image_processor=None,
+            )
 
+            trainer = CLIPLPTrainer(
+                model=model_wrapped,
+                args=args,
+                image_processor=model_wrapped.image_processor,
+                **data_module
+            )
+
+            return trainer
+        else:
+            raise NotImplementedError()
     else:
         raise NotImplementedError("Trainer not supported for {}".format(args.model))
 

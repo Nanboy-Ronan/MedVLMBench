@@ -42,6 +42,11 @@ class Arguments(transformers.TrainingArguments):
     num_train_epochs: int = None
     learning_rate: float = 3e-5
 
+    # evaluation
+    eval_print_freq: int = 100
+    save_pred: bool = False
+    save_total_limit: int = 2
+
     mm_projector_lr: Optional[float] = None  # for LLMs
     remove_unused_columns: bool = field(default=False)
     mpt_attn_impl: Optional[str] = field(default="triton")
@@ -101,17 +106,16 @@ def setup_args(args):
         args.peft = ""
         print(args.peft)
 
-    save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
-    if "llava" in args.model.lower() and "V" in args.tune_modules:
-        assert (
-            args.gradient_checkpointing is False
-        ), "Currently there is a bug when training visual tower using peft + gradient checkpointing. For more info: https://github.com/huggingface/peft/issues/1402"
-
-    if args.model == "LLaVA-1.5":
-        save_folder_name += "_llava"
-    if args.model == "LLaVA-Med":
-        save_folder_name += "_llava_mistral"
+        if args.model == "LLaVA-1.5":
+            save_folder_name += "_llava"
+        if args.model == "LLaVA-Med":
+            save_folder_name += "_llava_mistral"
+    elif args.task == "diagnosis":
+        save_folder_name = f"train_{args.usage}_seed{args.seed}"
+    else:
+        raise NotImplementedError()
 
     args.output_dir = os.path.join(
         args.output_dir,

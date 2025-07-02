@@ -1,10 +1,14 @@
 import os
+import csv
 import warnings
 import numpy as np
-from os.path import expanduser
+import pandas as pd
+import torch
 from PIL import Image
-from torch.utils.data import Dataset
+from os.path import expanduser
 from torchvision import transforms
+from torch.utils.data import Dataset
+from sklearn.model_selection import train_test_split
 
 
 def get_default_root():
@@ -416,6 +420,25 @@ INFO = {
         "n_samples": {"train": 1230, "val": 177, "test": 352},
         "license": "CC BY 4.0",
     },
+    "camelyon17": {
+        "label": {"0": "negative tumor", "1": "positive tumor"}
+    },
+    "drishti": {
+        "label": {"0": "normal retina ", "1": "glaucomatous retina"}
+    },
+    "ham10000": {
+        "label": {"0": "benign keratosis-like lesions", "1": "actinic keratoses or melanoma"}
+    },
+    "chestxray": {
+        "label": {
+            "0": "chest x with no finding", "1": " chest xray with pneumonia"
+        }
+    },
+    "gf3300":{
+        "label" : {
+            "0" : "normal retina image", "1": "glaucomatous retina image"
+        }
+    }
 }
 
 class MedMNIST(Dataset):
@@ -445,7 +468,6 @@ class MedMNIST(Dataset):
             root (string, optional): Root directory of dataset. Default: `~/.medmnist`.
 
         """
-
         # Here, `size_flag` is blank for 28 images, and `_size` for larger images, e.g., "_64".
         if (size is None) or (size == 28):
             self.size = 28
@@ -740,6 +762,200 @@ class VesselMNIST3D(MedMNIST3D):
 class SynapseMNIST3D(MedMNIST3D):
     flag = "synapsemnist3d"
 
+
+# Camelyon17 Dataset
+class Camelyon17(Dataset):
+    def __init__(self, data_args, metadata_path_train="./data/camelyon17_v1.0/sample3680_train_metadata.csv", metadata_path_test="./data/camelyon17_v1.0/sample920_test_metadata.csv", split="train", transform=None):
+        self.image_root = data_args.image_path
+        self.transform = transform
+        self.split = split
+        self.name = "Camelyon17"
+        
+        # Load the appropriate dataset
+        metadata_path = metadata_path_train if self.split == "train" else metadata_path_test
+        self.data = pd.read_csv(metadata_path)
+        
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self, idx):
+        row = self.data.iloc[idx]
+        image_path = os.path.join(self.image_root, f"patient_{row['patient']:03d}_node_{row['node']}", f"patch_patient_{row['patient']:03d}_node_{row['node']}_x_{row['x_coord']}_y_{row['y_coord']}.png")
+        img = Image.open(image_path).convert('RGB')
+        
+        if self.transform:
+            img = self.transform(img)
+        
+        label = torch.tensor(row['tumor'], dtype=torch.long)
+        
+        return {
+            "pixel_values": img,
+            "label": label,
+            "image_path": image_path
+        }
+
+
+class HAM10000Dataset(torch.utils.data.Dataset):
+    def __init__(self, data_args, transform, split="train"):
+        self.CLASSES = 2
+        self.class_dict = {'benign keratosis-like lesions': 0, 'actinic keratoses or melanoma': 1}
+        self.transform = transform
+        self.meta_path = os.path.join(data_args.image_path, "HAM10000", "split", "{}.csv".format(split))
+        self.df = pd.read_csv(self.meta_path)
+        self.Y = self.df["dx"].values.copy()
+        self.Y[self.Y == "akiec"] = 1
+        self.Y[self.Y == "mel"] = 1
+        self.Y[self.Y != 1] = 0
+        self.path_to_images = os.path.join(data_args.image_path, "HAM10000", "HAM10000_images")
+        self.name = "HAM10000"
+
+    def __len__(self):
+        return len(self.df)
+    
+    def __getitem__(self, idx):
+        image = Image.open(os.path.join(self.path_to_images, f"{self.df.iloc[idx]['image_id']}.jpg"))
+        label = torch.tensor(self.Y[idx])
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
+
+    
+class GF3300Dataset(torch.utils.data.Dataset):
+    def __init__(self, data_args, transform, split="train"):
+        self.CLASSES = 2
+        self.class_dict = {'benign retina': 0, 'glaucoma retina': 1}
+        self.transform = transform
+        self.meta_path = os.path.join(data_args.image_path, "GF3300", "split", "{}.csv".format(split))
+        self.df = pd.read_csv(self.meta_path)
+        self.Y = np.where(
+            self.df["glaucoma"] == "yes",
+            1,
+            0,
+        )
+        self.class_nums = 2
+        self.path_to_images = os.path.join(data_args.image_path, "GF3300", "data")
+        self.name = "GF3300"
+
+    def __len__(self):
+        return len(self.df)
+    
+    def __getitem__(self, idx):
+        item = self.df.iloc[idx]
+
+        # if self.path_to_labels is not None:
+        #     image = Image.fromarray(self.tol_images[idx])
+        # else:
+        image = np.load(os.path.join(self.path_to_images, item["path"]))["rnflt"]
+        image = (image - (-2)) / (350 - (-2)) * 255
+        image = Image.fromarray(image.astype(np.uint8)).convert("RGB")
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        label = torch.tensor(self.Y[idx])
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
+
+
+class DrishtiDataset(torch.utils.data.Dataset):
+    def __init__(self, data_args, transform, split="train"):
+        self.name = 'DrishtiDataset'
+        self.CLASSES = 2
+        self.class_dict = {'Normal': 0, 'Glaucomatous': 1}
+        self.transform = transforms.Compose([
+            transforms.PILToTensor(),  # Convert PIL Image to Tensor
+            transforms.Resize((224, 224))  # Resize the Tensor to 128x128
+        ])
+        if split == "train":
+            self.file = os.path.join(data_args.image_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Training', 'Images')
+        elif split == "test":
+            self.file = os.path.join(data_args.image_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Test', 'Images')
+        else:
+            raise RuntimeError("Split must be one of train and test.")
+
+        self.labels = self.get_label(os.path.join(data_args.image_path, 'Drishti-GS1_files', 'Drishti-GS1_files', 'Drishti-GS1_diagnosis.csv'))
+        self.image_names = []
+        self.label_tensors = []
+
+        for img_name in os.listdir(self.file):
+            self.image_names.append(os.path.join(self.file,img_name))
+            self.label_tensors.append(torch.tensor(self.class_dict[self.labels[img_name[:-4]]], dtype=torch.long))
+
+    def get_label(self, file):
+        retVal = {}
+        lines = list(csv.reader(open(file)))
+        for line in lines[1:]:
+            retVal[line[0][:-1]] = line[-2]
+        return retVal
+
+    def __len__(self):
+        return len(self.image_names)
+
+    def __getitem__(self, index):
+        image = Image.open(self.image_names[index]).convert('RGB')
+        label = self.label_tensors[index]
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
+
+
+class ChestXrayDataset(Dataset):
+    def __init__(self, data_args, transform=None, split="test"):
+        """
+        Args:
+            root_dir (str): Path to the dataset root directory (e.g., 'chest_xray').
+            transform (callable, optional): Transform to be applied to the images.
+            split (str): The dataset split to load ('train' or 'test').
+        """
+        self.root_dir = os.path.join(data_args.image_path, split)
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor()
+        ])
+        
+        # Class mapping
+        self.class_dict = {'NORMAL': 0, 'PNEUMONIA': 1}
+        
+        # Collect image paths and labels
+        self.image_paths = []
+        self.labels = []
+        self.name = "ChestXray"
+        
+        for class_name, label in self.class_dict.items():
+            class_dir = os.path.join(self.root_dir, class_name)
+            if os.path.exists(class_dir):
+                for img_name in os.listdir(class_dir):
+                    img_path = os.path.join(class_dir, img_name)
+                    self.image_paths.append(img_path)
+                    self.labels.append(label)
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, index):
+        img_path = self.image_paths[index]
+        image = Image.open(img_path).convert('RGB')
+        label = torch.tensor(self.labels[index], dtype=torch.long)
+
+        if self.transform:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
 
 # backward-compatible aliases
 OrganMNISTAxial = OrganAMNIST
