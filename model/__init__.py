@@ -3,11 +3,8 @@ from model.llava import LLaVA
 from model.blip2 import BLIP2
 from model.llava_med import LLaVAMed
 from model.xgen import XGenMiniV1
-from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis
-from model.biomedclip import BioMedCLIPLPForDiagnosis
-from model.clip import CLIPLPForDiagnosis
-from model.medclip import MedCLIPLPForDiagnosis
-from dataset.diagnosis import INFO
+
+# from model.xraygpt import XrayGPT, XGenGPTLPForDiagnosis
 
 
 from easydict import EasyDict as edict
@@ -27,6 +24,7 @@ def get_model(args, **kwargs):
             model = XGenMiniV1(args=args)
         elif args.model == "XrayGPT":
             from model.xraygpt import XrayGPT
+
             model = XrayGPT(args=args)
         else:
             raise NotImplementedError()
@@ -43,10 +41,13 @@ def get_model(args, **kwargs):
             model = XGenMiniV1(args=args)
         elif args.model == "XrayGPT":
             from model.xraygpt import XrayGPT
+
             model = XrayGPT(args=args)
         else:
             raise NotImplementedError()
     elif args.task == "diagnosis":
+        from dataset.diagnosis import INFO
+
         num_classes = len(INFO[args.dataset.lower()]["label"])
         if args.usage == "lp":
             if args.model == "BLIP":
@@ -54,10 +55,16 @@ def get_model(args, **kwargs):
             elif args.model == "XrayGPT":
                 model = XGenGPTLPForDiagnosis(args=args, num_classes=num_classes)
             elif args.model == "BioMedCLIP":
+                from model.biomedclip import BioMedCLIPLPForDiagnosis
+
                 model = BioMedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
             elif args.model == "CLIP":
+                from model.clip import CLIPLPForDiagnosis
+
                 model = CLIPLPForDiagnosis(args=args, num_classes=num_classes)
             elif args.model == "MedCLIP":
+                from model.medclip import MedCLIPLPForDiagnosis
+
                 model = MedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
             else:
                 raise NotImplementedError()
