@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch import inf
+from transformers import AutoTokenizer
 from bert_score import score as bertscore
 from nltk.translate.meteor_score import meteor_score, single_meteor_score
 
@@ -333,6 +334,14 @@ def calculate_bertscore(
 
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    tokenizer = AutoTokenizer.from_pretrained(model_type, use_fast=True)
+    cand_enc = tokenizer(candidate, truncation=True, max_length=512, return_tensors="pt")
+    ref_enc  = tokenizer(references, truncation=True, max_length=512, return_tensors="pt")
+
+    # 3) move to device
+    cand_enc = {k: v.to(device) for k, v in cand_enc.items()}
+    ref_enc  = {k: v.to(device) for k, v in ref_enc.items()}
 
     P, R, F1 = bertscore(
         [candidate], [references],

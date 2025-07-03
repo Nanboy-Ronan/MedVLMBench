@@ -32,9 +32,19 @@ deepspeed --include localhost:4 run_train.py \
     --logging_steps 1 \
     --tf32 True \
     --model_max_length 2048 \
-    --gradient_checkpointing True \
+    --gradient_checkpointing False \
     --dataloader_num_workers 0 \
     --tune_modules L
+
+
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model NVILA --model_path /bigdata/rjin02/MedVLMBench/log/vqa/SLAKE/NVILA/train_lora_L_seed42_nvila \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
 
 deepspeed run_train.py \
     --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \

@@ -81,6 +81,34 @@ CUDA_VISIBLE_DEVICES=6 python run_eval.py \
     --cache_dir ./cache \
     --save_pred
 
+# SLAKE, VILA1.5-8B
+CUDA_VISIBLE_DEVICES=4 python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model VILA1.5 --model_path Efficient-Large-Model/Llama-3-VILA1.5-8B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# PathVQA, VILA1.5-8B
+CUDA_VISIBLE_DEVICES=5 python run_eval.py \
+    --task vqa --dataset PathVQA --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model VILA1.5 --model_path Efficient-Large-Model/Llama-3-VILA1.5-8B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# VQARAD, VILA1.5-8B
+CUDA_VISIBLE_DEVICES=6 python run_eval.py \
+    --task vqa --dataset VQA-RAD --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model VILA1.5 --model_path Efficient-Large-Model/Llama-3-VILA1.5-8B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+
 # SLAKE, BLIP
 python run_eval.py \
     --task vqa --dataset SLAKE --split test \

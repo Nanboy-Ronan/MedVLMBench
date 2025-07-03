@@ -98,6 +98,11 @@ class Arguments(transformers.TrainingArguments):
     time_token_format: str = field(default="<t{t}>")
     soft_ce_std: float = field(default=1.0)
     max_num_images: int = field(default=6)
+    debug_e2e: bool = field(
+        default=False,
+        metadata={"help": "Whether enter debug mode."},
+    )
+
 
     # misc
     # exp_path: str = field(default="")
