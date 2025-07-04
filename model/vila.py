@@ -127,14 +127,14 @@ class VILA(ChatMetaModel):
 
             self.args.logger.info("Adding LoRA adapters...")
             self.model = get_peft_model(self.model, lora_config)
+        if "M" in self.args.tune_modules:
+            # for param in self.model.parameters():
+            #     param.requires_grad = False
+            self.model.get_mm_projector().requires_grad_(True)
+            self.args.logger.info("Only training MM Projector...")
 
         else:
-            if "M" in self.args.tune_modules:
-                for param in self.model.parameters():
-                    param.requires_grad = False
-                self.model.get_mm_projector().requires_grad_(True)
-            else:
-                raise NotImplementedError("Only LoRA is supported for training.")
+            raise NotImplementedError("Only LoRA is supported for training.")
     
         tokenizer = self.model.tokenizer
 
@@ -206,15 +206,24 @@ class VILA(ChatMetaModel):
         use_flash_attn=False,
         **kwargs,
     ):
-        if "NVILA-8B" in model_path:
-            model_name = "NVILA-8B"
+        if "NVILA" in model_path:
+            if "lora" in model_path.lower():
+                model_base = "Efficient-Large-Model/NVILA-8B"
+                model_name = "NVILA-8B-LoRA"
+            else:
+                model_name = "NVILA-8B"
         elif "VILA-M3" in model_path:
-            model_name = "VILA-M3"
+            if "lora" in model_path.lower():
+                model_base = "Efficient-Large-Model/Llama-3-VILA1.5-8B"
+                model_name = "VILA-M3-LoRA"
+            else:
+                model_name = "VILA-M3"
         elif "VILA1.5" in model_path:
-            model_name = "VILA1.5-8B"
-        elif "NVILA" in model_path and "lora" in model_path.lower():
-            model_base = "Efficient-Large-Model/NVILA-8B"
-            model_name = "NVILA-8B-LoRA"
+            if "lora" in model_path.lower():
+                model_base = "Efficient-Large-Model/Llama-3-VILA1.5-8B"
+                model_name = "VILA1.5-8B-LoRA"
+            else:
+                model_name = "VILA1.5-8B"
         else:
             raise NotImplementedError
         

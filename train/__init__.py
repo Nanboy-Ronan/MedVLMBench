@@ -21,7 +21,7 @@ def get_trainer(args, model_wrapped, dataset):
         trainer = LLaVATrainer(model=model_wrapped.model, args=args, tokenizer=model_wrapped.tokenizer, **data_module)
 
         return trainer
-    elif args.model == "NVILA":
+    elif args.model in ["NVILA", "VILA1.5", "VILA-M3"]:
         from model.release.vila.train.llava_trainer import LLaVATrainer
         from model.release.vila.data import make_supervised_data_module
 

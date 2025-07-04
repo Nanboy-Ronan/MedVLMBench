@@ -443,7 +443,7 @@ def process_image(
     image_file, data_args, image_folder, enable_dynamic_res=False, enable_dynamic_s2=False, max_tiles=None, box=None
 ):
     processor = data_args.image_processor
-    if isinstance(image_file, str):
+    if isinstance(image_file, str) and image_file != "NA":
         if image_folder is not None:
             image = Image.open(os.path.join(image_folder, image_file)).convert("RGB")
         else:
