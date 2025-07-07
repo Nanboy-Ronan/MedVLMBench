@@ -16,6 +16,8 @@ import copy
 import json
 import logging
 import os
+import re
+import importlib
 import os.path as osp
 import warnings
 from abc import ABC
@@ -32,20 +34,39 @@ from einops import rearrange
 from hydra.utils import instantiate
 from transformers import AutoConfig, GenerationConfig, LogitsProcessor, PreTrainedModel
 from transformers.modeling_utils import ContextManagers, no_init_weights
-from llava.constants import MEDIA_TOKENS
+from model.release.vila.constants import MEDIA_TOKENS
 
-from llava.constants import DEFAULT_IMAGE_TOKEN, IGNORE_INDEX, MEDIA_TOKENS, NUM_EXTRA_TOKENS
-from llava.conversation import Conversation
-from llava.mm_utils import process_image, process_images
-from llava.model.configuration_llava import LlavaConfig, ResponseFormat
-from llava.model.language_model.builder import build_llm_and_tokenizer
-from llava.model.multimodal_encoder.builder import build_vision_tower
-from llava.model.multimodal_projector.builder import build_mm_projector
-from llava.model.utils import get_model_config
-from llava.train.sequence_parallel import get_pg_manager
-from llava.utils import distributed
-from llava.utils.media import extract_media
-from llava.utils.tokenizer import tokenize_conversation
+from model.release.vila.constants import DEFAULT_IMAGE_TOKEN, IGNORE_INDEX, MEDIA_TOKENS, NUM_EXTRA_TOKENS
+from model.release.vila.conversation import Conversation
+from model.release.vila.mm_utils import process_image, process_images
+from model.release.vila.model.configuration_llava import LlavaConfig, ResponseFormat
+from model.release.vila.model.language_model.builder import build_llm_and_tokenizer
+from model.release.vila.model.multimodal_encoder.builder import build_vision_tower
+from model.release.vila.model.multimodal_projector.builder import build_mm_projector
+from model.release.vila.model.utils import get_model_config
+from model.release.vila.train.sequence_parallel import get_pg_manager
+from model.release.vila.utils import distributed
+from model.release.vila.utils.media import extract_media
+from model.release.vila.utils.tokenizer import tokenize_conversation
+
+
+def fix_target_paths(config, old_prefix="llava.", new_prefix="model.release.vila."):
+    """
+    Recursively replace '_target_' values that start with old_prefix
+    with new_prefix in the given config dictionary.
+    """
+    if isinstance(config, dict):
+        new_config = {}
+        for k, v in config.items():
+            if k == "_target_" and isinstance(v, str) and v.startswith(old_prefix):
+                new_config[k] = v.replace(old_prefix, new_prefix, 1)
+            else:
+                new_config[k] = fix_target_paths(v, old_prefix, new_prefix)
+        return new_config
+    elif isinstance(config, list):
+        return [fix_target_paths(item, old_prefix, new_prefix) for item in config]
+    else:
+        return config  # leave unchanged
 
 
 class LlavaMetaModel(ABC):
@@ -63,7 +84,7 @@ class LlavaMetaModel(ABC):
         if not hasattr(config, "model_dtype"):
             warnings.warn("model_dtype not found in config, defaulting to torch.float16.")
             config.model_dtype = model_dtype
-
+            
         cfgs = get_model_config(config)
         if len(cfgs) == 3:
             llm_cfg, vision_tower_cfg, mm_projector_cfg = cfgs
@@ -85,7 +106,8 @@ class LlavaMetaModel(ABC):
             config = getattr(self.config, f"{name}_encoder")
             if isinstance(config, str):
                 config = json.loads(config)
-            self.encoders[name] = instantiate(config, parent=self)
+                
+            self.encoders[name] = instantiate(fix_target_paths(config), parent=self)
 
         self.post_config()
         self.is_loaded = True

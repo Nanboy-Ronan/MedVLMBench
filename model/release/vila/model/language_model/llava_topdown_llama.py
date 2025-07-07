@@ -25,11 +25,11 @@ import torch
 from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from llava.constants import MEDIA_TOKENS
-from llava.model.loss import soft_cross_entropy
-from llava.model.utils.packing import set_seqlens_in_batch
-from llava.train.sequence_parallel.globals import get_pg_manager
-from llava.utils.logging import logger
+from model.release.vila.constants import MEDIA_TOKENS
+from model.release.vila.model.loss import soft_cross_entropy
+from model.release.vila.model.utils.packing import set_seqlens_in_batch
+from model.release.vila.train.sequence_parallel.globals import get_pg_manager
+from model.release.vila.utils.logging import logger
 
 from ...train.utils import calculate_loss_weight
 from ..configuration_llava import LlavaConfig

@@ -8,6 +8,9 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from torch import inf
+from transformers import AutoTokenizer, AutoConfig
+from bert_score import score as bertscore
+from nltk.translate.meteor_score import meteor_score, single_meteor_score
 
 from eval.utils import normalize_word, split_sentence, brevity_penalty, modified_precision
 
@@ -315,3 +318,109 @@ def calculate_f1score(candidate, reference):
             return 0, 0, 0
         else:
             return 2 * precision * recall / (precision + recall), precision, recall
+
+
+
+_TOKENIZER_CACHE = {}
+
+#: Any model_max_length or max_position_embeddings above this
+#: is treated as “infinite / unknown”.
+_SENTINEL = 10_000
+
+
+def _get_tokenizer(model_name: str) -> AutoTokenizer:
+    """Load (or retrieve from cache) the tokenizer for `model_name`."""
+    tok = _TOKENIZER_CACHE.get(model_name)
+    if tok is None:
+        tok = AutoTokenizer.from_pretrained(model_name)
+        _TOKENIZER_CACHE[model_name] = tok
+    return tok
+
+
+def _model_window(model_name: str, tok: AutoTokenizer):
+    """
+    Return the usable context-window size for this model, or None if unlimited.
+
+    Priority:
+    1. tokenizer.model_max_length, if it looks reasonable (≤ _SENTINEL)
+    2. model config's max_position_embeddings, if it looks reasonable
+    3. None  → treat as “no limit known”
+    """
+    t_lim = getattr(tok, "model_max_length", None)
+    if t_lim and t_lim < _SENTINEL:
+        return int(t_lim)
+
+    try:
+        cfg = AutoConfig.from_pretrained(model_name)
+        c_lim = getattr(cfg, "max_position_embeddings", None)
+        if c_lim and c_lim < _SENTINEL:
+            return int(c_lim)
+    except Exception:
+        # happens for trust_remote_code models, local dirs without config, etc.
+        pass
+
+    return None
+
+
+def _trim(text: str, limit, tok: AutoTokenizer) -> str:
+    """
+    If `limit` is an int, truncate `text` so that
+    (CLS) + tokens + (SEP) ≤ limit. Otherwise return `text` unchanged.
+    """
+    if limit is None:
+        return text
+
+    allowed = max(limit - 2, 1)
+    ids = tok.encode(text, add_special_tokens=False)[:allowed]
+    return tok.decode(ids, skip_special_tokens=True)
+
+
+def calculate_bertscore(
+    candidate: str,
+    references: str,
+    model_type: str = "emilyalsentzer/Bio_ClinicalBERT",
+    device: str | None = None,
+    reduction: str = "max",
+):
+    
+    if bertscore is None:
+        raise ImportError(
+            "bert_score library not found. Install it with:  pip install bert-score"
+        )
+
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    tok = _get_tokenizer(model_type)
+    limit = _model_window(model_type, tok)
+ 
+    cand_proc = _trim(candidate, limit, tok)
+    ref_proc  = _trim(references, limit, tok)
+
+    P, R, F1 = bertscore(
+        [cand_proc], [ref_proc],
+        model_type=model_type,
+        num_layers=12,
+        device=device,
+    )
+
+    if reduction == "mean":
+        return F1.mean().item()
+    elif reduction == "max":
+        return F1.max().item()
+    else:
+        raise ValueError("reduction must be either 'max' or 'mean'")
+
+
+def calculate_meteor(
+    candidate: str,
+    references: str,
+    alpha: float = 0.9,            # precision/recall balance; 0.9 is the default
+    beta:  float = 3.0,            # fragmentation penalty weight
+    gamma: float = 0.5,            # synonym/Stem penalty
+) -> float:
+
+    return single_meteor_score(
+        [references], [candidate],
+        alpha=alpha, beta=beta, gamma=gamma
+    )

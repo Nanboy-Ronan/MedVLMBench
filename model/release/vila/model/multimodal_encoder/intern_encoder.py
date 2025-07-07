@@ -20,9 +20,9 @@ from torchvision.transforms.functional import InterpolationMode
 from transformers import AutoConfig, AutoModel
 from transformers.image_processing_utils import BaseImageProcessor
 
-from llava.model.multimodal_encoder.intern.configuration_intern_vit import InternVisionConfig
-from llava.model.multimodal_encoder.intern.modeling_intern_vit import InternVisionModel
-from llava.model.multimodal_encoder.vision_encoder import VisionTower, VisionTowerS2
+from model.release.vila.model.multimodal_encoder.intern.configuration_intern_vit import InternVisionConfig
+from model.release.vila.model.multimodal_encoder.intern.modeling_intern_vit import InternVisionModel
+from model.release.vila.model.multimodal_encoder.vision_encoder import VisionTower, VisionTowerS2
 
 
 def build_transform(input_size):

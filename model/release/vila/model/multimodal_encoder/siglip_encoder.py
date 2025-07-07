@@ -17,7 +17,7 @@
 import torch
 from transformers import PretrainedConfig, SiglipImageProcessor
 
-from llava.model.multimodal_encoder.vision_encoder import VisionTower, VisionTowerDynamicS2, VisionTowerS2
+from model.release.vila.model.multimodal_encoder.vision_encoder import VisionTower, VisionTowerDynamicS2, VisionTowerS2
 
 from .siglip import SiglipVisionModel
 

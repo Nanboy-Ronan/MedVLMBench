@@ -29,7 +29,7 @@ from PIL import Image
 from torchvision import tv_tensors
 from transformers import StoppingCriteria
 
-from llava.constants import DEFAULT_IMAGE_TOKEN
+from model.release.vila.constants import DEFAULT_IMAGE_TOKEN
 
 
 def get_frame_from_vcap(vidcap, num_frames=10, max_fps=0.0, fps=None, frame_count=None, video_file_name=None):
@@ -443,7 +443,7 @@ def process_image(
     image_file, data_args, image_folder, enable_dynamic_res=False, enable_dynamic_s2=False, max_tiles=None, box=None
 ):
     processor = data_args.image_processor
-    if isinstance(image_file, str):
+    if isinstance(image_file, str) and image_file != "NA":
         if image_folder is not None:
             image = Image.open(os.path.join(image_folder, image_file)).convert("RGB")
         else:

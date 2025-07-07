@@ -33,10 +33,10 @@ from transformers import (
     PreTrainedTokenizer,
 )
 
-from llava.constants import MEDIA_TOKENS
-from llava.model.utils import packing
-from llava.utils.logging import logger
-from llava.utils.tokenizer import infer_stop_tokens
+from model.release.vila.constants import MEDIA_TOKENS
+from model.release.vila.model.utils import packing
+from model.release.vila.utils.logging import logger
+from model.release.vila.utils.tokenizer import infer_stop_tokens
 
 
 def has_tokenizer(repo_id_or_path: str) -> bool:

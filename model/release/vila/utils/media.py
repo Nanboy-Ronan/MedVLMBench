@@ -12,10 +12,10 @@ import PIL.Image
 import requests
 from transformers import PretrainedConfig
 
-from llava.constants import MEDIA_TOKENS
-from llava.media import Image, Video
-from llava.utils import make_list
-from llava.utils.logging import logger
+from model.release.vila.constants import MEDIA_TOKENS
+from model.release.vila.media import Image, Video
+from model.release.vila.utils import make_list
+from model.release.vila.utils.logging import logger
 
 __all__ = ["extract_media"]
 

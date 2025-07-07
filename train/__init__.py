@@ -21,6 +21,20 @@ def get_trainer(args, model_wrapped, dataset):
         trainer = LLaVATrainer(model=model_wrapped.model, args=args, tokenizer=model_wrapped.tokenizer, **data_module)
 
         return trainer
+    elif args.model in ["NVILA", "VILA1.5", "VILA-M3"]:
+        from model.release.vila.train.llava_trainer import LLaVATrainer
+        from model.release.vila.data import make_supervised_data_module
+
+        data_module = make_supervised_data_module(
+            args,
+            dataset=dataset,
+            tokenizer=model_wrapped.tokenizer,
+            image_processor=model_wrapped.image_processor,
+            model_constants=model_wrapped.constants,
+        )
+        trainer = LLaVATrainer(model=model_wrapped.model, args=args, tokenizer=model_wrapped.tokenizer, **data_module)
+
+        return trainer
     elif args.model == "BLIP" or args.model == "BLIP2-2.7b":
         if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
             num_classes = args.num_classes if hasattr(args, 'num_classes') else 10

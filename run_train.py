@@ -83,6 +83,27 @@ class Arguments(transformers.TrainingArguments):
     mm_patch_merge_type: Optional[str] = field(default="flat")
     mm_vision_select_feature: Optional[str] = field(default="patch")
 
+    ## VILA
+    longvila_sampler: bool = field(default=False)
+    seq_parallel_size: int = field(
+        default=-1,
+        metadata={"help": "The degree of sequence parallelism (SP). SP is disabled by default (value: -1). "},
+    )
+    image_aspect_ratio: Optional[str] = "resize"
+    mm_projector_lr: Optional[float] = None
+    vision_tower_lr: Optional[float] = None
+    mm_use_im_start_end: bool = field(default=False)
+    mm_use_im_patch_token: bool = field(default=False)
+    num_time_tokens: int = field(default=0)
+    time_token_format: str = field(default="<t{t}>")
+    soft_ce_std: float = field(default=1.0)
+    max_num_images: int = field(default=6)
+    debug_e2e: bool = field(
+        default=False,
+        metadata={"help": "Whether enter debug mode."},
+    )
+
+
     # misc
     # exp_path: str = field(default="")
     # device: Optional[str] = field(default="cuda")
@@ -108,10 +129,21 @@ def setup_args(args):
 
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
+    if "llava" in args.model.lower() and "V" in args.tune_modules:
+        assert (
+            args.gradient_checkpointing is False
+        ), "Currently there is a bug when training visual tower using peft + gradient checkpointing. For more info: https://github.com/huggingface/peft/issues/1402"
+
         if args.model == "LLaVA-1.5":
             save_folder_name += "_llava"
         if args.model == "LLaVA-Med":
             save_folder_name += "_llava_mistral"
+    elif args.model == "NVILA":
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_nvila"
+    elif args.model == "VILA1.5":
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_vila"
+    elif args.model == "VILA-M3":
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_vila_m3"
     elif args.task == "diagnosis":
         save_folder_name = f"train_{args.usage}_seed{args.seed}"
     else:
