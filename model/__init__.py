@@ -22,7 +22,7 @@ def get_model(args, **kwargs):
             from model.xraygpt import XrayGPT
 
             model = XrayGPT(args=args)
-        elif args.model in ["NVILA", "VILA-M3"]:
+        elif args.model in ["NVILA", "VILA-M3", "VILA1.5"]:
             from model.vila import VILA
             model = VILA(args=args)
         else:

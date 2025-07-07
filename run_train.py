@@ -98,6 +98,11 @@ class Arguments(transformers.TrainingArguments):
     time_token_format: str = field(default="<t{t}>")
     soft_ce_std: float = field(default=1.0)
     max_num_images: int = field(default=6)
+    debug_e2e: bool = field(
+        default=False,
+        metadata={"help": "Whether enter debug mode."},
+    )
+
 
     # misc
     # exp_path: str = field(default="")
@@ -135,6 +140,10 @@ def setup_args(args):
             save_folder_name += "_llava_mistral"
     elif args.model == "NVILA":
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_nvila"
+    elif args.model == "VILA1.5":
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_vila"
+    elif args.model == "VILA-M3":
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_vila_m3"
     elif args.task == "diagnosis":
         save_folder_name = f"train_{args.usage}_seed{args.seed}"
     else:

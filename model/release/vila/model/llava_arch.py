@@ -84,7 +84,7 @@ class LlavaMetaModel(ABC):
         if not hasattr(config, "model_dtype"):
             warnings.warn("model_dtype not found in config, defaulting to torch.float16.")
             config.model_dtype = model_dtype
-
+            
         cfgs = get_model_config(config)
         if len(cfgs) == 3:
             llm_cfg, vision_tower_cfg, mm_projector_cfg = cfgs
