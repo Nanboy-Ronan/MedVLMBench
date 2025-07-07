@@ -93,7 +93,7 @@ CUDA_VISIBLE_DEVICES=6 python run_eval.py \
 # Harvard-FairVLMed10k, VILA-M3
 CUDA_VISIBLE_DEVICES=7 python run_eval.py \
     --task vqa --dataset Harvard-FairVLMed10k --split test \
-    --image_path ./notgiven \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
     --model VILA-M3 --model_path MONAI/Llama3-VILA-M3-8B \
     --exp_path ./log \
     --cache_dir ./cache \
@@ -126,6 +126,14 @@ CUDA_VISIBLE_DEVICES=6 python run_eval.py \
     --cache_dir ./cache \
     --save_pred
 
+# Harvard-FairVLMed10k, VILA1.5-8B
+CUDA_VISIBLE_DEVICES=7 python run_eval.py \
+    --task vqa --dataset Harvard-FairVLMed10k --split test \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
+    --model VILA1.5 --model_path Efficient-Large-Model/Llama-3-VILA1.5-8B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
 
 # SLAKE, BLIP
 python run_eval.py \
