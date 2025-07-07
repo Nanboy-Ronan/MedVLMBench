@@ -227,7 +227,7 @@ CUDA_VISIBLE_DEVICES=0 python run_eval.py \
 
 
 # PathVQA, VILA-M3
-deepspeed --include localhost:4 --master_port 29602 run_train.py \
+deepspeed --include localhost:5 --master_port 29602 run_train.py \
     --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset PathVQA \
