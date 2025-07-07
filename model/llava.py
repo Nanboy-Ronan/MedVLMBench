@@ -161,7 +161,7 @@ class LLaVA(ChatMetaModel):
 
         self.conv_mode = "vicuna_v1"
         self.name = "LLaVA-1.5"
-        self.model_type = "medical"
+        self.model_type = "general"
 
     def load_for_training(self, model_name_or_path):
         compute_dtype = torch.float16 if self.args.fp16 else (torch.bfloat16 if self.args.bf16 else torch.float32)
@@ -428,10 +428,15 @@ class LLaVA(ChatMetaModel):
 
                 from peft import PeftModel
 
+                vision_tower = model.get_vision_tower()
+                if not vision_tower.is_loaded:
+                    vision_tower.load_model(device_map=device_map)
+
                 print("Loading LoRA weights...")
                 model = PeftModel.from_pretrained(model, model_path)
                 print("Merging LoRA weights...")
                 model = model.merge_and_unload()
+
                 print("Model is loaded...")
             elif model_base is not None:
                 # this may be mm projector only

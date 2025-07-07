@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-
+import numpy as np
 from PIL import Image
 
 from datasets import load_dataset, concatenate_datasets
@@ -143,6 +143,48 @@ class VQARAD(VQADataset):
             image = self.transform(image)
 
         image_path = "NA"
+
+        return {
+            "image": image,
+            "query": qs,
+            "label": answer,
+            "is_open": is_open,
+            "prompt_template": prompt_template,
+            "image_size": image_size,
+            "image_path": image_path,
+        }
+
+
+class HarvardFairVLMed10kVQA(VQADataset):
+    def __init__(self, data_args, split, transform=None):
+        super().__init__(data_args, split, transform)
+
+        self.name = "Harvard-FairVLMed10k"
+        self.modality = "SLO Fundus"
+
+        self.image_path = data_args.image_path
+        self.ds = pd.read_csv(os.path.join(self.image_path, f"vqa_{split}.csv")).dropna()
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, index):
+        item = self.ds.iloc[index]
+
+        image_path = os.path.join(self.image_path, item["image_path"])
+        image = Image.fromarray(np.load(image_path)["slo_fundus"]).convert("RGB")
+        image_size = image.size
+
+        qs = item["question"]
+        answer = item["answer"]
+
+        is_open = item["question type"] == "OPEN"
+        is_binary = answer.lower() in ["yes", "no"]
+
+        prompt_template = self.prompt_templates[int(is_binary)]
+
+        if self.transform is not None:
+            image = self.transform(image)
 
         return {
             "image": image,

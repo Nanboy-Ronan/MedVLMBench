@@ -129,6 +129,11 @@ def setup_args(args):
 
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
+    if "llava" in args.model.lower() and "V" in args.tune_modules:
+        assert (
+            args.gradient_checkpointing is False
+        ), "Currently there is a bug when training visual tower using peft + gradient checkpointing. For more info: https://github.com/huggingface/peft/issues/1402"
+
         if args.model == "LLaVA-1.5":
             save_folder_name += "_llava"
         if args.model == "LLaVA-Med":
