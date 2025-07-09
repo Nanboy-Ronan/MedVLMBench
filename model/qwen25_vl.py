@@ -4,13 +4,13 @@ import warnings
 import torch
 from torchvision.transforms.functional import to_pil_image
 import transformers
-from transformers import Qwen2VLForConditionalGeneration, AutoTokenizer, AutoProcessor
+from transformers import Qwen2_5_VLForConditionalGeneration, AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
 
 from model.chat import ChatMetaModel
 
 
-class Qwen2_VL(ChatMetaModel):
+class Qwen25_VL(ChatMetaModel):
     def __init__(self, args):
         super().__init__(args)
 
@@ -18,7 +18,7 @@ class Qwen2_VL(ChatMetaModel):
         self.model_type = "general"
 
     def load_from_pretrained(self, model_path, **kwargs):
-        self.model = Qwen2VLForConditionalGeneration.from_pretrained(
+        self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_path, torch_dtype=torch.bfloat16, attn_implementation="flash_attention_2", device_map="auto"
         )
         self.processor = AutoProcessor.from_pretrained(model_path)

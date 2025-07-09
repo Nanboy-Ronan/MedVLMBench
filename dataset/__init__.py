@@ -9,7 +9,16 @@ from collections import Counter
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA
 from dataset.caption import HarvardFairVLMed10k, MIMIC_CXR
-from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset
+from dataset.diagnosis import (
+    PneumoniaMNIST,
+    BreastMNIST,
+    DermaMNIST,
+    Camelyon17,
+    HAM10000Dataset,
+    DrishtiDataset,
+    ChestXrayDataset,
+    GF3300Dataset,
+)
 
 datasets = {
     "SLAKE": SLAKE,
@@ -24,7 +33,7 @@ datasets = {
     "HAM10000": HAM10000Dataset,
     "Drishti": DrishtiDataset,
     "ChestXray": ChestXrayDataset,
-    "GF3300": GF3300Dataset
+    "GF3300": GF3300Dataset,
 }
 
 
@@ -38,7 +47,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
         random.seed(args.seed)
 
     dataset_name = datasets[args.dataset]
-    
+
     assert args.split in ["train", "validation", "test", "all"]
 
     if split is None:
@@ -50,15 +59,15 @@ def get_dataset(args, image_processor_callable=None, split=None):
     else:
         transform = get_transform(args)
 
-    dataset = dataset_name(
-        data_args=edict(image_path=args.image_path, size=224), split=split, transform=transform
-    )
+    dataset = dataset_name(data_args=edict(image_path=args.image_path, size=224), split=split, transform=transform)
 
-    args.logger.info("Loaded dataset: " + dataset.name)
+    try:
+        args.logger.info("Loaded dataset: " + dataset.name)
+    except:
+        print("Logger is not set.")
 
     if args.task == "diagnosis":
         report_label_distribution(dataset, args)
-
 
     return dataset
 
@@ -68,10 +77,10 @@ def report_label_distribution(dataset, args):
     for i in range(len(dataset)):
         label = dataset[i]["label"].item()
         label_counts[label] += 1
-    
+
     total = sum(label_counts.values())
     distribution = {label: count / total for label, count in label_counts.items()}
-    
+
     args.logger.info("Label Distribution:")
     for label, freq in distribution.items():
         args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")

@@ -4,9 +4,10 @@ import warnings
 import torch
 from torchvision.transforms.functional import to_pil_image
 import transformers
-from transformers import AutoProcessor, AutoModelForImageTextToText
+from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
 
 from model.chat import ChatMetaModel
+from peft import LoraConfig
 
 
 class MedGemma(ChatMetaModel):
@@ -23,6 +24,29 @@ class MedGemma(ChatMetaModel):
             device_map="auto",
         )
         self.processor = AutoProcessor.from_pretrained(model_path)
+
+    def load_for_training(self, model_path):
+        # Check if GPU supports bfloat16
+        if torch.cuda.get_device_capability()[0] < 8:
+            raise ValueError("GPU does not support bfloat16, please use a GPU that supports bfloat16.")
+
+        model_kwargs = dict(
+            attn_implementation="eager",
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+        )
+
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=model_kwargs["torch_dtype"],
+            bnb_4bit_quant_storage=model_kwargs["torch_dtype"],
+        )
+
+        self.model = AutoModelForImageTextToText.from_pretrained(model_path, **model_kwargs)
+        self.processor = AutoProcessor.from_pretrained(model_path)
+        self.processor.tokenizer.padding_side = "right"
 
     def infer_vision_language(self, image, qs, image_size=None):
         image = to_pil_image(image)

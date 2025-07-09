@@ -11,6 +11,7 @@ LANGUAGE_MODELS = [
     "Gemma",
     "MedGemma",
     "Qwen2-VL",
+    "Qwen25-VL",
     "XGenMiniV1",
     "XrayGPT",
     "NVILA",

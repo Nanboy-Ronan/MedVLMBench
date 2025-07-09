@@ -27,6 +27,10 @@ def get_model(args, **kwargs):
             from model.qwen2_vl import Qwen2_VL
 
             model = Qwen2_VL(args=args)
+        elif args.model == "Qwen25-VL":
+            from model.qwen25_vl import Qwen25_VL
+
+            model = Qwen25_VL(args=args)
         elif args.model == "XGenMiniV1":
             from model.xgen import XGenMiniV1
 
