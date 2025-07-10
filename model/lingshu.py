@@ -2,6 +2,7 @@ from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
 from PIL import Image
+from torchvision.transforms.functional import to_pil_image
 from model.chat import ChatMetaModel
 
 class Lingshu(ChatMetaModel):
@@ -19,13 +20,13 @@ class Lingshu(ChatMetaModel):
         model_path: str = "lingshu-medical-mllm/Lingshu-7B",
         device_map: str = "auto",
         torch_dtype: str | torch.dtype = "auto",
-        **hf_kwargs,
+        **kwargs,
     ):
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             model_path,
             device_map=device_map,
             torch_dtype=torch_dtype,
-            **hf_kwargs,
+            # **hf_kwargs,
         )
         self.processor = AutoProcessor.from_pretrained(model_path)
 
@@ -55,6 +56,7 @@ class Lingshu(ChatMetaModel):
         Single-image VL-QA / captioning.  Accepts PIL.Image, filepath or URL (the
         processor handles URLs transparently).
         """
+        image = self._to_pil(image)
         messages = self._build_messages(image, qs)
 
         chat_text = self.processor.apply_chat_template(
@@ -110,3 +112,14 @@ class Lingshu(ChatMetaModel):
     def save(self, output_folder, trainer=None):
         self.model.save_pretrained(output_folder)
         self.processor.save_pretrained(output_folder)
+    
+    def _to_pil(self, img: Image.Image | torch.Tensor | str):
+        """
+        Make sure the vision object is a PIL.Image or a path/URL.
+        """
+        if isinstance(img, torch.Tensor):
+            # If the tensor is float in [0, 1] convert to uint8 first
+            if img.dtype.is_floating_point:
+                img = (img.clamp(0, 1) * 255).to(torch.uint8)
+            img = to_pil_image(img.cpu())
+        return img

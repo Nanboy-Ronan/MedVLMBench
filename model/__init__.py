@@ -25,6 +25,9 @@ def get_model(args, **kwargs):
         elif args.model in ["NVILA", "VILA-M3", "VILA1.5"]:
             from model.vila import VILA
             model = VILA(args=args)
+        elif args.model == "Lingshu":
+            from model.lingshu import Lingshu
+            model = Lingshu(args=args)
         else:
             raise NotImplementedError()
     elif args.task == "caption":
