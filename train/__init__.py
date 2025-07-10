@@ -1,9 +1,10 @@
+from train.caption import CaptionTrainEngine
 from train.vqa import VQATrainEngine
 from train.lp import DiagnosisLPTrainEngine
 from train.clip_trainer import CLIPLPTrainer, make_lp_data_module
 from train.clip_trainer import make_lp_data_module
 
-task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine}
+task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine, "caption": CaptionTrainEngine}
 
 
 def get_trainer(args, model_wrapped, dataset):

@@ -135,6 +135,43 @@ CUDA_VISIBLE_DEVICES=7 python run_eval.py \
     --cache_dir ./cache \
     --save_pred
 
+
+# SLAKE, Lingshu
+CUDA_VISIBLE_DEVICES=4 python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model Lingshu --model_path lingshu-medical-mllm/Lingshu-7B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# PathVQA, Lingshu
+CUDA_VISIBLE_DEVICES=5 python run_eval.py \
+    --task vqa --dataset PathVQA --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model Lingshu --model_path lingshu-medical-mllm/Lingshu-7B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# VQARAD, Lingshu
+CUDA_VISIBLE_DEVICES=6 python run_eval.py \
+    --task vqa --dataset VQA-RAD --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model Lingshu --model_path lingshu-medical-mllm/Lingshu-7B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+# Harvard-FairVLMed10k, Lingshu
+CUDA_VISIBLE_DEVICES=7 python run_eval.py \
+    --task vqa --dataset Harvard-FairVLMed10k --split test \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
+    --model Lingshu --model_path lingshu-medical-mllm/Lingshu-7B \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
 # SLAKE, BLIP
 python run_eval.py \
     --task vqa --dataset SLAKE --split test \
