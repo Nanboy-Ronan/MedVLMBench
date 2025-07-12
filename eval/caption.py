@@ -3,11 +3,11 @@ import nltk
 nltk.download("wordnet")
 
 from torchvision.transforms.functional import to_pil_image
-from torchmetrics.functional.text import bleu_score, rouge_score, bert_score
+from torchmetrics.functional.text import bleu_score, rouge_score
 from nltk.translate.meteor_score import meteor_score
 
 from eval.base import EvalEngine
-from eval.metrics import calculate_exactmatch
+from eval.metrics import calculate_exactmatch, calculate_bertscore
 from eval.utils import normalize_word
 
 
@@ -52,9 +52,10 @@ class CaptionEvalEngine(EvalEngine):
             "rougeL_recall",
             "methor",
             "exact_match",
-            "bert_score_precision",
-            "bert_score_recall",
-            "bert_score_f1",
+            "bertscore"
+            # "bert_score_precision",
+            # "bert_score_recall",
+            # "bert_score_f1",
         ]
 
         exact_match = calculate_exactmatch(output_l, caption_l)
@@ -65,13 +66,14 @@ class CaptionEvalEngine(EvalEngine):
         bleu4 = bleu_score([output_normed], [[caption_normed]], n_gram=4).item()
         rouge_scores = rouge_score(output_normed, caption_normed)
         methor = meteor_score([caption_normed.split()], output_normed.split())
-        bert_scores = bert_score([output_normed], [caption_normed])
+        bertscore = calculate_bertscore(output_normed, caption_normed)
+        # bert_scores = bert_score([output_normed], [caption_normed])
 
         for metric in metrics:
             if metric.startswith("rouge"):
                 self.metric_logger.meters[metric].update(rouge_scores[metric].item(), n=1)
-            elif metric.startswith("bert_score"):
-                self.metric_logger.meters[metric].update(bert_scores[metric.replace("bert_score_", "")].item(), n=1)
+            # elif metric.startswith("bert_score"):
+            #     self.metric_logger.meters[metric].update(bert_scores[metric.replace("bert_score_", "")].item(), n=1)
             else:
                 self.metric_logger.meters[metric].update(eval(metric), n=1)
 

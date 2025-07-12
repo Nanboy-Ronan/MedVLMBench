@@ -400,10 +400,11 @@ class VILA(ChatMetaModel):
             output_embeddings[-num_new_tokens:] = output_embeddings_avg
 
 
-    def infer_vision_language(self, image, qs, temperature=0, image_size=None):
+    def infer_vision_language(self, image, qs, temperature=0, image_size=224):
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
         image = transforms.ToPILImage()(image)
+        image = image.resize((image_size, image_size), Image.BICUBIC)
         prompt = [image, qs]
         answer_generated = self.model.generate_content(prompt)
         return answer_generated

@@ -43,6 +43,9 @@ def get_model(args, **kwargs):
             from model.vila import VILA
 
             model = VILA(args=args)
+        elif args.model == "Lingshu":
+            from model.lingshu import Lingshu
+            model = Lingshu(args=args)
         else:
             raise NotImplementedError()
     elif args.task == "caption":

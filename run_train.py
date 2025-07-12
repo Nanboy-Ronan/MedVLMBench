@@ -144,6 +144,8 @@ def setup_args(args):
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_vila"
     elif args.model == "VILA-M3":
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_vila_m3"
+    elif args.model == "Lingshu":
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_lingshu"
     elif args.task == "diagnosis":
         save_folder_name = f"train_{args.usage}_seed{args.seed}"
     else:

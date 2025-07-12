@@ -86,7 +86,7 @@ class MIMIC_CXRCaption(CaptionDataset):
         return {
             "image": image,
             "label": caption,
-            "prompt_template": "",
+            "prompt_template": self.prompt_template,
             "image_size": image_size,
             "image_path": image_path,
         }
