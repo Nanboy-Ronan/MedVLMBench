@@ -13,7 +13,7 @@ CLIP_MODELS = [
     "PLIP"
 ]
 
-LANGUAGE_MODELS = ["LLaVA-1.5", "LLaVA-Med", "XGenMiniV1", "XrayGPT", "NVILA", "VILA-M3", "VILA1.5"]
+LANGUAGE_MODELS = ["LLaVA-1.5", "LLaVA-Med", "XGenMiniV1", "XrayGPT", "NVILA", "VILA-M3", "VILA1.5", "Lingshu"]
 
 MODELS = CLIP_MODELS + LANGUAGE_MODELS
 

@@ -163,7 +163,7 @@ class HarvardFairVLMed10kVQA(VQADataset):
         self.modality = "SLO Fundus"
 
         self.image_path = data_args.image_path
-        self.ds = pd.read_csv(os.path.join(self.image_path, f"vqa_{split}.csv")).dropna()
+        self.ds = pd.read_csv(os.path.join("./data/FairVLMed10k", f"vqa_{split}.csv")).dropna()
 
     def __len__(self):
         return len(self.ds)
@@ -182,6 +182,8 @@ class HarvardFairVLMed10kVQA(VQADataset):
         is_binary = answer.lower() in ["yes", "no"]
 
         prompt_template = self.prompt_templates[int(is_binary)]
+
+        image_path = "NA"
 
         if self.transform is not None:
             image = self.transform(image)

@@ -24,7 +24,8 @@ datasets = {
     "HAM10000": HAM10000Dataset,
     "Drishti": DrishtiDataset,
     "ChestXray": ChestXrayDataset,
-    "GF3300": GF3300Dataset
+    "GF3300": GF3300Dataset,
+    "HarvardFairVLMed10k_caption": HarvardFairVLMed10k
 }
 
 
