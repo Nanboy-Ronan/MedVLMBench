@@ -8,7 +8,7 @@ from collections import Counter
 
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA
-from dataset.caption import HarvardFairVLMed10k, MIMIC_CXR
+from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
 from dataset.diagnosis import (
     PneumoniaMNIST,
     BreastMNIST,
@@ -21,19 +21,20 @@ from dataset.diagnosis import (
 )
 
 datasets = {
-    "SLAKE": SLAKE,
-    "PathVQA": PathVQA,
-    "VQA-RAD": VQARAD,
-    "Harvard-FairVLMed10k": HarvardFairVLMed10kVQA,
-    "MIMIC_CXR": MIMIC_CXR,
-    "PneumoniaMNIST": PneumoniaMNIST,
-    "BreastMNIST": BreastMNIST,
-    "DermaMNIST": DermaMNIST,
-    "Camelyon17": Camelyon17,
-    "HAM10000": HAM10000Dataset,
-    "Drishti": DrishtiDataset,
-    "ChestXray": ChestXrayDataset,
-    "GF3300": GF3300Dataset,
+    "SLAKE-vqa": SLAKE,
+    "PathVQA-vqa": PathVQA,
+    "VQA-RAD-vqa": VQARAD,
+    "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
+    "Harvard-FairVLMed10k-caption": HarvardFairVLMed10kCaption,
+    "MIMIC_CXR-caption": MIMIC_CXRCaption,
+    "PneumoniaMNIST-diagnosis": PneumoniaMNIST,
+    "BreastMNIST-diagnosis": BreastMNIST,
+    "DermaMNIST-diagnosis": DermaMNIST,
+    "Camelyon17-diagnosis": Camelyon17,
+    "HAM10000-diagnosis": HAM10000Dataset,
+    "Drishti-diagnosis": DrishtiDataset,
+    "ChestXray-diagnosis": ChestXrayDataset,
+    "GF3300-diagnosis": GF3300Dataset,
 }
 
 
@@ -46,7 +47,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
         np.random.seed(args.seed)
         random.seed(args.seed)
 
-    dataset_name = datasets[args.dataset]
+    dataset_name = datasets[f"{args.dataset}-{args.task}"]
 
     assert args.split in ["train", "validation", "test", "all"]
 

@@ -18,7 +18,7 @@ class CaptionDataset(BaseDataset):
         self.prompt_template = "Can you provide a medical report for this image? {}"
 
 
-class HarvardFairVLMed10k(CaptionDataset):
+class HarvardFairVLMed10kCaption(CaptionDataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split, transform)
 
@@ -53,7 +53,7 @@ class HarvardFairVLMed10k(CaptionDataset):
         }
 
 
-class MIMIC_CXR(CaptionDataset):
+class MIMIC_CXRCaption(CaptionDataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split, transform)
 
@@ -62,9 +62,9 @@ class MIMIC_CXR(CaptionDataset):
 
         self.image_path = os.path.join(data_args.image_path, "images")
 
-        with open(os.path.join(data_args.image_path, f"annotation.json"), 'r') as f:
+        with open(os.path.join(data_args.image_path, f"annotation.json"), "r") as f:
             annotations = json.load(f)
-        
+
         self.data = [item for item in annotations[self.split]]
 
     def __len__(self):
@@ -91,8 +91,9 @@ class MIMIC_CXR(CaptionDataset):
             "image_path": image_path,
         }
 
+
 if __name__ == "__main__":
-    dataset = MIMIC_CXR(edict(image_path="/fast/rjin02/DataSets/mimic_cxr"), split="train", transform=None)
+    dataset = MIMIC_CXRCaption(edict(image_path="/fast/rjin02/DataSets/mimic_cxr"), split="train", transform=None)
     sample = dataset[0]
     print("Image Path:", sample["image_path"])
     print("Label:", sample["label"])
