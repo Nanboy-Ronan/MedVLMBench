@@ -403,3 +403,177 @@ CUDA_VISIBLE_DEVICES=2 python run_eval.py \
     --exp_path ./log \
     --cache_dir ./cache \
     --save_pred
+
+
+################################## Lingshu ##################################
+conda activate torch2.6
+# SLAKE, Lingshu
+CUDA_VISIBLE_DEVICE=3 python run_train.py \
+    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --task vqa --dataset SLAKE \
+    --model Lingshu \
+    --image_path ./data/SLAKE/imgs \
+    --model_path lingshu-medical-mllm/Lingshu-7B \
+    --mm_projector_type mlp2x_gelu \
+    --mm_vision_select_layer -2 \
+    --mm_use_im_start_end False \
+    --mm_use_im_patch_token False \
+    --image_aspect_ratio pad \
+    --group_by_modality_length True \
+    --bf16 True \
+    --output_dir ./log \
+    --cache_dir ./cache \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 16 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 1 \
+    --save_strategy "steps" \
+    --save_steps 50000 \
+    --save_total_limit 1 \
+    --learning_rate 2e-4 \
+    --weight_decay 0. \
+    --warmup_ratio 0.03 \
+    --lr_scheduler_type "cosine" \
+    --logging_steps 1 \
+    --tf32 True \
+    --model_max_length 2048 \
+    --gradient_checkpointing False \
+    --dataloader_num_workers 0 \
+    --tune_modules ML
+
+CUDA_VISIBLE_DEVICES=1 python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/SLAKE/Lingshu/train_lora_ML_seed42_lingshu \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+
+# PathVQA, Lingshu
+CUDA_VISIBLE_DEVICES=5 python run_train.py \
+    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --task vqa --dataset PathVQA \
+    --model Lingshu \
+    --image_path ./notnedded \
+    --model_path lingshu-medical-mllm/Lingshu-7B \
+    --mm_projector_type mlp2x_gelu \
+    --mm_vision_select_layer -2 \
+    --mm_use_im_start_end False \
+    --mm_use_im_patch_token False \
+    --image_aspect_ratio pad \
+    --group_by_modality_length True \
+    --bf16 True \
+    --output_dir ./log \
+    --cache_dir ./cache \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 16 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 1 \
+    --save_strategy "steps" \
+    --save_steps 50000 \
+    --save_total_limit 1 \
+    --learning_rate 2e-4 \
+    --weight_decay 0. \
+    --warmup_ratio 0.03 \
+    --lr_scheduler_type "cosine" \
+    --logging_steps 1 \
+    --tf32 True \
+    --model_max_length 2048 \
+    --gradient_checkpointing False \
+    --dataloader_num_workers 4 \
+    --tune_modules ML
+
+
+CUDA_VISIBLE_DEVICES=3 python run_eval.py \
+    --task vqa --dataset PathVQA --split test \
+    --image_path /notgiven \
+    --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/PathVQA/Lingshu/train_lora_ML_seed42_lingshu \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+
+# VQA-RAD, Lingshu
+CUDA_VISIBLE_DEVICES=5 python run_train.py \
+    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --task vqa --dataset VQA-RAD \
+    --model Lingshu \
+    --model_path lingshu-medical-mllm/Lingshu-7B \
+    --mm_projector_type mlp2x_gelu \
+    --mm_vision_select_layer -2 \
+    --mm_use_im_start_end False \
+    --mm_use_im_patch_token False \
+    --image_aspect_ratio pad \
+    --group_by_modality_length True \
+    --bf16 True \
+    --output_dir ./log \
+    --cache_dir ./cache \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 16 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 1 \
+    --save_strategy "steps" \
+    --save_steps 50000 \
+    --save_total_limit 1 \
+    --learning_rate 2e-4 \
+    --weight_decay 0. \
+    --warmup_ratio 0.03 \
+    --lr_scheduler_type "cosine" \
+    --logging_steps 1 \
+    --tf32 True \
+    --model_max_length 2048 \
+    --gradient_checkpointing False \
+    --dataloader_num_workers 0 \
+    --tune_modules ML
+
+CUDA_VISIBLE_DEVICES=5 python run_eval.py \
+    --task vqa --dataset VQA-RAD --split test \
+    --image_path ./notgiven \
+    --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/VQA-RAD/Lingshu/train_lora_ML_seed42_lingshu \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+
+
+# FairVLMed, Lingshu
+CUDA_VISIBLE_DEVICES=6 python run_train.py \
+    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --task vqa --dataset Harvard-FairVLMed10k \
+    --model Lingshu \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
+    --model_path lingshu-medical-mllm/Lingshu-7B \
+    --mm_projector_type mlp2x_gelu \
+    --mm_vision_select_layer -2 \
+    --mm_use_im_start_end False \
+    --mm_use_im_patch_token False \
+    --image_aspect_ratio pad \
+    --group_by_modality_length True \
+    --bf16 True \
+    --output_dir ./log \
+    --cache_dir ./cache \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 16 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 1 \
+    --save_strategy "steps" \
+    --save_steps 50000 \
+    --save_total_limit 1 \
+    --learning_rate 2e-4 \
+    --weight_decay 0. \
+    --warmup_ratio 0.03 \
+    --lr_scheduler_type "cosine" \
+    --logging_steps 1 \
+    --tf32 True \
+    --model_max_length 2048 \
+    --gradient_checkpointing False \
+    --dataloader_num_workers 0 \
+    --tune_modules ML
+
+CUDA_VISIBLE_DEVICES=6 python run_eval.py \
+    --task vqa --dataset Harvard-FairVLMed10k --split test \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
+    --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/Harvard-FairVLMed10k/Lingshu/train_lora_ML_seed42_lingshu \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
