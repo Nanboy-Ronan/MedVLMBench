@@ -407,6 +407,7 @@ class VILA(ChatMetaModel):
         image = image.resize((image_size, image_size), Image.BICUBIC)
         prompt = [image, qs]
         answer_generated = self.model.generate_content(prompt)
+        print(answer_generated)
         return answer_generated
 
 

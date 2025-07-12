@@ -26,7 +26,7 @@ class HarvardFairVLMed10kCaption(CaptionDataset):
         self.modality = "SLO Fundus"
 
         self.image_path = data_args.image_path
-        self.ds = pd.read_csv(os.path.join(self.image_path, f"caption_{split}.csv"))
+        self.ds = pd.read_csv(os.path.join("./data/FairVLMed10k", f"caption_{split}.csv"))
 
     def __len__(self):
         return len(self.ds)

@@ -169,4 +169,5 @@ pretrained_models/
 log/
 pretrained/
 wandb/
+cache/
 *.out
