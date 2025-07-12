@@ -20,6 +20,33 @@ python run_eval.py \
     --cache_dir /research/d5/gds/yzhong22/misc/cache \
     --save_pred
 
+# SLAKE, Qwen2-VL
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path /research/d5/gds/yzhong22/datasets/SLAKE/imgs \
+    --model Qwen2-VL --model_path /research/d5/gds/yzhong22/misc/pretrained/Qwen2-VL-7B-Instruct \
+    --exp_path /research/d5/gds/yzhong22/experiments/med_vlm_benchmark \
+    --cache_dir /research/d5/gds/yzhong22/misc/cache \
+    --save_pred
+
+# SLAKE, Qwen25-VL
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path /research/d5/gds/yzhong22/datasets/SLAKE/imgs \
+    --model Qwen25-VL --model_path /research/d5/gds/yzhong22/misc/pretrained/Qwen2.5-VL-7B-Instruct \
+    --exp_path /research/d5/gds/yzhong22/experiments/med_vlm_benchmark \
+    --cache_dir /research/d5/gds/yzhong22/misc/cache \
+    --save_pred
+
+# SLAKE, MedGemma
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path /research/d5/gds/yzhong22/datasets/SLAKE/imgs \
+    --model MedGemma --model_path /research/d5/gds/yzhong22/misc/pretrained/medgemma-4b-it \
+    --exp_path /research/d5/gds/yzhong22/experiments/med_vlm_benchmark \
+    --cache_dir /research/d5/gds/yzhong22/misc/cache \
+    --save_pred
+
 # SLAKE, BLIP
 python run_eval.py \
     --task vqa --dataset SLAKE --split test \

@@ -24,7 +24,7 @@ class ChatMetaModel(BaseModel):
     def infer_language(self, qs):
         pass
 
-    def init_for_training(self):
+    def load_for_training(self):
         pass
 
     def save(self, output_folder):
