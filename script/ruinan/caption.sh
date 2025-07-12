@@ -88,7 +88,7 @@ deepspeed --include localhost:4 --master_port 29604 run_train.py \
     --save_strategy "steps" \
     --save_steps 50000 \
     --save_total_limit 1 \
-    --learning_rate 2e-4 \
+    --learning_rate 2e-5 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
@@ -133,7 +133,7 @@ deepspeed --include localhost:5 --master_port 29606 run_train.py \
     --save_strategy "steps" \
     --save_steps 50000 \
     --save_total_limit 1 \
-    --learning_rate 2e-4 \
+    --learning_rate 2e-5 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
