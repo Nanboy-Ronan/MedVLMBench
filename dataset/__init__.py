@@ -8,24 +8,33 @@ from collections import Counter
 
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA
-from dataset.caption import HarvardFairVLMed10k, MIMIC_CXR
-from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset
+from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
+from dataset.diagnosis import (
+    PneumoniaMNIST,
+    BreastMNIST,
+    DermaMNIST,
+    Camelyon17,
+    HAM10000Dataset,
+    DrishtiDataset,
+    ChestXrayDataset,
+    GF3300Dataset,
+)
 
 datasets = {
-    "SLAKE": SLAKE,
-    "PathVQA": PathVQA,
-    "VQA-RAD": VQARAD,
-    "Harvard-FairVLMed10k": HarvardFairVLMed10kVQA,
-    "MIMIC_CXR": MIMIC_CXR,
-    "PneumoniaMNIST": PneumoniaMNIST,
-    "BreastMNIST": BreastMNIST,
-    "DermaMNIST": DermaMNIST,
-    "Camelyon17": Camelyon17,
-    "HAM10000": HAM10000Dataset,
-    "Drishti": DrishtiDataset,
-    "ChestXray": ChestXrayDataset,
-    "GF3300": GF3300Dataset,
-    "HarvardFairVLMed10k_caption": HarvardFairVLMed10k
+    "SLAKE-vqa": SLAKE,
+    "PathVQA-vqa": PathVQA,
+    "VQA-RAD-vqa": VQARAD,
+    "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
+    "Harvard-FairVLMed10k-caption": HarvardFairVLMed10kCaption,
+    "MIMIC_CXR-caption": MIMIC_CXRCaption,
+    "PneumoniaMNIST-diagnosis": PneumoniaMNIST,
+    "BreastMNIST-diagnosis": BreastMNIST,
+    "DermaMNIST-diagnosis": DermaMNIST,
+    "Camelyon17-diagnosis": Camelyon17,
+    "HAM10000-diagnosis": HAM10000Dataset,
+    "Drishti-diagnosis": DrishtiDataset,
+    "ChestXray-diagnosis": ChestXrayDataset,
+    "GF3300-diagnosis": GF3300Dataset,
 }
 
 
@@ -38,8 +47,8 @@ def get_dataset(args, image_processor_callable=None, split=None):
         np.random.seed(args.seed)
         random.seed(args.seed)
 
-    dataset_name = datasets[args.dataset]
-    
+    dataset_name = datasets[f"{args.dataset}-{args.task}"]
+
     assert args.split in ["train", "validation", "test", "all"]
 
     if split is None:
@@ -51,15 +60,15 @@ def get_dataset(args, image_processor_callable=None, split=None):
     else:
         transform = get_transform(args)
 
-    dataset = dataset_name(
-        data_args=edict(image_path=args.image_path, size=224), split=split, transform=transform
-    )
+    dataset = dataset_name(data_args=edict(image_path=args.image_path, size=224), split=split, transform=transform)
 
-    args.logger.info("Loaded dataset: " + dataset.name)
+    try:
+        args.logger.info("Loaded dataset: " + dataset.name)
+    except:
+        print("Logger is not set.")
 
     if args.task == "diagnosis":
         report_label_distribution(dataset, args)
-
 
     return dataset
 
@@ -69,10 +78,10 @@ def report_label_distribution(dataset, args):
     for i in range(len(dataset)):
         label = dataset[i]["label"].item()
         label_counts[label] += 1
-    
+
     total = sum(label_counts.values())
     distribution = {label: count / total for label, count in label_counts.items()}
-    
+
     args.logger.info("Label Distribution:")
     for label, freq in distribution.items():
         args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")

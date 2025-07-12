@@ -60,7 +60,7 @@ def collect_args():
     assert args.dataset in getattr(
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
-    
+
     args.save_folder = os.path.join(
         args.exp_path, args.task, args.dataset, args.model, f"eval_seed{args.seed}", os.path.basename(args.model_path)
     )
