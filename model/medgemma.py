@@ -48,6 +48,35 @@ class MedGemma(ChatMetaModel):
         self.processor = AutoProcessor.from_pretrained(model_path)
         self.processor.tokenizer.padding_side = "right"
 
+        modules_to_save = []
+        exclude_modules = ""
+        if "M" in self.args.tune_modules:
+            modules_to_save.extend(
+                [
+                    "multi_modal_projector"
+                    # "lm_head",
+                    # "embed_tokens",
+                ]
+            )
+
+        # print(self.model)
+
+        if "V" not in self.args.tune_modules:
+            exclude_modules = r".*\.vision_tower\..*"
+        if "L" not in self.args.tune_modules:
+            exclude_modules = r".*\.language_model\.layers\..*"
+
+        self.peft_config = LoraConfig(
+            lora_alpha=self.args.lora_alpha,
+            lora_dropout=self.args.lora_dropout,
+            r=self.args.lora_r,
+            bias=self.args.lora_bias,
+            target_modules="all-linear",
+            exclude_modules=exclude_modules,
+            task_type="CAUSAL_LM",
+            modules_to_save=modules_to_save,
+        )
+
     def infer_vision_language(self, image, qs, image_size=None):
         image = to_pil_image(image)
 
@@ -81,3 +110,6 @@ class MedGemma(ChatMetaModel):
         print(decoded)
 
         return decoded.strip()
+
+    def save(self, output_folder, trainer=None):
+        trainer.save_model()

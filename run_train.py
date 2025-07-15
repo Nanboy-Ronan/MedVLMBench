@@ -103,7 +103,6 @@ class Arguments(transformers.TrainingArguments):
         metadata={"help": "Whether enter debug mode."},
     )
 
-
     # misc
     # exp_path: str = field(default="")
     # device: Optional[str] = field(default="cuda")
@@ -122,6 +121,8 @@ def setup_args(args):
     assert args.dataset in getattr(
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
+
+    save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
     if "LLaVA" in args.model and args.tune_modules == "M":
         args.peft = ""
@@ -148,8 +149,6 @@ def setup_args(args):
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_lingshu"
     elif args.task == "diagnosis":
         save_folder_name = f"train_{args.usage}_seed{args.seed}"
-    else:
-        raise NotImplementedError()
 
     args.output_dir = os.path.join(
         args.output_dir,

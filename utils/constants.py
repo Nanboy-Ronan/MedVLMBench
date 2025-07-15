@@ -8,7 +8,7 @@ CLIP_MODELS = ["BLIP", "BLIP2-2.7b", "BioMedCLIP", "CLIP", "MedCLIP", "PMCCLIP",
 LANGUAGE_MODELS = [
     "LLaVA-1.5",
     "LLaVA-Med",
-    "Gemma",
+    "Gemma3",
     "MedGemma",
     "Qwen2-VL",
     "Qwen25-VL",

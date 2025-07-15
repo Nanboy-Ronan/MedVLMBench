@@ -19,6 +19,10 @@ def get_model(args, **kwargs):
             from model.llava_med import LLaVAMed
 
             model = LLaVAMed(args=args)
+        elif args.model == "Gemma3":
+            from model.gemma3 import Gemma3
+
+            model = Gemma3(args=args)
         elif args.model == "MedGemma":
             from model.medgemma import MedGemma
 
@@ -45,6 +49,7 @@ def get_model(args, **kwargs):
             model = VILA(args=args)
         elif args.model == "Lingshu":
             from model.lingshu import Lingshu
+
             model = Lingshu(args=args)
         else:
             raise NotImplementedError()
