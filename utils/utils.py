@@ -22,20 +22,17 @@ import torch.distributed as dist
 from torch import inf
 
 
-def maybe_zero_3(param, ignore_status=False, name=None):
+def maybe_zero_3(param, ignore_status=False):
+    if param.device.type == "meta":
+        return param
 
-    if hasattr(param, "ds_id"):
+    if hasattr(param, "ds_status") and \
+       str(param.ds_status) == "ZeroParamStatus.NOT_AVAILABLE":
         from deepspeed import zero
-        from deepspeed.runtime.zero.partition_parameters import ZeroParamStatus
+        with zero.GatheredParameters([param], modifier_rank=None):
+            return param.detach().cpu().clone()
 
-        if param.ds_status == ZeroParamStatus.NOT_AVAILABLE:
-            if not ignore_status:
-                print(f"{name}: param.ds_status != ZeroParamStatus.NOT_AVAILABLE: {param.ds_status}")
-        with zero.GatheredParameters([param]):
-            param = param.data.detach().cpu().clone()
-    else:
-        param = param.detach().cpu().clone()
-    return param
+    return param.detach().cpu().clone()
 
 
 class WandbLogger(object):

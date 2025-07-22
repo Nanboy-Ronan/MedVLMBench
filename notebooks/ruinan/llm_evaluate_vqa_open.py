@@ -38,7 +38,7 @@ def get_gpt4_response(dialogue_history, instruction=""):
             response = requests.post(
                 url="https://openrouter.ai/api/v1/chat/completions",
                 headers={
-                    "Authorization": "Bearer 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",
+                    "Authorization": "Bearer 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",
                 },
                 data=json.dumps({"model": "openai/gpt-4o-mini", "messages": prompt}),
                 timeout=30 # Adding a timeout for the request
@@ -73,7 +73,7 @@ def get_ds_response(dialogue_history, instruction=""):
             response = requests.post(
                 url="https://openrouter.ai/api/v1/chat/completions",
                 headers={
-                    "Authorization": "Bearer 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",
+                    "Authorization": "Bearer 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",
                 },
                 data=json.dumps({"model": "deepseek/deepseek-r1:free", "messages": prompt}),
                 timeout=30

@@ -12,11 +12,11 @@ from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
 from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset
 
 datasets = {
-    "SLAKE": SLAKE,
-    "PathVQA": PathVQA,
-    "VQA-RAD": VQARAD,
-    "Harvard-FairVLMed10k": HarvardFairVLMed10kVQA,
-    "MIMIC_CXR": MIMIC_CXRCaption,
+    "SLAKE-vqa": SLAKE,
+    "PathVQA-vqa": PathVQA,
+    "VQA-RAD-vqa": VQARAD,
+    "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
+    "MIMIC_CXR-caption": MIMIC_CXRCaption,
     "PneumoniaMNIST": PneumoniaMNIST,
     "BreastMNIST": BreastMNIST,
     "DermaMNIST": DermaMNIST,

@@ -29,7 +29,7 @@ CUDA_VISIBLE_DEVICES=1 python run_eval.py \
     --save_pred
 
 # Lingshu, HarvardFairVLMed10k
-CUDA_VISIBLE_DEVICES=0 python run_eval.py \
+CUDA_VISIBLE_DEVICES=2 python run_eval.py \
     --task caption --dataset HarvardFairVLMed10k --split test \
     --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
     --model Lingshu --model_path lingshu-medical-mllm/Lingshu-7B \
@@ -147,7 +147,7 @@ CUDA_VISIBLE_DEVICES=0 python run_eval.py \
 
 
 # VILA-M3, HarvardFairVLMed10k
-deepspeed --include localhost:5 --master_port 29606 run_train.py \
+deepspeed --include localhost:0 --master_port 29604 run_train.py \
     --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task caption --dataset HarvardFairVLMed10k \
@@ -171,7 +171,7 @@ deepspeed --include localhost:5 --master_port 29606 run_train.py \
     --save_strategy "steps" \
     --save_steps 50000 \
     --save_total_limit 1 \
-    --learning_rate 2e-4 \
+    --learning_rate 2e-5 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
@@ -196,6 +196,8 @@ CUDA_VISIBLE_DEVICES=1 python run_eval.py \
 
 
 # Lingshu, HarvardFairVLMed10k
+# lr 2e-6 --> output normal but 
+# lr 2e-3, 2e-4 and 2e-5 leads to empty output --> loss 2-3 --> inference output ""
 CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --task caption --dataset HarvardFairVLMed10k \
@@ -218,7 +220,7 @@ CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --save_strategy "steps" \
     --save_steps 50000 \
     --save_total_limit 1 \
-    --learning_rate 2e-4 \
+    --learning_rate 2e-6 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
@@ -231,12 +233,19 @@ CUDA_VISIBLE_DEVICES=5 python run_train.py \
 
 
 # Lingshu, HarvardFairVLMed10k
-CUDA_VISIBLE_DEVICES=1 python run_eval.py \
+CUDA_VISIBLE_DEVICES=2 python run_eval.py \
     --task caption --dataset HarvardFairVLMed10k --split test \
     --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
-    --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/caption/HarvardFairVLMed10k/VILA-M3/train_lora_ML_seed42_vila_m3 \
+    --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/caption/HarvardFairVLMed10k/Lingshu/train_lora_ML_seed42_lingshu \
     --exp_path ./log \
     --save_pred
+
+
+
+
+
+
+
 
 
 
@@ -289,7 +298,7 @@ python run_eval.py \
 
 
 # VILA-M3, MIMIC-CXR
-deepspeed --include localhost:5 --master_port 29606 run_train.py \
+deepspeed --include localhost:6 --master_port 29608 run_train.py \
     --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task caption --dataset MIMIC_CXR \
@@ -373,9 +382,9 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --tune_modules ML
 
 # Lingshu, MIMIC-CXR
-CUDA_VISIBLE_DEVICES=1 python run_eval.py \
+CUDA_VISIBLE_DEVICES=2 python run_eval.py \
     --task caption --dataset MIMIC_CXR --split test \
     --image_path /data/rjin02/project/DataSets/mimic_cxr \
-    --model VILA-M3 --model_path /bigdata/rjin02/MedVLMBench/log/caption/MIMIC_CXR/VILA-M3/train_lora_ML_seed42_vila_m3 \
+    --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/caption/HarvardFairVLMed10k/Lingshu/train_lora_ML_seed42_lingshu \
     --exp_path ./log \
-    --save_preds
+    --save_pred

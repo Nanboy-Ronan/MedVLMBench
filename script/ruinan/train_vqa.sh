@@ -47,8 +47,8 @@ python run_eval.py \
 
 ################################## VILA1.5-8B ##################################
 # SLAKE, VILA1.5-8B
-deepspeed --include localhost:4 --master_port 29601 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+deepspeed --include localhost:0 --master_port 29601 run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset SLAKE \
     --model VILA1.5 \
@@ -82,7 +82,7 @@ deepspeed --include localhost:4 --master_port 29601 run_train.py \
     --dataloader_num_workers 4 \
     --tune_modules ML
 
-python run_eval.py \
+CUDA_VISIBLE_DEVICE=4 python run_eval.py \
     --task vqa --dataset SLAKE --split test \
     --image_path ./data/SLAKE/imgs \
     --model VILA1.5 --model_path /bigdata/rjin02/MedVLMBench/log/vqa/SLAKE/VILA1.5/train_lora_ML_seed42_vila \
@@ -92,8 +92,8 @@ python run_eval.py \
 
 
 # PathVQA, VILA1.5-8B
-deepspeed --include localhost:5 --master_port 29602 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+deepspeed --include localhost:1 --master_port 29602 run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset PathVQA \
     --model VILA1.5 \
@@ -127,7 +127,7 @@ deepspeed --include localhost:5 --master_port 29602 run_train.py \
     --dataloader_num_workers 4 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=1 python run_eval.py \
+CUDA_VISIBLE_DEVICES=5 python run_eval.py \
     --task vqa --dataset PathVQA --split test \
     --image_path /notgiven \
     --model VILA1.5 --model_path /bigdata/rjin02/MedVLMBench/log/vqa/PathVQA/VILA1.5/train_lora_ML_seed42_vila \
@@ -137,8 +137,8 @@ CUDA_VISIBLE_DEVICES=1 python run_eval.py \
 
 
 # VQA-RAD, VILA1.5-8B
-deepspeed --include localhost:6 --master_port 29603 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+deepspeed --include localhost:2 --master_port 29603 run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset VQA-RAD \
     --model VILA1.5 \
@@ -168,10 +168,10 @@ deepspeed --include localhost:6 --master_port 29603 run_train.py \
     --tf32 True \
     --model_max_length 2048 \
     --gradient_checkpointing False \
-    --dataloader_num_workers 0 \
+    --dataloader_num_workers 4 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=2 python run_eval.py \
+CUDA_VISIBLE_DEVICES=6 python run_eval.py \
     --task vqa --dataset VQA-RAD --split test \
     --image_path ./notgiven \
     --model VILA1.5 --model_path /bigdata/rjin02/MedVLMBench/log/vqa/VQA-RAD/VILA1.5/train_lora_ML_seed42_vila \
@@ -181,8 +181,8 @@ CUDA_VISIBLE_DEVICES=2 python run_eval.py \
 
 
 # FairVLMed, VILA1.5-8B
-deepspeed --include localhost:5 --master_port 29604 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+deepspeed --include localhost:3 --master_port 29604 run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset Harvard-FairVLMed10k \
     --model VILA1.5 \
@@ -216,7 +216,7 @@ deepspeed --include localhost:5 --master_port 29604 run_train.py \
     --dataloader_num_workers 0 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=2 python run_eval.py \
+CUDA_VISIBLE_DEVICES=7 python run_eval.py \
     --task vqa --dataset Harvard-FairVLMed10k --split test \
     --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
     --model VILA1.5 --model_path /bigdata/rjin02/MedVLMBench/log/vqa/Harvard-FairVLMed10k/VILA1.5/train_lora_ML_seed42_vila \
@@ -228,7 +228,7 @@ CUDA_VISIBLE_DEVICES=2 python run_eval.py \
 
 # SLAKE, VILA-M3
 deepspeed --include localhost:4 --master_port 29601 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset SLAKE \
     --model VILA-M3 \
@@ -243,7 +243,7 @@ deepspeed --include localhost:4 --master_port 29601 run_train.py \
     --bf16 True \
     --output_dir ./log \
     --cache_dir ./cache \
-    --num_train_epochs 1 \
+    --num_train_epochs 5 \
     --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 1 \
@@ -272,8 +272,8 @@ CUDA_VISIBLE_DEVICES=0 python run_eval.py \
 
 
 # PathVQA, VILA-M3
-deepspeed --include localhost:5 --master_port 29602 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+deepspeed --include localhost:1 --master_port 29602 run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset PathVQA \
     --model VILA-M3 \
@@ -317,8 +317,8 @@ CUDA_VISIBLE_DEVICES=1 python run_eval.py \
 
 
 # VQA-RAD, VILA-M3
-deepspeed --include localhost:6 --master_port 29603 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+deepspeed --include localhost:0 --master_port 29603 run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset VQA-RAD \
     --model VILA-M3 \
@@ -332,7 +332,7 @@ deepspeed --include localhost:6 --master_port 29603 run_train.py \
     --bf16 True \
     --output_dir ./log \
     --cache_dir ./cache \
-    --num_train_epochs 1 \
+    --num_train_epochs 5 \
     --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 1 \
@@ -348,10 +348,10 @@ deepspeed --include localhost:6 --master_port 29603 run_train.py \
     --tf32 True \
     --model_max_length 2048 \
     --gradient_checkpointing False \
-    --dataloader_num_workers 0 \
+    --dataloader_num_workers 4 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=2 python run_eval.py \
+CUDA_VISIBLE_DEVICES=3 python run_eval.py \
     --task vqa --dataset VQA-RAD --split test \
     --image_path ./notgiven \
     --model VILA-M3 --model_path /bigdata/rjin02/MedVLMBench/log/vqa/VQA-RAD/VILA-M3/train_lora_ML_seed42_vila_m3 \
@@ -361,8 +361,8 @@ CUDA_VISIBLE_DEVICES=2 python run_eval.py \
 
 
 # FairVLMed, VILA-M3
-deepspeed --include localhost:4 --master_port 29603 run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+deepspeed --include localhost:4 --master_port 29609 run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./script/zero2.json \
     --task vqa --dataset Harvard-FairVLMed10k \
     --model VILA-M3 \
@@ -393,10 +393,10 @@ deepspeed --include localhost:4 --master_port 29603 run_train.py \
     --tf32 True \
     --model_max_length 2048 \
     --gradient_checkpointing False \
-    --dataloader_num_workers 0 \
+    --dataloader_num_workers 4 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=2 python run_eval.py \
+CUDA_VISIBLE_DEVICES=3 python run_eval.py \
     --task vqa --dataset Harvard-FairVLMed10k --split test \
     --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
     --model VILA-M3 --model_path /bigdata/rjin02/MedVLMBench/log/vqa/Harvard-FairVLMed10k/VILA-M3/train_lora_ML_seed42_vila_m3 \
@@ -408,8 +408,8 @@ CUDA_VISIBLE_DEVICES=2 python run_eval.py \
 ################################## Lingshu ##################################
 conda activate torch2.6
 # SLAKE, Lingshu
-CUDA_VISIBLE_DEVICE=3 python run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+CUDA_VISIBLE_DEVICE=0 python run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --task vqa --dataset SLAKE \
     --model Lingshu \
     --image_path ./data/SLAKE/imgs \
@@ -438,10 +438,10 @@ CUDA_VISIBLE_DEVICE=3 python run_train.py \
     --tf32 True \
     --model_max_length 2048 \
     --gradient_checkpointing False \
-    --dataloader_num_workers 0 \
+    --dataloader_num_workers 4 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=1 python run_eval.py \
+CUDA_VISIBLE_DEVICES=4 python run_eval.py \
     --task vqa --dataset SLAKE --split test \
     --image_path ./data/SLAKE/imgs \
     --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/SLAKE/Lingshu/train_lora_ML_seed42_lingshu \
@@ -451,8 +451,8 @@ CUDA_VISIBLE_DEVICES=1 python run_eval.py \
 
 
 # PathVQA, Lingshu
-CUDA_VISIBLE_DEVICES=5 python run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+CUDA_VISIBLE_DEVICES=1 python run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --task vqa --dataset PathVQA \
     --model Lingshu \
     --image_path ./notnedded \
@@ -485,7 +485,7 @@ CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --tune_modules ML
 
 
-CUDA_VISIBLE_DEVICES=3 python run_eval.py \
+CUDA_VISIBLE_DEVICES=5 python run_eval.py \
     --task vqa --dataset PathVQA --split test \
     --image_path /notgiven \
     --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/PathVQA/Lingshu/train_lora_ML_seed42_lingshu \
@@ -495,8 +495,8 @@ CUDA_VISIBLE_DEVICES=3 python run_eval.py \
 
 
 # VQA-RAD, Lingshu
-CUDA_VISIBLE_DEVICES=5 python run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+CUDA_VISIBLE_DEVICES=2 python run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --task vqa --dataset VQA-RAD \
     --model Lingshu \
     --model_path lingshu-medical-mllm/Lingshu-7B \
@@ -527,7 +527,7 @@ CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --dataloader_num_workers 0 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=5 python run_eval.py \
+CUDA_VISIBLE_DEVICES=6 python run_eval.py \
     --task vqa --dataset VQA-RAD --split test \
     --image_path ./notgiven \
     --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/VQA-RAD/Lingshu/train_lora_ML_seed42_lingshu \
@@ -537,8 +537,8 @@ CUDA_VISIBLE_DEVICES=5 python run_eval.py \
 
 
 # FairVLMed, Lingshu
-CUDA_VISIBLE_DEVICES=6 python run_train.py \
-    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+CUDA_VISIBLE_DEVICES=3 python run_train.py \
+    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --task vqa --dataset Harvard-FairVLMed10k \
     --model Lingshu \
     --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
@@ -570,7 +570,7 @@ CUDA_VISIBLE_DEVICES=6 python run_train.py \
     --dataloader_num_workers 0 \
     --tune_modules ML
 
-CUDA_VISIBLE_DEVICES=6 python run_eval.py \
+CUDA_VISIBLE_DEVICES=7 python run_eval.py \
     --task vqa --dataset Harvard-FairVLMed10k --split test \
     --image_path /data/rjin02/project/FairMedFM-DNE/data/FairVLMed10k \
     --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/Harvard-FairVLMed10k/Lingshu/train_lora_ML_seed42_lingshu \

@@ -23,13 +23,14 @@ class CaptionEvalEngine(EvalEngine):
         prompt_template = subject["prompt_template"]
         image_size = subject["image_size"]
         image_path = subject["image_path"]
+        query = subject.get("query", "")
 
         caption_l = caption.lower()
 
         device = self.args.device
         image = image.to(device, non_blocking=True)
 
-        prompt = prompt_template.format("")
+        prompt = prompt_template.format(query)
         output = model.infer_vision_language(image, prompt, image_size=image_size)
         output_l = output.lower()
 

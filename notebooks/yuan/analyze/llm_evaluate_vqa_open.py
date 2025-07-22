@@ -34,7 +34,7 @@ def get_gpt4_response(dialogue_history, instruction=""):
                 headers={
                     "Authorization": "Bearer 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",
                 },
-                data=json.dumps({"model": "openai/gpt-4o-mini", "messages": prompt}),  # Optional
+                data=json.dumps({"model": "openai/gpt-4o-mini", "messages": prompt}),
             )
             assert response.status_code == 200
             score = response.json()["choices"][0]["message"]["content"].split("\n")[0]
