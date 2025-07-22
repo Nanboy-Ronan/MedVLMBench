@@ -191,7 +191,7 @@ if __name__ == "__main__":
         torch.cuda.manual_seed_all(args.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
+    breakpoint()
     model_wrapped = get_model(args=args, device=args.device.type)
     model_wrapped.load_for_training(args.model_path)
 

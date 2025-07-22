@@ -18,13 +18,13 @@ datasets = {
     "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
     "MIMIC_CXR-caption": MIMIC_CXRCaption,
     "PneumoniaMNIST": PneumoniaMNIST,
-    "BreastMNIST": BreastMNIST,
-    "DermaMNIST": DermaMNIST,
-    "Camelyon17": Camelyon17,
-    "HAM10000": HAM10000Dataset,
+    "BreastMNIST-diagnosis": BreastMNIST,
+    "DermaMNIST-diagnosis": DermaMNIST,
+    "Camelyon17-diagnosis": Camelyon17,
+    "HAM10000-diagnosis": HAM10000Dataset,
     "Drishti": DrishtiDataset,
-    "ChestXray": ChestXrayDataset,
-    "GF3300": GF3300Dataset,
+    "ChestXray-diagnosis": ChestXrayDataset,
+    "GF3300-diagnosis": GF3300Dataset,
     "HarvardFairVLMed10k-caption": HarvardFairVLMed10kCaption
 }
 

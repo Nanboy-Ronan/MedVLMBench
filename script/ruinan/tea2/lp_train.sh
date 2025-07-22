@@ -96,14 +96,14 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # # Train BREAST
-# python run_train.py \
-#     --task diagnosis --usage lp --dataset BreastMNIST --split train \
-#     --image_path ./data \
-#     --output_dir ./log \
-#     --model CLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 50 \
-#     --learning_rate 5e-5
+python run_train.py \
+    --task diagnosis --usage lp --dataset BreastMNIST --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model CLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset BreastMNIST --split train \
@@ -151,14 +151,14 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # HAM10000
-# python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
-#     --image_path ../DataSets \
-#     --output_dir ./log \
-#     --model CLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 50 \
-#     --learning_rate 5e-5
+CUDA_VISIBLE_DEVICES=1 python run_train.py \
+    --task diagnosis --usage lp --dataset HAM10000 --split train \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data \
+    --output_dir ./log \
+    --model CLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HAM10000 --split train \
