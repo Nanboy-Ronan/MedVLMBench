@@ -3,20 +3,22 @@ import shutil
 import warnings
 import torch
 from torchvision.transforms.functional import to_pil_image
-from transformers import AutoProcessor, Gemma3ForConditionalGeneration
+from transformers import AutoProcessor, AutoModelForImageTextToText
 
 from model.chat import ChatMetaModel
 
 
-class Gemma3(ChatMetaModel):
+class InternVL3(ChatMetaModel):
     def __init__(self, args):
         super().__init__(args)
 
-        self.name = "Gemma3"
+        self.name = "InternVL3"
         self.model_type = "general"
 
     def load_from_pretrained(self, model_path, **kwargs):
-        self.model = Gemma3ForConditionalGeneration.from_pretrained(model_path, device_map="auto").eval()
+        self.model = AutoModelForImageTextToText.from_pretrained(
+            model_path, device_map="auto", torch_dtype=torch.bfloat16
+        )
         self.processor = AutoProcessor.from_pretrained(model_path)
 
     def infer_vision_language(self, image, qs, image_size=None):
@@ -38,15 +40,11 @@ class Gemma3(ChatMetaModel):
         ]
 
         inputs = self.processor.apply_chat_template(
-            messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt"
+            messages, add_generation_prompt=True, tokenize=True, return_dict=True, return_tensors="pt"
         ).to(self.model.device, dtype=torch.bfloat16)
-        input_len = inputs["input_ids"].shape[-1]
 
-        with torch.inference_mode():
-            generation = self.model.generate(**inputs, max_new_tokens=200, do_sample=False)
-            generation = generation[0][input_len:]
-
-        decoded = self.processor.decode(generation, skip_special_tokens=True)
-        # print(decoded)
+        generate_ids = self.model.generate(**inputs, max_new_tokens=200)
+        decoded = self.processor.decode(generate_ids[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True)
+        print(decoded)
 
         return decoded.strip()

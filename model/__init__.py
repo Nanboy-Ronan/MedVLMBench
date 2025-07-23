@@ -23,6 +23,10 @@ def get_model(args, **kwargs):
             from model.gemma3 import Gemma3
 
             model = Gemma3(args=args)
+        elif args.model == "InternVL3":
+            from model.internvl import InternVL3
+
+            model = InternVL3(args=args)
         elif args.model == "MedGemma":
             from model.medgemma import MedGemma
 
