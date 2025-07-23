@@ -76,3 +76,11 @@ def report_label_distribution(dataset, args):
     args.logger.info("Label Distribution:")
     for label, freq in distribution.items():
         args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")
+    
+    num_classes = max(label_counts.keys()) + 1
+    weights = [0.0] * num_classes
+    for lbl, cnt in label_counts.items():
+        weights[lbl] = total / (cnt * num_classes)
+
+    dataset.class_weights = torch.tensor(weights, dtype=torch.float)
+    args.logger.info(f"Class weights: {dataset.class_weights.tolist()}")

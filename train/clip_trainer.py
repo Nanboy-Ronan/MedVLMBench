@@ -26,37 +26,37 @@ class CustomCallback(TrainerCallback):
             metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
             print(f"Evaluation metrics at epoch {self.trainer.current_epoch}: {metrics}")
         self.trainer.current_epoch += 1
+        if self.trainer.profile:
+            total_epoch_forward = self.trainer.epoch_forward_flops
+            total_epoch_backward = self.trainer.epoch_backward_flops
+            total_epoch_flops = total_epoch_forward + total_epoch_backward
 
-        total_epoch_forward = self.trainer.epoch_forward_flops
-        total_epoch_backward = self.trainer.epoch_backward_flops
-        total_epoch_flops = total_epoch_forward + total_epoch_backward
+            avg_epoch_forward = total_epoch_forward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
+            avg_epoch_backward = total_epoch_backward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
 
-        avg_epoch_forward = total_epoch_forward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
-        avg_epoch_backward = total_epoch_backward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
+            self.trainer.total_train_forward_flops += total_epoch_forward
+            self.trainer.total_train_backward_flops += total_epoch_backward
+            total_train_flops = self.trainer.total_train_forward_flops + self.trainer.total_train_backward_flops
 
-        self.trainer.total_train_forward_flops += total_epoch_forward
-        self.trainer.total_train_backward_flops += total_epoch_backward
-        total_train_flops = self.trainer.total_train_forward_flops + self.trainer.total_train_backward_flops
+            self.trainer.args.logger.info(
+                f"Epoch {self.trainer.current_epoch} FLOPs: "
+                f"Total Forward: {total_epoch_forward/1e9:.2f} GFLOPS, "
+                f"Total Backward: {total_epoch_backward/1e9:.2f} GFLOPS, "
+                f"Combined: {total_epoch_flops/1e9:.2f} GFLOPS "
+                f"(Avg per batch: Forward: {avg_epoch_forward/1e9:.2f} GFLOPS, "
+                f"Backward: {avg_epoch_backward/1e9:.2f} GFLOPS)"
+            )
 
-        self.trainer.args.logger.info(
-            f"Epoch {self.trainer.current_epoch} FLOPs: "
-            f"Total Forward: {total_epoch_forward/1e9:.2f} GFLOPS, "
-            f"Total Backward: {total_epoch_backward/1e9:.2f} GFLOPS, "
-            f"Combined: {total_epoch_flops/1e9:.2f} GFLOPS "
-            f"(Avg per batch: Forward: {avg_epoch_forward/1e9:.2f} GFLOPS, "
-            f"Backward: {avg_epoch_backward/1e9:.2f} GFLOPS)"
-        )
+            self.trainer.args.logger.info(
+                f"Total training FLOPs up to epoch {self.trainer.current_epoch}: "
+                f"Forward: {self.trainer.total_train_forward_flops/1e9:.2f} GFLOPS, "
+                f"Backward: {self.trainer.total_train_backward_flops/1e9:.2f} GFLOPS, "
+                f"Combined: {total_train_flops/1e9:.2f} GFLOPS"
+            )
 
-        self.trainer.args.logger.info(
-            f"Total training FLOPs up to epoch {self.trainer.current_epoch}: "
-            f"Forward: {self.trainer.total_train_forward_flops/1e9:.2f} GFLOPS, "
-            f"Backward: {self.trainer.total_train_backward_flops/1e9:.2f} GFLOPS, "
-            f"Combined: {total_train_flops/1e9:.2f} GFLOPS"
-        )
-
-        self.trainer.epoch_forward_flops = 0
-        self.trainer.epoch_backward_flops = 0
-        self.trainer.batch_count = 0
+            self.trainer.epoch_forward_flops = 0
+            self.trainer.epoch_backward_flops = 0
+            self.trainer.batch_count = 0
     
     def on_train_end(self, args, state, control, **kwargs):
         """
@@ -123,7 +123,9 @@ class CLIPLPTrainer(Trainer):
             ) as prof:
                 with record_function("forward_pass"):
                     logits = model(pixel_values)
-                    loss = F.cross_entropy(logits, labels)
+                    class_weights = self.train_dataset.class_weights
+                    cw = class_weights.to(logits.device, logits.dtype)
+                    loss = F.cross_entropy(logits, labels, weight=cw)
 
             # Extract Forward FLOPS
             flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
@@ -133,7 +135,9 @@ class CLIPLPTrainer(Trainer):
             # print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
         else:
             logits = model(pixel_values)
-            loss = F.cross_entropy(logits, labels)
+            class_weights = self.train_dataset.class_weights
+            cw = class_weights.to(logits.device, logits.dtype)
+            loss = F.cross_entropy(logits, labels, weight=cw)
 
         return (loss, logits) if return_outputs else loss
     
@@ -201,18 +205,18 @@ def make_lp_data_module(args, dataset, image_processor):
 
     data_collator = LinearProbingDataCollator()
     # TODO: check transform
-    train_dataset = PneumoniaMNIST(
-        data_args=args,
-        split="train", # 'train', 'val' or 'test'
-        transform=transform,
-        target_transform=None,
-        download=True,
-        as_rgb=True,
-        size=224,
-        mmap_mode=None,
-    )
+    # train_dataset = PneumoniaMNIST(
+    #     data_args=args,
+    #     split="train", # 'train', 'val' or 'test'
+    #     transform=transform,
+    #     target_transform=None,
+    #     download=True,
+    #     as_rgb=True,
+    #     size=224,
+    #     mmap_mode=None,
+    # )
 
-    return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
+    return dict(train_dataset=dataset, eval_dataset=None, data_collator=data_collator)
 
 # TODO
 class CLIPTrainer(Trainer):
