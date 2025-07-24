@@ -1,74 +1,56 @@
-#!/usr/bin/env python
-"""
-Estimate AUROC and its 95 % bootstrap CI from a predictions.json file.
-The JSON is expected to be a list of records, each with:
-  - "true_label" : 0 or 1
-  - "pred_score" : model‑estimated probability or score for the positive class
-"""
-
-import argparse
 import json
 import numpy as np
+from pathlib import Path
 from sklearn.metrics import roc_auc_score
 
+# ---------- configuration ----------
+JSON_PATH      = "/bigdata/rjin02/MedVLMBench/log/diagnosis/Camelyon17/CLIP/train_lp_seed42/predictions.json"
+N_BOOTSTRAPS   = 1_000
+RANDOM_SEED    = 42
+# -----------------------------------
 
-def load_predictions(path):
-    """Return y_true, y_score from a MedVLMBench-style JSON."""
-    with open(path, "r") as f:
-        data = json.load(f)
-    y_true = np.array([row["true_label"] for row in data], dtype=np.int8)
-    y_score = np.array([row["pred_score"] for row in data], dtype=np.float32)
+def load_predictions(json_path: Path):
+    """Returns two flat numpy arrays: y_true, y_score."""
+    with open(json_path) as f:
+        batches = json.load(f)
+
+    y_true  = np.concatenate([np.asarray(b["true_label"])  for b in batches])
+    y_score = np.concatenate([np.asarray(b["pred_score"])  for b in batches])
     return y_true, y_score
 
 
-def bootstrap_ci(y_true, y_score, n_bootstraps=1000, seed=42):
+def bootstrap_auc_ci(y_true, y_score, *, n_iterations=1000, seed=None, ci=0.95):
     """
-    Bootstrap AUROC.
-    Returns: mean_bootstrap_auc, (ci_low, ci_high), bootstrapped_scores
+    Bootstraps AUROC and returns (lower, upper) CI bounds.
+    Skips any resample that contains only one class.
     """
-    rng = np.random.default_rng(seed)
-    boot_scores = []
+    rng  = np.random.default_rng(seed)
+    n    = len(y_true)
+    aucs = []
 
-    n = len(y_true)
-    for _ in range(n_bootstraps):
-        indices = rng.integers(0, n, n)          # sample with replacement
-        if len(np.unique(y_true[indices])) < 2:  # skip if all same class
-            continue
-        score = roc_auc_score(y_true[indices], y_score[indices])
-        boot_scores.append(score)
+    for _ in range(n_iterations):
+        idx = rng.integers(0, n, n)       # sample with replacement
+        if np.unique(y_true[idx]).size < 2:
+            continue                      # AUROC undefined if only one class present
+        aucs.append(roc_auc_score(y_true[idx], y_score[idx]))
 
-    boot_scores = np.array(boot_scores)
-    mean_score = boot_scores.mean()
-    ci_low, ci_high = np.percentile(boot_scores, [2.5, 97.5])
-    return mean_score, (ci_low, ci_high), boot_scores
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--json_path", help="Path to predictions.json")
-    parser.add_argument("-n", "--n_bootstraps", type=int, default=1000,
-                        help="Number of bootstrap resamples (default: 1000)")
-    parser.add_argument("--seed", type=int, default=42,
-                        help="Random seed for reproducibility (default: 42)")
-    args = parser.parse_args()
-
-    y_true, y_score = load_predictions(args.json_path)
-
-    # Point estimate on full test set
-    auroc = roc_auc_score(y_true, y_score)
-
-    # Bootstrap
-    mean_boot, (ci_low, ci_high), _ = bootstrap_ci(
-        y_true, y_score,
-        n_bootstraps=args.n_bootstraps,
-        seed=args.seed
-    )
-
-    print(f"Test AUROC         : {auroc:.4f}")
-    print(f"Bootstrap mean     : {mean_boot:.4f}")
-    print(f"95% CI (percentile): [{ci_low:.4f}, {ci_high:.4f}]  "
-          f"({args.n_bootstraps} resamples)")
+    lower = np.percentile(aucs, (1 - ci) / 2 * 100)
+    upper = np.percentile(aucs, (1 + ci) / 2 * 100)
+    return np.asarray(aucs), (lower, upper)
 
 
 if __name__ == "__main__":
-    main()
+    y_true, y_score = load_predictions(JSON_PATH)
+
+    # 1. point estimate
+    point_auc = roc_auc_score(y_true, y_score)
+
+    # 2. bootstrap CI
+    auc_samples, (ci_low, ci_high) = bootstrap_auc_ci(
+        y_true, y_score,
+        n_iterations=N_BOOTSTRAPS,
+        seed=RANDOM_SEED,
+    )
+
+    print(f"AUROC: {point_auc:.4f}")
+    print(f"{(0.95*100):.0f}% bootstrap CI: [{ci_low:.4f}, {ci_high:.4f}]")

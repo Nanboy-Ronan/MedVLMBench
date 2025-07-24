@@ -28,7 +28,7 @@ class DiagnosisEvalEngine(EvalEngine):
             raise ValueError(f"Unsupported task: {task}")
         
         self.device = device 
-        self.records = []  # filled only when save_pred=True
+        self.records = []
 
     def evaluate(self, args, model):
         """Run evaluation on the classification dataset."""
@@ -36,6 +36,7 @@ class DiagnosisEvalEngine(EvalEngine):
         data_loader = DataLoader(self.dataset, batch_size=64, collate_fn=LinearProbingDataCollator(), shuffle=False)
         self.num_classes = model.num_classes
         self.init_metric_logger()
+        self.records = []
         all_true = []
         all_out = []
 
@@ -56,6 +57,7 @@ class DiagnosisEvalEngine(EvalEngine):
         self.metric_logger.synchronize_between_processes()
         results = {k: m.global_avg for k, m in self.metric_logger.meters.items()}
         self.logger.info("\nEvaluation results:\n" + "\n".join(f"{k}: {v:.6f}" for k, v in results.items()))
+        self.save(self.args.output_dir, model)
 
         return results
 
@@ -89,7 +91,7 @@ class DiagnosisEvalEngine(EvalEngine):
             record = {
                 "true_label": true_np.tolist(),
                 "pred_label": pred.cpu().numpy().tolist(),
-                "pred_score": out_np.max(axis=-1).tolist(),
+                "pred_score": out_np[:, 1].tolist(),
             }
             self.records.append(record)
 
@@ -104,39 +106,17 @@ class DiagnosisEvalEngine(EvalEngine):
     def _compute_auc(self, y_true: np.ndarray, y_score: np.ndarray) -> float:
         """Wrapper around *roc_auc_score* for binary & multi-class with better messages."""
         if self.task == "binary-class":
-            if y_true.ndim > 1 and y_true.shape[1] == 2:
+            if y_true.ndim > 1 and y_true.shape[1] == 2: # y_true.shape = (920,)
                 y_true = y_true.argmax(axis=1)
             if y_score.ndim == 2 and y_score.shape[1] == 2:
                 y_score = y_score[:, 1]
             return roc_auc_score(y_true, y_score)
 
-        # ---------------------------- multi-class ----------------------------
-        lb = LabelBinarizer()
-        lb.fit(range(self.num_classes))
-        y_true_bin = lb.transform(y_true)
-
-        if y_true_bin.shape[1] == 1:  # degenerate two-class represented as 0/1 column
-            y_true_bin = np.hstack((1 - y_true_bin, y_true_bin))
-
-        if y_true_bin.shape[1] != self.num_classes:
-            raise ValueError(
-                "Number of classes in y_true ({y_true_bin.shape[1]}) does not match the expected "
-                f"num_classes ({self.num_classes})."
-            )
-        if y_score.shape[1] != self.num_classes:
-            raise ValueError(
-                f"y_score has {y_score.shape[1]} columns, expected {self.num_classes}."
-            )
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning)  # suppress empty class warnings
-            return roc_auc_score(y_true_bin, y_score, multi_class="ovr")
     
     def save(self, path: str, model) -> None:
         """Save a one-row CSV with global averages and, optionally, raw predictions."""
         os.makedirs(path, exist_ok=True)
         info = {
-            "model": [getattr(model, "name", "model")],
             "task": [self.task],
             "dataset": [getattr(self.dataset, "name", "dataset")],
             "model_type": [getattr(model, "model_type", "")],

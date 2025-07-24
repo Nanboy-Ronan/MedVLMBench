@@ -14,10 +14,8 @@ class ImageProcessorCallable:
     def __init__(self, image_processor, transform_func=None):
         self.image_processor = image_processor
         if transform_func is None:
-            # Default behavior for processors that return tensors directly.
             self.transform_func = lambda x: x
         else:
-            # Custom function to extract tensor from processor's output dict.
             self.transform_func = transform_func
 
     def __call__(self, image_batch_tensor: torch.Tensor) -> torch.Tensor:

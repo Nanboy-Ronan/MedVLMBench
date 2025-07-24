@@ -98,7 +98,7 @@ if __name__ == "__main__":
     if args.model_path != "original_pretrained":
         model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
 
-    dataset = get_dataset(args, image_processor_callable=model_wrapped.image_processor_callable)
+    dataset = get_dataset(args)
 
     eval_engine = get_eval_engine(args=args, dataset=dataset)
     eval_engine.evaluate(args=args, model=model_wrapped)

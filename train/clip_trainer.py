@@ -76,7 +76,8 @@ class CLIPLPTrainer(Trainer):
             eval_dataset=eval_dataset,
             **kwargs
         )
-        dataset = get_dataset(args=args, split="test")
+
+        dataset = get_dataset(args=args, split="test") # safeguard that it is really testset here
         self.eval_engine = get_eval_engine(args=args, dataset=dataset)
         self.image_processor = image_processor
         self.current_epoch = 0
@@ -106,7 +107,6 @@ class CLIPLPTrainer(Trainer):
         Returns:
             Loss value (and logits if return_outputs=True).
         """
-        device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
 

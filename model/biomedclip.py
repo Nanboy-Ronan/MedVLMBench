@@ -66,8 +66,7 @@ class BioMedCLIPLPForDiagnosis(LPModel):
         self.image_processor_evaluation = self.image_processor
     
     def extract_features(self, images):
-        # The visual encoder returns a dict, we need the CLS token feature
-        return self.encoder(images, out_type='raw')[:, 0]
+        return self.encoder(images)
 
 
 class BioMedCLIPLoRALPForDiagnosis(LoRALPModel):

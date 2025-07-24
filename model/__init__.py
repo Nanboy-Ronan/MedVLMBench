@@ -48,6 +48,7 @@ def get_model(args, **kwargs):
             model = Lingshu(args=args)
         else:
             raise NotImplementedError()
+    
     elif args.task == "caption":
         if args.model == "BLIP":
             model = BLIPForQA(args=args)
@@ -100,8 +101,17 @@ def get_model(args, **kwargs):
                 from model.pmcclip import PMCCLIPForDiagnosis, PMCCLIPLPForDiagnosis
 
                 model = PMCCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "PLIP":
+                from model.plip import PLIPLPForDiagnosis
+
+                model = PLIPLPForDiagnosis(args=args, num_classes=num_classes)
+            elif args.model == "MedSigLIP":
+                from model.medsiglip import MedSigLIPLPForDiagnosis
+
+                model = MedSigLIPLPForDiagnosis(args=args, num_classes=num_classes)
             else:
                 raise NotImplementedError()
+            
         elif args.usage == "lora_lp":
             if args.model == "BLIP":
                 from model.blip import BLIPLoRALPForDiagnosis

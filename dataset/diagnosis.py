@@ -1,5 +1,6 @@
 import os
 import csv
+import glob
 import warnings
 import numpy as np
 import pandas as pd
@@ -431,12 +432,27 @@ INFO = {
     },
     "chestxray": {
         "label": {
-            "0": "chest x with no finding", "1": " chest xray with pneumonia"
+            "0": "chest xray with no finding", "1": " chest xray with pneumonia"
         }
     },
     "gf3300":{
         "label" : {
             "0" : "normal retina image", "1": "glaucomatous retina image"
+        }
+    },
+    "chexpert":{
+        "label" : {
+            "0" : "chest xray with no finding", "1": " chest xray with disease"
+        }
+    },
+    "papila":{
+        "label" : {
+            "0" : "a normal fundus image", "1": " a glaucoma fundus image"
+        }
+    },
+    "harvard-fairvlmed10k":{
+        "label" : {
+            "0" : "a normal scanning laser ophthalmoscope fundus image", "1": " a glaucoma scanning laser ophthalmoscope fundus image"
         }
     }
 }
@@ -863,6 +879,272 @@ class GF3300Dataset(torch.utils.data.Dataset):
             "label": label
         }
 
+
+
+class CXPDataset(torch.utils.data.Dataset):
+    # Uses the original CheXpert dataset split.
+
+    def __init__(
+        self,
+        data_args,
+        transform=None,
+        split: str = "train",
+        target_col: str = "Pneumonia",
+    ):
+        split = "valid" if split == "test" else "train"
+        self.CLASSES = 2
+        self.class_dict = {f"no {target_col.lower()}": 0, target_col.lower(): 1}
+        self.transform = transform
+
+        # --- metadata ---
+        self.meta_path = os.path.join(
+            data_args.image_path, "CheXpert-v1.0-small", f"{split}.csv"
+        )
+        self.df = pd.read_csv(self.meta_path)
+
+        if target_col not in self.df.columns:
+            raise KeyError(
+                f"Column '{target_col}' not found in {self.meta_path}. "
+                "Make sure the split CSVs include this label column."
+            )
+
+        # Treat uncertain (-1) or NaN as negative (0)
+        labels = (
+            self.df[target_col]
+            .replace(-1, 0)        # CheXpert convention: -1 = uncertain
+            .fillna(0)             # blank → negative
+            .astype(int)
+            .to_numpy()
+        )
+        self.Y = np.where(labels == 1, 1, 0).astype(np.int64)
+
+        self.class_nums = 2
+        self.path_to_images = os.path.join(data_args.image_path)
+        self.name = "CXP"
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        item = self.df.iloc[idx]
+
+        # Full path to the image
+        img_path = os.path.join(self.path_to_images, item["Path"])
+        image = Image.open(img_path).convert("RGB")
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        label = torch.tensor(self.Y[idx])
+
+        return {
+            "pixel_values": image,
+            "label": label,
+        }
+    
+
+
+class PAPILADataset(Dataset):
+    # Uses the FairMedFM's PAPILA dataset.
+    def __init__(
+        self,
+        data_args,
+        transform = None,
+        split: str = "train",
+        label_col: str | None = None,
+        path_col: str | None = None,
+    ):
+        super().__init__()
+        # ---------------- paths & metadata ---------------- #
+        self.transform = transform
+        self.meta_path = os.path.join(
+            data_args.image_path, "PAPILA", "split", f"{split}.csv"
+        )
+        self.df = pd.read_csv(self.meta_path)
+
+        # --------------- locate useful columns ------------- #
+        # path to image
+        if path_col is None:
+            for cand in ("path", "Path", "image", "Image"):
+                if cand in self.df.columns:
+                    path_col = cand
+                    break
+            else:
+                raise KeyError(
+                    f"Could not find an image-path column in {self.meta_path}"
+                )
+        self.path_col = path_col
+
+        # label
+        if label_col is None:
+            for cand in ("glaucoma", "label", "diagnosis"):
+                if cand in self.df.columns:
+                    label_col = cand
+                    break
+            else:
+                raise KeyError(
+                    f"Could not find a label column in {self.meta_path}"
+                )
+        self.label_col = label_col
+
+        self.Y = (
+            self.df[self.label_col]
+            .fillna(0)
+            .apply(
+                lambda x: 1
+                if str(x).strip().lower()
+                in {"1", "yes", "glaucoma", "suspect"}
+                else 0
+            )
+            .astype(np.int64)
+            .to_numpy()
+        )
+
+        # ---------------- misc bookkeeping --------------- #
+        self.CLASSES = 2
+        self.class_nums = 2
+        self.class_dict = {
+            "healthy retina": 0,
+            "glaucoma/suspect retina": 1,
+        }
+        self.path_to_images = os.path.join(data_args.image_path, "PAPILA", "data")
+        self.name = "PAPILA"
+
+    def __len__(self) -> int:
+        return len(self.df)
+
+    def __getitem__(self, idx: int):
+        rec = self.df.iloc[idx]
+        img_fp = os.path.join(self.path_to_images, rec[self.path_col])
+        image = Image.open(img_fp).convert("RGB")
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        label = torch.tensor(self.Y[idx])
+
+        return {
+            "pixel_values": image,  # image tensor after transforms
+            "label": label,         # torch.long tensor, 0 or 1
+        }
+    
+class FairVLMedDataset(Dataset):
+    # Use FairMedFM's implementation
+    def __init__(
+        self,
+        data_args,
+        transform = None,
+        split: str = "train",
+        prefer_npz: bool = True,
+    ):
+        super().__init__()
+
+        self.transform = transform
+        self.name = "FairVLMed"
+        self.CLASSES = 2
+        self.class_nums = 2
+        self.class_dict = {
+            "benign retina": 0,
+            "glaucoma retina": 1,
+        }
+
+        # ---------------- Root paths ---------------- #
+        self.root_dir = os.path.join(data_args.image_path, "FairVLMed")
+        self.split = split.lower()                       # "train" | "val" | "test"
+        split2folder = {"train": "Training",
+                        "val": "Validation",
+                        "test": "Test"}
+
+        # ---------------- Locate metadata ---------------- #
+        split_csv = os.path.join(self.root_dir, "split", f"{self.split}.csv")
+        fallback_dir = os.path.join(self.root_dir, split2folder[self.split])
+
+        if os.path.exists(split_csv):
+            # ---- use provided CSV (recommended) ----
+            self.df = pd.read_csv(split_csv)
+            if "path" not in self.df.columns:
+                raise KeyError(f"'path' column missing in {split_csv}")
+
+            self.paths = self.df["path"].tolist()
+
+            if "glaucoma" in self.df.columns:
+                # Already has numeric labels?
+                self.Y = self.df["glaucoma"].astype(int).to_numpy()
+            else:
+                # Will fall back to reading from NPZ later
+                self.Y = None
+        else:
+            # ---- no CSV -> enumerate files in folder ----
+            if not os.path.isdir(fallback_dir):
+                raise FileNotFoundError(
+                    "Neither split/*.csv nor folder "
+                    f"{fallback_dir} found for split='{self.split}'."
+                )
+
+            npz_paths = sorted(
+                glob.glob(os.path.join(fallback_dir, "data_*.npz"))
+            )
+            jpg_paths = sorted(
+                glob.glob(os.path.join(fallback_dir, "slo_*.jpg"))
+            )
+
+            if prefer_npz and npz_paths:
+                self.paths = npz_paths
+            elif jpg_paths:
+                self.paths = jpg_paths
+            else:
+                # If nothing matches, take whatever is there
+                self.paths = sorted(os.listdir(fallback_dir))
+
+            self.Y = None  # will read per-sample from NPZ or CSV later
+
+        if self.Y is not None:
+            self.Y = self.Y.astype(np.int64)
+
+    def __len__(self) -> int:
+        return len(self.paths)
+
+    def _load_from_npz(self, file_path: str):
+        """helper - extract (fundus-image, glaucoma-label) from .npz"""
+        with np.load(file_path) as data:
+            img = data["slo_fundus"]          # (200, 200) uint8
+            label = int(data["glaucoma"])
+        # npz image is already 0-255 uint8
+        img = Image.fromarray(img).convert("RGB")
+        return img, label
+
+    def _load_from_jpg(self, file_path: str, idx: int):
+        """helper - load .jpg and label (if we have a CSV with Y)"""
+        img = Image.open(file_path).convert("RGB")
+        label = int(self.Y[idx]) if self.Y is not None else 0  # dummy
+        return img, label
+
+    def __getitem__(self, idx: int):
+        rel_path = self.paths[idx]
+        fpath = (
+            rel_path
+            if os.path.isabs(rel_path)
+            else os.path.join(self.root_dir, rel_path)
+        )
+
+        if fpath.endswith(".npz"):
+            image, label = self._load_from_npz(fpath)
+        else:
+            image, label = self._load_from_jpg(fpath, idx)
+
+        if self.Y is None and label == 0 and fpath.endswith(".jpg"):
+            npz_fallback = fpath.replace("slo_", "data_").replace(".jpg", ".npz")
+            if os.path.exists(npz_fallback):
+                _, label = self._load_from_npz(npz_fallback)
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": torch.tensor(label, dtype=torch.long),
+        }
+    
 
 class DrishtiDataset(torch.utils.data.Dataset):
     def __init__(self, data_args, transform, split="train"):
