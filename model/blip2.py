@@ -47,8 +47,7 @@ class BLIP2ForDiagnosis(CLIPBase):
         
         processor = Blip2Processor.from_pretrained(model_name)
         self.tokenizer = processor.tokenizer
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(processor.image_processor, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
 
         # BLIP2-ITM computes logits directly, so we don't need text prototypes in the same way.
@@ -83,8 +82,7 @@ class BLIP2LPForDiagnosis(LPModel):
         super().__init__(encoder=vision_model, *args, **kwargs)
 
         processor = Blip2Processor.from_pretrained(model_name)
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(processor.image_processor, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
     
     def extract_features(self, images):
@@ -100,8 +98,7 @@ class BLIP2LPLoRAForDiagnosis(LoRALPModel):
         super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
 
         processor = Blip2Processor.from_pretrained(model_name)
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(processor.image_processor, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
     
     def extract_features(self, images):

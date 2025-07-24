@@ -50,6 +50,8 @@ def get_dataset(args, image_processor_callable=None, split=None):
         assert args.split in ["train", "validation", "test", "all"]
         split = args.split
 
+    assert image_processor_callable is not None or args.task != "diagnosis"
+    
     if image_processor_callable is not None:
         transform = image_processor_callable
     else:

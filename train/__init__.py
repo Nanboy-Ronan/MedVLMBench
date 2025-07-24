@@ -1,8 +1,8 @@
 from train.caption import CaptionTrainEngine
 from train.vqa import VQATrainEngine
 from train.lp import DiagnosisLPTrainEngine
-from train.clip_trainer import CLIPLPTrainer, make_lp_data_module
-from train.clip_trainer import make_lp_data_module
+from train.clip_trainer import CLIPLPTrainer, make_diagnosis_data_module
+from train.clip_trainer import make_diagnosis_data_module
 
 task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine, "caption": CaptionTrainEngine}
 
@@ -50,12 +50,10 @@ def get_trainer(args, model_wrapped, dataset):
 
         return trainer
     
-    elif args.model in ["CLIP", "MedCLIP", "PMCCLIP", "PLIP", "MedSigLIP", "XrayGPT", "BioMedCLIP", "BLIP", "BLIP2-2.7b"]:        
+    elif args.model in ["CLIP", "MedCLIP", "PMCCLIP", "PLIP", "MedSigLIP", "XrayGPT", "BioMedCLIP", "BLIP", "BLIP2-2.7b", "PubMedCLIP", "SigLIP"]:        
         if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
-            data_module = make_lp_data_module(
-                args,
-                dataset=dataset,
-                image_processor=None,
+            data_module = make_diagnosis_data_module(
+                train_dataset=dataset,
             )
 
             trainer = CLIPLPTrainer(

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Sequence, Optional
 from eval import get_eval_engine
 from dataset import get_dataset
-from dataset.utils import LinearProbingDataCollator
+from dataset.utils import DiagnosisDataCollator
 from torch.profiler import profile, record_function, ProfilerActivity
 
 
@@ -77,7 +77,7 @@ class CLIPLPTrainer(Trainer):
             **kwargs
         )
 
-        dataset = get_dataset(args=args, split="test") # safeguard that it is really testset here
+        dataset = get_dataset(args=args, image_processor_callable=getattr(model, "image_processor"), split="test") # safeguard that it is really testset here
         self.eval_engine = get_eval_engine(args=args, dataset=dataset)
         self.image_processor = image_processor
         self.current_epoch = 0
@@ -193,32 +193,14 @@ class CLIPLPTrainer(Trainer):
 
 
 
-def make_lp_data_module(args, dataset, image_processor):
-    from dataset.diagnosis import PneumoniaMNIST
-    if image_processor is None:
-        transform = transforms.Compose([
-            transforms.PILToTensor(),
-            # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
-        ])
-    else:
-        transform = image_processor
+def make_diagnosis_data_module(train_dataset, eval_dataset=None):
 
-    data_collator = LinearProbingDataCollator()
-    # TODO: check transform
-    # train_dataset = PneumoniaMNIST(
-    #     data_args=args,
-    #     split="train", # 'train', 'val' or 'test'
-    #     transform=transform,
-    #     target_transform=None,
-    #     download=True,
-    #     as_rgb=True,
-    #     size=224,
-    #     mmap_mode=None,
-    # )
+    data_collator = DiagnosisDataCollator()
 
-    return dict(train_dataset=dataset, eval_dataset=None, data_collator=data_collator)
+    return dict(train_dataset=train_dataset, eval_dataset=eval_dataset, data_collator=data_collator)
 
-# TODO
+
+
 class CLIPTrainer(Trainer):
     def __init__(self, 
                  model, 

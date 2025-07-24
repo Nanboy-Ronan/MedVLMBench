@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 from peft import LoraConfig, get_peft_model
 from transformers import CLIPModel, CLIPProcessor, CLIPFeatureExtractor
-from model.clip_base import CLIPBase, ImageProcessorCallable
-from model.lp_base import LPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
 from model.lora_base import LoRALPModel
 
 
@@ -33,21 +32,11 @@ class PLIPForDiagnosis(CLIPBase):
         processor = CLIPProcessor.from_pretrained("vinid/plip")
         self.tokenizer = processor.tokenizer
 
-        transform_func = lambda out: torch.tensor(out["pixel_values"][0])
-        self.image_processor = ImageProcessorCallable(
-            processor.image_processor,
-            transform_func=transform_func,
-        )
+        self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
-
-        # PLIP keeps the same fixed log-temperature as OpenAI CLIP
-        self.logit_scale = nn.Parameter(torch.log(torch.tensor(100.0)))
 
         self.initialize_prototypes()
 
-    # ------------------------------------------------------------------ #
-    # Encoding helpers
-    # ------------------------------------------------------------------ #
     @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes
@@ -64,33 +53,21 @@ class PLIPForDiagnosis(CLIPBase):
         return self.model.get_image_features(images)
 
 
-# ---------------------------------------------------------------------- #
-# Linear-probe variant (frozen PLIP vision encoder + small classifier)
-# ---------------------------------------------------------------------- #
 class PLIPLPForDiagnosis(LPModel):
-    def __init__(self, *args, **kwargs):
-        model = CLIPModel.from_pretrained("vinid/plip")
-        vision_model = model.vision_model
-        vision_model.feat_dim = getattr(vision_model, "feat_dim", 768)
-
-        super().__init__(encoder=vision_model, *args, **kwargs)
-
+    def __init__(self, args, text, num_classes) -> None:
+        super().__init__(text=text, num_classes=num_classes, model=CLIPModel.from_pretrained("vinid/plip"), args=args)
+        
         image_processor_hf = CLIPFeatureExtractor.from_pretrained("vinid/plip")
-        transform_func = lambda out: torch.tensor(out["pixel_values"][0])
-        self.image_processor = ImageProcessorCallable(
-            image_processor_hf,
-            transform_func=transform_func,
-        )
+        self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
+    
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.text_model
+        self.text_embed_dim = 512
+        self.vision_embed_dim = 512
 
-    def extract_features(self, images):
-        # CLS token at index 0
-        return self.encoder(images)["last_hidden_state"][:, 0, :]
 
-
-# ---------------------------------------------------------------------- #
-# LoRA-adapted linear-probe variant
-# ---------------------------------------------------------------------- #
 class PLIPLoRALPForDiagnosis(LoRALPModel):
     def __init__(self, args, *kargs, **kwargs):
         model = CLIPModel.from_pretrained("vinid/plip")
@@ -105,11 +82,7 @@ class PLIPLoRALPForDiagnosis(LoRALPModel):
                          num_classes=kwargs["num_classes"])
 
         image_processor_hf = CLIPFeatureExtractor.from_pretrained("vinid/plip")
-        transform_func = lambda out: torch.tensor(out["pixel_values"][0])
-        self.image_processor = ImageProcessorCallable(
-            image_processor_hf,
-            transform_func=transform_func,
-        )
+        self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
 
     def extract_features(self, images):

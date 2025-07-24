@@ -3,7 +3,7 @@ TASKS = ["vqa", "caption", "diagnosis"]
 
 
 # models
-CLIP_MODELS = ["BLIP", "BLIP2-2.7b", "BioMedCLIP", "CLIP", "MedCLIP", "PMCCLIP", "PLIP", "MedSigLIP"]
+CLIP_MODELS = ["BLIP", "BLIP2-2.7b", "BioMedCLIP", "CLIP", "MedCLIP", "PMCCLIP", "PLIP", "MedSigLIP", "PubMedCLIP", "SigLIP"]
 
 LANGUAGE_MODELS = [
     "LLaVA-1.5",

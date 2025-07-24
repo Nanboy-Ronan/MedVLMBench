@@ -22,7 +22,7 @@ def get_prototype(args):
     return text_classes
 
 @dataclass
-class LinearProbingDataCollator:
+class DiagnosisDataCollator:
     def __call__(self, instances: Sequence[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
         images = [instance['pixel_values'] for instance in instances]    # List of image tensors
         labels = [instance['label'] for instance in instances]    # List of label arrays

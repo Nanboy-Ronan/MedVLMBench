@@ -11,7 +11,7 @@ from sklearn.preprocessing import LabelBinarizer
 from torch.utils.data import DataLoader
 from torchvision.transforms.functional import to_pil_image
 from eval.base import EvalEngine
-from dataset.utils import LinearProbingDataCollator
+from dataset.utils import DiagnosisDataCollator
 
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
@@ -33,7 +33,7 @@ class DiagnosisEvalEngine(EvalEngine):
     def evaluate(self, args, model):
         """Run evaluation on the classification dataset."""
         args.logger.info("Length of the evaluation dataset: {}".format(len(self.dataset)))
-        data_loader = DataLoader(self.dataset, batch_size=64, collate_fn=LinearProbingDataCollator(), shuffle=False)
+        data_loader = DataLoader(self.dataset, batch_size=64, collate_fn=DiagnosisDataCollator(), shuffle=False)
         self.num_classes = model.num_classes
         self.init_metric_logger()
         self.records = []
@@ -65,7 +65,7 @@ class DiagnosisEvalEngine(EvalEngine):
         """Evaluate a single batch (image and label)."""
         image = batch["pixel_values"].to(self.device, non_blocking=True)
         true = batch["labels"].to(self.device)
-        image = model.image_processor_evaluation(image)
+        # image = model.image_processor_evaluation(image)
 
         model.to(self.device)
 

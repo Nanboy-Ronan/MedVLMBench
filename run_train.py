@@ -195,7 +195,7 @@ if __name__ == "__main__":
     model_wrapped = get_model(args=args, device=args.device.type)
     model_wrapped.load_for_training(args.model_path)
 
-    dataset = get_dataset(args)
+    dataset = get_dataset(args, image_processor_callable=getattr(model_wrapped, "image_processor", None))
     train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
     train_engine.train()
 

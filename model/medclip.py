@@ -65,8 +65,6 @@ class MedCLIPForDiagnosis(CLIPBase):
         self.tokenizer = self.processor.tokenizer
         self.image_processor = ImageProcessorCallable(MedCLIPFeatureExtractor())
         self.image_processor_evaluation = self.image_processor
-
-        self.logit_scale = nn.Parameter(torch.log(torch.tensor(100.0)))
         
         self.initialize_prototypes()
 

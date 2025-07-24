@@ -2,16 +2,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from peft import LoraConfig, get_peft_model
-from transformers import CLIPModel, CLIPProcessor, CLIPFeatureExtractor, CLIPTokenizer
-from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
+from transformers import SiglipModel, SiglipProcessor, SiglipImageProcessor, AutoTokenizer
 from model.lora_base import LoRALPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
 
 
-class CLIPForDiagnosis(CLIPBase):
+
+class SiglipForDiagnosis(CLIPBase):
     def __init__(self, text, num_classes, args=None, *kargs, **kwargs) -> None:
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        model = SiglipModel.from_pretrained("google/siglip-base-patch16-224")
 
-        if args and args.usage == "clip-img-lora":
+        if args and args.usage == "siglip-img-lora": # Assuming a new usage key for siglip lora
             lora_config = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
             for name, para in model.named_parameters():
                 para.requires_grad = False
@@ -19,9 +20,11 @@ class CLIPForDiagnosis(CLIPBase):
         
         super().__init__(text=text, num_classes=num_classes, model=model, args=args, **kwargs)
         
-        self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
-        image_processor_hf = CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
-        
+        # SiglipProcessor combines the tokenizer and image processor
+        processor = SiglipProcessor.from_pretrained("google/siglip-base-patch16-224")
+        self.tokenizer = processor.tokenizer
+        image_processor_hf = processor.image_processor
+
         self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
 
@@ -38,29 +41,33 @@ class CLIPForDiagnosis(CLIPBase):
         return self.model.get_image_features(images)
 
 
-class CLIPLPForDiagnosis(LPModel):
+class SiglipLPForDiagnosis(LPModel):
     def __init__(self, args, text, num_classes) -> None:
-        super().__init__(text=text, num_classes=num_classes, model=CLIPModel.from_pretrained("openai/clip-vit-base-patch32"), args=args)
+        super().__init__(text=text, num_classes=num_classes, model=SiglipModel.from_pretrained("google/siglip-base-patch16-224"), args=args)
         
-        image_processor_hf = CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
+        image_processor_hf = SiglipImageProcessor.from_pretrained("google/siglip-base-patch16-224")
         self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
     
     def setup_encoders(self):
         self.vision_model = self.model.vision_model
         self.text_model = self.model.text_model
-        self.text_embed_dim = 512
-        self.vision_embed_dim = 512
+        self.text_embed_dim = 768
+        self.vision_embed_dim = 768
 
 
-class CLIPLoRALPForDiagnosis(LoRALPModel):
+class SiglipLoRALPForDiagnosis(LoRALPModel):
     def __init__(self, args, *kargs, **kwargs) -> None:
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        model = SiglipModel.from_pretrained("google/siglip-base-patch16-224")
         vision_model = model.vision_model
         vision_model.feat_dim = 768
         lora_config = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
         super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
 
-        image_processor_hf = CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
+        image_processor_hf = SiglipImageProcessor.from_pretrained("google/siglip-base-patch16-224")
         self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
+    
+    def extract_features(self, images):
+        # The feature extraction logic is identical to CLIP's ViT
+        return self.encoder(images).pooler_output
