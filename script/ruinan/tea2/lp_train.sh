@@ -218,7 +218,7 @@ CUDA_VISIBLE_DEVICES=6 python run_train.py \
 
 
 # CheXpert
-CUDA_VISIBLE_DEVICES=0 python run_train.py \
+CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --task diagnosis --usage lp --dataset CheXpert --split train \
     --image_path /bigdata/rjin02/DataSets \
     --output_dir ./log \
@@ -227,7 +227,7 @@ CUDA_VISIBLE_DEVICES=0 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5 # Ongoing
 
-CUDA_VISIBLE_DEVICES=2 python run_train.py \
+CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --task diagnosis --usage lp --dataset CheXpert --split train \
     --image_path /bigdata/rjin02/DataSets \
     --output_dir ./log \
@@ -236,7 +236,7 @@ CUDA_VISIBLE_DEVICES=2 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5 # Ongoing
 
-CUDA_VISIBLE_DEVICES=3 python run_train.py \
+CUDA_VISIBLE_DEVICES=6 python run_train.py \
     --task diagnosis --usage lp --dataset CheXpert --split train \
     --image_path /bigdata/rjin02/DataSets \
     --output_dir ./log \
@@ -245,7 +245,7 @@ CUDA_VISIBLE_DEVICES=3 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5 # Ongoing
 
-CUDA_VISIBLE_DEVICES=4 python run_train.py \
+CUDA_VISIBLE_DEVICES=7 python run_train.py \
     --task diagnosis --usage lp --dataset CheXpert --split train \
     --image_path /bigdata/rjin02/DataSets \
     --output_dir ./log \
@@ -352,7 +352,7 @@ CUDA_VISIBLE_DEVICES=0 python run_train.py \
 #     --num_train_epochs 10 \
 #     --learning_rate 5e-5 &
 
-CUDA_VISIBLE_DEVICES=1 python run_train.py \
+CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --task diagnosis --usage lp --dataset Camelyon17 --split train \
     --image_path ./data/camelyon17_v1.0/patches \
     --output_dir ./log \
@@ -361,7 +361,7 @@ CUDA_VISIBLE_DEVICES=1 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5
 
-CUDA_VISIBLE_DEVICES=4 python run_train.py \
+CUDA_VISIBLE_DEVICES=5 python run_train.py \
     --task diagnosis --usage lp --dataset Camelyon17 --split train \
     --image_path ./data/camelyon17_v1.0/patches \
     --output_dir ./log \
@@ -370,7 +370,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --num_train_epochs 10 \
     --learning_rate 5e-5
 
-CUDA_VISIBLE_DEVICES=3 python run_train.py \
+CUDA_VISIBLE_DEVICES=4 python run_train.py \
     --task diagnosis --usage lp --dataset Camelyon17 --split train \
     --image_path ./data/camelyon17_v1.0/patches \
     --output_dir ./log \

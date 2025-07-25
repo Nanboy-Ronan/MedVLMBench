@@ -3,9 +3,8 @@ import torch.nn.functional as F
 from transformers import Blip2ForConditionalGeneration, Blip2Processor, Blip2ForImageTextRetrieval
 from peft import LoraConfig, get_peft_model
 from model.chat import ChatMetaModel
-from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
-from model.clip_base import CLIPBase, ImageProcessorCallable
+from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
 
 
 class BLIP2(ChatMetaModel):
@@ -75,18 +74,27 @@ class BLIP2ForDiagnosis(CLIPBase):
 
 
 class BLIP2LPForDiagnosis(LPModel):
-    def __init__(self, model_name="Salesforce/blip2-itm-vit-g", *args, **kwargs) -> None:
-        model = Blip2ForImageTextRetrieval.from_pretrained(model_name)
-        vision_model = model.vision_model
-        vision_model.feat_dim = 1408
-        super().__init__(encoder=vision_model, *args, **kwargs)
+    def __init__(self, args, text, num_classes) -> None:
+        super().__init__(
+                text=text,
+                num_classes=num_classes,
+                model=Blip2ForImageTextRetrieval.from_pretrained("Salesforce/blip2-itm-vit-g"),
+                args=args
+            )
 
-        processor = Blip2Processor.from_pretrained(model_name)
+        processor = Blip2Processor.from_pretrained("Salesforce/blip2-itm-vit-g")
         self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
     
-    def extract_features(self, images):
-        return self.encoder(images)["last_hidden_state"][:, 0, :]
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.embeddings
+        self.text_embed_dim = 1408
+        self.vision_embed_dim = 1408
+
+    def encode_image(self, images):
+        # https://github.com/huggingface/transformers/blob/main/src/transformers/models/blip_2/modeling_blip_2.py#L2376
+        return self.vision_model(images)[0][:, 0, :]
 
 
 class BLIP2LPLoRAForDiagnosis(LoRALPModel):

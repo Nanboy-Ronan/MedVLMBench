@@ -63,10 +63,10 @@ class BioMedCLIPLPForDiagnosis(LPModel):
     def encode_text(self, text):
         return self.model.encode_text(text)
 
-    def forward(self, pixel_values, input_ids):
-        image_features, text_features, logit_scale = self.model.forward(pixel_values, input_ids)
-        logits = (logit_scale * image_features @ text_features.t()).detach().softmax(dim=-1)
-        return logits
+    # def forward(self, pixel_values, input_ids):
+    #     image_features, text_features, logit_scale = self.model.forward(pixel_values, input_ids)
+    #     logits = (logit_scale * image_features @ text_features.t()).detach().softmax(dim=-1)
+    #     return logits
 
 
 

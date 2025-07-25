@@ -4,8 +4,7 @@ import torch.nn.functional as F
 from peft import LoraConfig, get_peft_model
 from torchvision import transforms
 from medclip import MedCLIPModel, MedCLIPVisionModelViT, MedCLIPProcessor
-from model.clip_base import CLIPBase, ImageProcessorCallable
-from model.lp_base import LPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
 from model.lora_base import LoRALPModel
 
 
@@ -78,20 +77,29 @@ class MedCLIPForDiagnosis(CLIPBase):
     def encode_image(self, images):
         return self.model.encode_image(images)
 
+
+
 class MedCLIPLPForDiagnosis(LPModel):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, args, text, num_classes) -> None:
         model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
         model.from_pretrained()
-        vision_model = model.vision_model
-        vision_model.feat_dim = 512
-        super().__init__(encoder=vision_model, *args, **kwargs)
+        super().__init__(text=text, num_classes=num_classes, model=model, args=args)
         
         self.image_processor = ImageProcessorCallable(MedCLIPFeatureExtractor())
         self.image_processor_evaluation = self.image_processor
+    
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.text_model
+        self.text_embed_dim = 512
+        self.vision_embed_dim = 512
 
-    def extract_features(self, images):
-        # MedCLIP vision encoder returns a tensor directly
-        return self.encoder(images)
+    def encode_image(self, images):
+        return self.model.encode_image(images)
+
+    def encode_text(self, text):
+        return self.model.encode_text(text)
+    
 
 class MedCLIPLoRALPForDiagnosis(LoRALPModel):
     def __init__(self, args, *kargs, **kwargs) -> None:
