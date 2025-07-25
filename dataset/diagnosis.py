@@ -437,7 +437,7 @@ INFO = {
     },
     "gf3300":{
         "label" : {
-            "0" : "normal retina image", "1": "glaucomatous retina image"
+            "0" : "benign retina image", "1": "glaucomatous retina image"
         }
     },
     "chexpert":{
