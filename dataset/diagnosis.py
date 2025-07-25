@@ -447,12 +447,12 @@ INFO = {
     },
     "papila":{
         "label" : {
-            "0" : "a normal fundus image", "1": " a glaucoma fundus image"
+            "0" : "a benign fundus image", "1": " a glaucoma fundus image"
         }
     },
     "harvard-fairvlmed10k":{
         "label" : {
-            "0" : "a normal scanning laser ophthalmoscope fundus image", "1": " a glaucoma scanning laser ophthalmoscope fundus image"
+            "0" : "a benign scanning laser ophthalmoscope fundus image", "1": " a glaucoma scanning laser ophthalmoscope fundus image"
         }
     }
 }
@@ -955,14 +955,12 @@ class PAPILADataset(Dataset):
         path_col: str | None = None,
     ):
         super().__init__()
-        # ---------------- paths & metadata ---------------- #
         self.transform = transform
         self.meta_path = os.path.join(
             data_args.image_path, "PAPILA", "split", f"{split}.csv"
         )
         self.df = pd.read_csv(self.meta_path)
 
-        # --------------- locate useful columns ------------- #
         # path to image
         if path_col is None:
             for cand in ("path", "Path", "image", "Image"):
@@ -1024,8 +1022,8 @@ class PAPILADataset(Dataset):
         label = torch.tensor(self.Y[idx])
 
         return {
-            "pixel_values": image,  # image tensor after transforms
-            "label": label,         # torch.long tensor, 0 or 1
+            "pixel_values": image,
+            "label": label,
         }
     
 class FairVLMedDataset(Dataset):
