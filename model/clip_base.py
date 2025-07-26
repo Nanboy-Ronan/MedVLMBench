@@ -48,14 +48,13 @@ class ImageProcessorCallable:
 class CLIPBase(BaseModel, nn.Module):
     def __init__(self, text, num_classes, model=None, args=None, **kwargs):
         super().__init__(args=args, **kwargs)
-        self.args
         self.model = model
         self.prototype = None
         self.prototype_text = text
         self.num_classes = num_classes
         self.setup_encoders()
 
-        if args.usage == "clip-img-lora":
+        if self.args.usage == "clip-img-lora":
             lora_config = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
             for name, para in self.model.named_parameters():
                 para.requires_grad = False
@@ -116,13 +115,25 @@ class CLIPBase(BaseModel, nn.Module):
             return lora_module_names
     
 
-class LPModel(CLIPBase):
+class CLIPImgLPModel(CLIPBase):
     def __init__(self, text, num_classes, model=None, args=None):
-        super().__init__(text, num_classes, model)
+        super().__init__(text, num_classes, model, args)
         self.num_classes = num_classes
 
+        assert args.usage in ["clip-img-lora", "img-lora-lp"], f"Unsupported usage: {args.usage}"
         for param in self.model.parameters():
             param.requires_grad = False
+
+        if args.usage == "img-lora-lp":
+            self.args.logger.info("Using LoRA for CLIP image model")
+            lora_config = LoraConfig(
+                r=8,
+                lora_alpha=32,
+                lora_dropout=0.05,
+                bias="none",
+                target_modules=self.find_target_linear_names(self.model.vision_model),
+            )
+            self.model.vision_model = get_peft_model(self.model.vision_model, lora_config)
         
         self.head = torch.nn.Linear(self.vision_embed_dim, self.num_classes)
 

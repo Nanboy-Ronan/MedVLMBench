@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from peft import LoraConfig, get_peft_model
 from transformers import CLIPModel, CLIPProcessor, CLIPFeatureExtractor, CLIPTokenizer
-from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel, CLIPVisionLoRALPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, CLIPImgLPModel, CLIPVisionLoRALPModel
 
 
 class CLIPForDiagnosis(CLIPBase):
@@ -30,7 +30,7 @@ class CLIPForDiagnosis(CLIPBase):
         return self.model.get_image_features(images)
 
 
-class CLIPLPForDiagnosis(LPModel):
+class CLIPLPForDiagnosis(CLIPImgLPModel):
     def __init__(self, args, text, num_classes) -> None:
         super().__init__(text=text, num_classes=num_classes, model=CLIPModel.from_pretrained("openai/clip-vit-base-patch32"), args=args)
         

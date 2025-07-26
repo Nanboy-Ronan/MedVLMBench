@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from peft import LoraConfig, get_peft_model
 from open_clip import create_model_from_pretrained, get_tokenizer
-from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, CLIPImgLPModel
 from model.lora_base import LoRALPModel
 
 
@@ -41,7 +41,7 @@ class BiomedCLIPForDiagnosis(CLIPBase):
         return self.model.encode_image(images)
 
 
-class BioMedCLIPLPForDiagnosis(LPModel):
+class BioMedCLIPLPForDiagnosis(CLIPImgLPModel):
     def __init__(self, args, text, num_classes) -> None:
         model, preprocess = create_model_from_pretrained(
             "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",

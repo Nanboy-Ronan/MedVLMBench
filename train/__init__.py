@@ -51,7 +51,7 @@ def get_trainer(args, model_wrapped, dataset):
         return trainer
     
     elif args.model in ["CLIP", "MedCLIP", "PMCCLIP", "PLIP", "MedSigLIP", "XrayGPT", "BioMedCLIP", "BLIP", "BLIP2-2.7b", "PubMedCLIP", "SigLIP"]:        
-        if args.usage in ["lp", "lora_lp", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
+        if args.usage in ["lp", "img-lora-lp", "clip-img-lora"]:
             data_module = make_diagnosis_data_module(
                 train_dataset=dataset,
             )

@@ -73,7 +73,7 @@ def get_model(args, **kwargs):
         text = ["a photo of {}".format(txt) for txt in text]
         num_classes = len(INFO[args.dataset.lower()]["label"])
 
-        if args.usage == "lp":
+        if args.usage in ["lp", "img-lora-lp"]:
             if args.model == "BLIP":
                 from model.blip import BLIPLPForDiagnosis
 
