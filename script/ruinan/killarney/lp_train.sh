@@ -292,14 +292,15 @@ nvidia-smi
 #     --learning_rate 5e-5 \
 #     --save_pred
 
-python run_train.py \
-    --task diagnosis --usage lp --dataset PAPILA --split train \
-    --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
-    --output_dir ./log \
-    --model BLIP2-2.7b --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 10 \
-    --learning_rate 5e-5 # Ongoing
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
+#     --output_dir ./log \
+#     --model BLIP2-2.7b --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 10 \
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset PAPILA --split train \
@@ -308,7 +309,8 @@ python run_train.py \
 #     --model SigLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset PAPILA --split train \
@@ -317,7 +319,8 @@ python run_train.py \
 #     --model BioMedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset PAPILA --split train \
@@ -326,7 +329,8 @@ python run_train.py \
 #     --model MedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset PAPILA --split train \
@@ -335,7 +339,8 @@ python run_train.py \
 #     --model PLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset PAPILA --split train \
@@ -344,7 +349,8 @@ python run_train.py \
 #     --model MedSigLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset PAPILA --split train \
@@ -353,7 +359,8 @@ python run_train.py \
 #     --model PubMedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 
 # HarvardFairVLMed10k
@@ -364,7 +371,8 @@ python run_train.py \
 #     --model CLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
@@ -373,7 +381,8 @@ python run_train.py \
 #     --model BLIP2-2.7b --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
@@ -382,7 +391,8 @@ python run_train.py \
 #     --model SigLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
@@ -391,7 +401,8 @@ python run_train.py \
 #     --model BioMedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
@@ -400,7 +411,8 @@ python run_train.py \
 #     --model MedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
@@ -409,7 +421,8 @@ python run_train.py \
 #     --model PLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
@@ -418,7 +431,8 @@ python run_train.py \
 #     --model MedSigLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
@@ -427,11 +441,12 @@ python run_train.py \
 #     --model PubMedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 
 # # Camelyon17
-# CUDA_VISIBLE_DEVICES=0 python run_train.py \
+# python run_train.py \
 #     --task diagnosis --usage lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
@@ -441,83 +456,72 @@ python run_train.py \
 #     --learning_rate 5e-5 \
 #     --save_pred
 
-# CUDA_VISIBLE_DEVICES=6 python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
-#     --image_path ./data/camelyon17_v1.0/patches \
-#     --output_dir ./log \
-#     --model BLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 10 \
-#     --learning_rate 5e-5 &
-
-# CUDA_VISIBLE_DEVICES=4 python run_train.py \
+# python run_train.py \
 #     --task diagnosis --usage lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5
+#     --learning_rate 5e-5 \
+#     --save_pred
 
-# CUDA_VISIBLE_DEVICES=5 python run_train.py \
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --image_path ./data/camelyon17_v1.0/patches \
+#     --output_dir ./log \
+#     --model SigLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 10 \
+#     --learning_rate 5e-5 \
+#     --save_pred
+
+# python run_train.py \
 #     --task diagnosis --usage lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5
+#     --learning_rate 5e-5 \
+#     --save_pred
 
-# CUDA_VISIBLE_DEVICES=4 python run_train.py \
+# python run_train.py \
 #     --task diagnosis --usage lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5
+#     --learning_rate 5e-5 \
+#     --save_pred
 
-# CUDA_VISIBLE_DEVICES=5 python run_train.py \
+# python run_train.py \
 #     --task diagnosis --usage lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model PLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5
+#     --learning_rate 5e-5 \
+#     --save_pred
 
-# CUDA_VISIBLE_DEVICES=6 python run_train.py \
+# python run_train.py \
 #     --task diagnosis --usage lp --dataset Camelyon17 --split train \
-#     --image_path ./data/camelyon17_v1.0/patches\
-#     --output_dir ./log \
-#     --model SigLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 10 \
-#     --learning_rate 5e-5
-
-# CUDA_VISIBLE_DEVICES=7 python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
-#     --image_path ./data/camelyon17_v1.0/patches\
+#     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model MedSigLIP --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5
+#     --learning_rate 5e-5 \
+#     --save_pred
 
-# CUDA_VISIBLE_DEVICES=7 python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
-#     --image_path ./data/camelyon17_v1.0/patches\
-#     --output_dir ./log \
-#     --model PubMedCLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 10 \
-#     --learning_rate 5e-5
-
-# CUDA_VISIBLE_DEVICES=3 python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
-#     --image_path ./data/camelyon17_v1.0/patches \
-#     --output_dir ./log \
-#     --model MedCLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 10 \
-#     --learning_rate 5e-5
+python run_train.py \
+    --task diagnosis --usage lp --dataset Camelyon17 --split train \
+    --image_path ./data/camelyon17_v1.0/patches \
+    --output_dir ./log \
+    --model PubMedCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 10 \
+    --learning_rate 5e-5 \
+    --save_pred
