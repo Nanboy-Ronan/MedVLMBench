@@ -48,6 +48,7 @@ def get_model(args, **kwargs):
             model = Lingshu(args=args)
         else:
             raise NotImplementedError()
+    
     elif args.task == "caption":
         if args.model == "BLIP":
             model = BLIPForQA(args=args)
@@ -68,66 +69,85 @@ def get_model(args, **kwargs):
 
     elif args.task == "diagnosis":
         from dataset.diagnosis import INFO
-
+        text = get_prototype(args)
+        text = ["a photo of {}".format(txt) for txt in text]
         num_classes = len(INFO[args.dataset.lower()]["label"])
 
         if args.usage == "lp":
             if args.model == "BLIP":
                 from model.blip import BLIPLPForDiagnosis
 
-                model = BLIPLPForDiagnosis(args=args, num_classes=num_classes)
+                model = BLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "XrayGPT":
                 from model.xraygpt import XGenGPTLPForDiagnosis
 
-                model = XGenGPTLPForDiagnosis(args=args, num_classes=num_classes)
+                model = XGenGPTLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BioMedCLIP":
                 from model.biomedclip import BioMedCLIPLPForDiagnosis
 
-                model = BioMedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+                model = BioMedCLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "CLIP":
                 from model.clip import CLIPLPForDiagnosis
 
-                model = CLIPLPForDiagnosis(args=args, num_classes=num_classes)
+                model = CLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "MedCLIP":
                 from model.medclip import MedCLIPLPForDiagnosis
 
-                model = MedCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+                model = MedCLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BLIP2-2.7b":
                 from model.blip2 import BLIP2LPForDiagnosis
 
-                model = BLIP2LPForDiagnosis(args=args, num_classes=num_classes)
+                model = BLIP2LPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "PMCCLIP":
                 from model.pmcclip import PMCCLIPForDiagnosis, PMCCLIPLPForDiagnosis
 
-                model = PMCCLIPLPForDiagnosis(args=args, num_classes=num_classes)
+                model = PMCCLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "PLIP":
+                from model.plip import PLIPLPForDiagnosis
+
+                model = PLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "MedSigLIP":
+                from model.medsiglip import MedSigLIPLPForDiagnosis
+
+                model = MedSigLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "PubMedCLIP":
+                from model.pubmedclip import PubMedCLIPLPForDiagnosis
+                
+                model = PubMedCLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "SigLIP":
+                from model.siglip import SiglipLPForDiagnosis
+
+                model = SiglipLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
+            
         elif args.usage == "lora_lp":
+            raise NotImplementedError("LoRA-LP is not supported for diagnosis task.")
             if args.model == "BLIP":
                 from model.blip import BLIPLoRALPForDiagnosis
 
-                model = BLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
+                model = BLIPLoRALPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "XrayGPT":
                 from model.xraygpt import XGenGPTLoRALPForDiagnosis
 
-                model = XGenGPTLoRALPForDiagnosis(args=args, num_classes=num_classes)
+                model = XGenGPTLoRALPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BioMedCLIP":
                 from model.biomedclip import BioMedCLIPLoRALPForDiagnosis
 
-                model = BioMedCLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
+                model = BioMedCLIPLoRALPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "CLIP":
                 from model.clip import CLIPLoRALPForDiagnosis
 
-                model = CLIPLoRALPForDiagnosis(args=args, num_classes=num_classes)
+                model = CLIPLoRALPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "BLIP2-2.7b":
                 from model.blip2 import BLIP2LPLoRAForDiagnosis
 
-                model = BLIP2LPLoRAForDiagnosis(args=args, num_classes=num_classes)
+                model = BLIP2LPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
+            
         elif args.usage in ["clip-zs", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
-            text = get_prototype(args)
-            text = ["a photo of {}".format(txt) for txt in text]
+            raise NotImplementedError("CLIP-based models are not supported for diagnosis task with usage {}".format(args.usage))
             if args.model == "BLIP":
                 from model.blip import BLIPForDiagnosis
 

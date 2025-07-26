@@ -23,6 +23,7 @@ import tempfile
 from io import BytesIO
 
 import numpy as np
+from pathlib import Path
 import torch
 import torchvision.transforms.v2 as v2
 from PIL import Image
@@ -443,8 +444,14 @@ def process_image(
     image_file, data_args, image_folder, enable_dynamic_res=False, enable_dynamic_s2=False, max_tiles=None, box=None
 ):
     processor = data_args.image_processor
+
+    
     if isinstance(image_file, str) and image_file != "NA":
-        if image_folder is not None:
+        image_file = Path(image_file)
+
+        if image_file.suffix.lower() == ".npz": # for FairVLMed
+            image = Image.fromarray(np.load(image_file)["slo_fundus"]).convert("RGB")
+        elif image_folder is not None and image_folder != "":
             image = Image.open(os.path.join(image_folder, image_file)).convert("RGB")
         else:
             image = Image.open(image_file).convert("RGB")
@@ -543,7 +550,10 @@ def process_images(images, image_processor, model_cfg, enable_dynamic_res=False,
 
 def get_original_image_size(image_file, image_folder=None):
     if isinstance(image_file, str):
-        if image_folder is not None:
+        image_file = Path(image_file)
+        if image_file.suffix.lower() == ".npz": # for FairVLMed
+            image = Image.fromarray(np.load(image_file)["slo_fundus"]).convert("RGB")
+        elif image_folder is not None:
             image = Image.open(os.path.join(image_folder, image_file)).convert("RGB")
         else:
             image = Image.open(image_file).convert("RGB")

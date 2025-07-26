@@ -404,9 +404,10 @@ class VILA(ChatMetaModel):
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
         image = transforms.ToPILImage()(image)
-        image = image.resize((image_size, image_size), Image.BICUBIC)
+        # image = image.resize((image_size, image_size), Image.BICUBIC)
         prompt = [image, qs]
         answer_generated = self.model.generate_content(prompt)
+        print(answer_generated)
         return answer_generated
 
 

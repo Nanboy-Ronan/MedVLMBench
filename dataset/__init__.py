@@ -8,24 +8,27 @@ from collections import Counter
 
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA
-from dataset.caption import HarvardFairVLMed10k, MIMIC_CXR
-from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset
+from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
+from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset, CXPDataset, PAPILADataset, FairVLMedDataset
 
 datasets = {
-    "SLAKE": SLAKE,
-    "PathVQA": PathVQA,
-    "VQA-RAD": VQARAD,
-    "Harvard-FairVLMed10k": HarvardFairVLMed10kVQA,
-    "MIMIC_CXR": MIMIC_CXR,
+    "SLAKE-vqa": SLAKE,
+    "PathVQA-vqa": PathVQA,
+    "VQA-RAD-vqa": VQARAD,
+    "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
+    "MIMIC_CXR-caption": MIMIC_CXRCaption,
     "PneumoniaMNIST": PneumoniaMNIST,
-    "BreastMNIST": BreastMNIST,
-    "DermaMNIST": DermaMNIST,
-    "Camelyon17": Camelyon17,
-    "HAM10000": HAM10000Dataset,
+    "BreastMNIST-diagnosis": BreastMNIST,
+    "DermaMNIST-diagnosis": DermaMNIST,
+    "Camelyon17-diagnosis": Camelyon17,
+    "HAM10000-diagnosis": HAM10000Dataset,
     "Drishti": DrishtiDataset,
-    "ChestXray": ChestXrayDataset,
-    "GF3300": GF3300Dataset,
-    "HarvardFairVLMed10k_caption": HarvardFairVLMed10k
+    "ChestXray-diagnosis": ChestXrayDataset,
+    "GF3300-diagnosis": GF3300Dataset,
+    "HarvardFairVLMed10k-caption": HarvardFairVLMed10kCaption,
+    "CheXpert-diagnosis": CXPDataset,
+    "PAPILA-diagosis": PAPILADataset,
+    "HarvardFairVLMed10k-diagnosis": FairVLMedDataset,
 }
 
 
@@ -46,6 +49,8 @@ def get_dataset(args, image_processor_callable=None, split=None):
         assert args.split in ["train", "validation", "test", "all"]
         split = args.split
 
+    assert image_processor_callable is not None or args.task != "diagnosis"
+    
     if image_processor_callable is not None:
         transform = image_processor_callable
     else:
@@ -76,3 +81,11 @@ def report_label_distribution(dataset, args):
     args.logger.info("Label Distribution:")
     for label, freq in distribution.items():
         args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")
+    
+    num_classes = max(label_counts.keys()) + 1
+    weights = [0.0] * num_classes
+    for lbl, cnt in label_counts.items():
+        weights[lbl] = total / (cnt * num_classes)
+
+    dataset.class_weights = torch.tensor(weights, dtype=torch.float)
+    args.logger.info(f"Class weights: {dataset.class_weights.tolist()}")

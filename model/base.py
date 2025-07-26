@@ -23,7 +23,7 @@ class BaseModel:
     def load_from_pretrained(self, model_path, **kwargs):
         pass
 
-    def init_for_training(self):
+    def load_for_training(self, model_path):
         pass
 
     @abc.abstractmethod
@@ -34,7 +34,7 @@ class BaseModel:
         tuned_parameters = []
         tuned_parameter_size = 0
         all_parameter_size = 0
-
+        
         for n, p in self.model.named_parameters():
             all_parameter_size += maybe_zero_3(p, ignore_status=True).numel()
             if p.requires_grad:

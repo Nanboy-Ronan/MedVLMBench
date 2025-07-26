@@ -123,13 +123,13 @@ def setup_args(args):
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
-    if "LLaVA" in args.model and args.tune_modules == "M":
+    if "LLaVA" in args.model:
         args.peft = ""
         print(args.peft)
 
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
-    if "llava" in args.model.lower() and "V" in args.tune_modules:
+    if "llava" in args.model.lower():
         assert (
             args.gradient_checkpointing is False
         ), "Currently there is a bug when training visual tower using peft + gradient checkpointing. For more info: https://github.com/huggingface/peft/issues/1402"
@@ -191,11 +191,11 @@ if __name__ == "__main__":
         torch.cuda.manual_seed_all(args.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
+        
     model_wrapped = get_model(args=args, device=args.device.type)
     model_wrapped.load_for_training(args.model_path)
 
-    dataset = get_dataset(args)
+    dataset = get_dataset(args, image_processor_callable=getattr(model_wrapped, "image_processor", None))
     train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
     train_engine.train()
 

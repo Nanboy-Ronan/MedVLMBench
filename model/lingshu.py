@@ -153,7 +153,7 @@ class Lingshu(ChatMetaModel):
 
         chat_text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
-        )
+        ) # 'Can you provide a medical report for this image? '
 
         image_inputs, video_inputs = process_vision_info(messages)
 

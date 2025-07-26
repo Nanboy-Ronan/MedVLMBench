@@ -4,8 +4,7 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from peft import LoraConfig, get_peft_model
 from open_clip import create_model_from_pretrained, get_tokenizer
-from model.clip_base import CLIPBase, ImageProcessorCallable
-from model.lp_base import LPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
 from model.lora_base import LoRALPModel
 
 
@@ -43,31 +42,32 @@ class BiomedCLIPForDiagnosis(CLIPBase):
 
 
 class BioMedCLIPLPForDiagnosis(LPModel):
-    def __init__(self, *args, **kwargs) -> None:
-        model, _ = create_model_from_pretrained(
+    def __init__(self, args, text, num_classes) -> None:
+        model, preprocess = create_model_from_pretrained(
             "hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224",
         )  
-        vision_model = model.visual
-        vision_model.feat_dim = 512
-        super().__init__(encoder=vision_model, *args, **kwargs)
+        super().__init__(text=text, num_classes=num_classes, model=model, args=args)
         
-        # Using standard CLIP normalization
-        normalize = transforms.Normalize(
-            mean=[0.48145466, 0.4578275, 0.40821073], 
-            std=[0.26862954, 0.26130258, 0.27577711]
-        )
-        transform = transforms.Compose([
-            transforms.Resize(224, interpolation=transforms.InterpolationMode.BICUBIC),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            normalize,
-        ])
-        self.image_processor = ImageProcessorCallable(transform)
+        self.image_processor = ImageProcessorCallable(preprocess)
         self.image_processor_evaluation = self.image_processor
     
-    def extract_features(self, images):
-        # The visual encoder returns a dict, we need the CLS token feature
-        return self.encoder(images, out_type='raw')[:, 0]
+    def setup_encoders(self):
+        self.vision_model = self.model.visual
+        self.text_model = self.model.text
+        self.text_embed_dim = 512
+        self.vision_embed_dim = 512
+
+    def encode_image(self, images):
+        return self.model.encode_image(images)
+
+    def encode_text(self, text):
+        return self.model.encode_text(text)
+
+    # def forward(self, pixel_values, input_ids):
+    #     image_features, text_features, logit_scale = self.model.forward(pixel_values, input_ids)
+    #     logits = (logit_scale * image_features @ text_features.t()).detach().softmax(dim=-1)
+    #     return logits
+
 
 
 class BioMedCLIPLoRALPForDiagnosis(LoRALPModel):
