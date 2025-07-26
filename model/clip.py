@@ -3,20 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from peft import LoraConfig, get_peft_model
 from transformers import CLIPModel, CLIPProcessor, CLIPFeatureExtractor, CLIPTokenizer
-from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
-from model.lora_base import LoRALPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel, CLIPVisionLoRALPModel
 
 
 class CLIPForDiagnosis(CLIPBase):
     def __init__(self, text, num_classes, args=None, *kargs, **kwargs) -> None:
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-
-        if args and args.usage == "clip-img-lora":
-            lora_config = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
-            for name, para in model.named_parameters():
-                para.requires_grad = False
-            model.vision_model = get_peft_model(model.vision_model, lora_config)
-        
+        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")        
         super().__init__(text=text, num_classes=num_classes, model=model, args=args, **kwargs)
         
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
@@ -53,14 +45,19 @@ class CLIPLPForDiagnosis(LPModel):
         self.vision_embed_dim = 512
 
 
-class CLIPLoRALPForDiagnosis(LoRALPModel):
+class CLIPVisionLoRALPForDiagnosis(CLIPVisionLoRALPModel):
     def __init__(self, args, *kargs, **kwargs) -> None:
         model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        vision_model = model.vision_model
-        vision_model.feat_dim = 768
         lora_config = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
-        super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
+        breakpoint()
+        super().__init__(args=args, lora_config=lora_config, text=args.text, num_classes=kwargs['num_classes'])
 
         image_processor_hf = CLIPFeatureExtractor.from_pretrained("openai/clip-vit-base-patch32")
         self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
+    
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.text_model
+        self.text_embed_dim = 512
+        self.vision_embed_dim = 512
