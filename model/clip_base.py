@@ -120,7 +120,7 @@ class CLIPImgLPModel(CLIPBase):
         super().__init__(text, num_classes, model, args)
         self.num_classes = num_classes
 
-        assert args.usage in ["clip-img-lora", "img-lora-lp"], f"Unsupported usage: {args.usage}"
+        assert args.usage in ["lp", "img-lora-lp"], f"Unsupported usage: {args.usage}"
         for param in self.model.parameters():
             param.requires_grad = False
 
@@ -158,19 +158,19 @@ class CLIPImgLPModel(CLIPBase):
 
 
 
-class CLIPVisionLoRALPModel(BaseModel, nn.Module):
-    def __init__(self, args, model, num_classes, lora_config):
-        super().__init__(args)
+# class CLIPVisionLoRALPModel(BaseModel, nn.Module):
+#     def __init__(self, args, model, num_classes, lora_config):
+#         super().__init__(args)
         
-        for param in self.model.parameters():
-            param.requires_grad = False
+#         for param in self.model.parameters():
+#             param.requires_grad = False
             
-        self.model.vision_model = get_peft_model(self.model.vision_model, lora_config)
+#         self.model.vision_model = get_peft_model(self.model.vision_model, lora_config)
         
-        self.head = nn.Linear(self.feat_dim, self.num_classes).to(self.device)
+#         self.head = nn.Linear(self.feat_dim, self.num_classes).to(self.device)
         
 
-    def forward(self, images):
-        image_features = self.encode_image(images)
+#     def forward(self, images):
+#         image_features = self.encode_image(images)
         
-        return self.head(image_features)        
+#         return self.head(image_features)        
