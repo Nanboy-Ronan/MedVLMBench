@@ -310,64 +310,81 @@ python run_train.py \
 
 
 # GF3300
-python run_train.py \
-    --task diagnosis --usage lp --dataset GF3300 --split train \
-    --image_path ./data \
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --image_path ./data \
+#     --output_dir ./log \
+#     --model CLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5
+
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --image_path ./data \
+#     --output_dir ./log \
+#     --model BLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5
+
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --image_path ./data \
+#     --output_dir ./log \
+#     --model BLIP2-2.7b --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5
+
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --image_path ./data \
+#     --output_dir ./log \
+#     --model BioMedCLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5
+
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --image_path ./data \
+#     --output_dir ./log \
+#     --model MedCLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5
+
+
+# python run_train.py \
+#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --image_path ./data \
+#     --output_dir ./log \
+#     --model PMCCLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 50 \
+#     --learning_rate 5e-5
+
+
+# PAPILA
+CUDA_VISIBLE_DEVICES=4 python run_train.py \
+    --task diagnosis --usage lp --dataset PAPILA --split train \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data \
     --output_dir ./log \
     --model CLIP --model_path not_given \
     --cache_dir ./cache \
-    --num_train_epochs 50 \
+    --num_train_epochs 10 \
     --learning_rate 5e-5
 
-python run_train.py \
-    --task diagnosis --usage lp --dataset GF3300 --split train \
-    --image_path ./data \
+# HarvardFairVLMed10k
+CUDA_VISIBLE_DEVICES=4 python run_train.py \
+    --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+    --image_path /data/rjin02/project/FairMedFM-DNE/data \
     --output_dir ./log \
-    --model BLIP --model_path not_given \
+    --model CLIP --model_path not_given \
     --cache_dir ./cache \
-    --num_train_epochs 50 \
+    --num_train_epochs 10 \
     --learning_rate 5e-5
-
-python run_train.py \
-    --task diagnosis --usage lp --dataset GF3300 --split train \
-    --image_path ./data \
-    --output_dir ./log \
-    --model BLIP2-2.7b --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 50 \
-    --learning_rate 5e-5
-
-python run_train.py \
-    --task diagnosis --usage lp --dataset GF3300 --split train \
-    --image_path ./data \
-    --output_dir ./log \
-    --model BioMedCLIP --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 50 \
-    --learning_rate 5e-5
-
-python run_train.py \
-    --task diagnosis --usage lp --dataset GF3300 --split train \
-    --image_path ./data \
-    --output_dir ./log \
-    --model MedCLIP --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 50 \
-    --learning_rate 5e-5
-
-
-python run_train.py \
-    --task diagnosis --usage lp --dataset GF3300 --split train \
-    --image_path ./data \
-    --output_dir ./log \
-    --model PMCCLIP --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 50 \
-    --learning_rate 5e-5
-
-
-
-
 
 
 # # Train DermaMNIST

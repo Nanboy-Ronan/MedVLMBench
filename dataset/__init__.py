@@ -9,7 +9,7 @@ from collections import Counter
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA
 from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
-from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset, CXPDataset, PAPILADataset, FairVLMedDataset
+from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset, CXPDataset, PAPILADataset, FairVLMed10kDataset
 
 datasets = {
     "SLAKE-vqa": SLAKE,
@@ -27,8 +27,8 @@ datasets = {
     "GF3300-diagnosis": GF3300Dataset,
     "HarvardFairVLMed10k-caption": HarvardFairVLMed10kCaption,
     "CheXpert-diagnosis": CXPDataset,
-    "PAPILA-diagosis": PAPILADataset,
-    "HarvardFairVLMed10k-diagnosis": FairVLMedDataset,
+    "PAPILA-diagnosis": PAPILADataset,
+    "HarvardFairVLMed10k-diagnosis": FairVLMed10kDataset,
 }
 
 
