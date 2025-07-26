@@ -35,7 +35,9 @@ DIAGNOSIS_DATASETS = [
     "HAM10000",
     "ChestXray",
     "GF3300",
-    "CheXpert"
+    "CheXpert",
+    "PAPILA",
+    "HarvardFairVLMed10k",
 ]
 
 DATASETS = VQA_DATASETS + CAPTION_DATASETS + DIAGNOSIS_DATASETS

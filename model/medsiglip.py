@@ -11,7 +11,7 @@ from transformers import (
 # Make sure these base classes are correctly imported from your project structure
 from model.base import BaseModel
 from model.lora_base import LoRALPModel
-from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, CLIPImgLPModel
 
 
 class MedSigLIPForDiagnosis(CLIPBase):
@@ -65,7 +65,7 @@ class MedSigLIPForDiagnosis(CLIPBase):
         return self.model.get_image_features(images)
 
 
-class MedSigLIPLPForDiagnosis(LPModel):
+class MedSigLIPLPForDiagnosis(CLIPImgLPModel):
     def __init__(self, args, text, num_classes) -> None:
         super().__init__(text=text, num_classes=num_classes, model=SiglipModel.from_pretrained("google/medsiglip-448"), args=args)
         

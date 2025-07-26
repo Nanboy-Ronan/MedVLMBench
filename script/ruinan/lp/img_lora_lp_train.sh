@@ -42,7 +42,7 @@ date
 
 # Train Xray
 python run_train.py \
-    --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+    --task diagnosis --usage img-lora-lp --dataset PneumoniaMNIST --split train \
     --image_path ./data \
     --output_dir ./log \
     --model CLIP --model_path not_given \
@@ -51,7 +51,7 @@ python run_train.py \
     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PneumoniaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -60,7 +60,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PneumoniaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -69,7 +69,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PneumoniaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -78,7 +78,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PneumoniaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -87,7 +87,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PneumoniaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PneumoniaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \
@@ -97,7 +97,7 @@ python run_train.py \
 
 # # Train BREAST
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset BreastMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset BreastMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -106,7 +106,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset BreastMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset BreastMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -115,7 +115,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset BreastMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset BreastMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -124,7 +124,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset BreastMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset BreastMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -133,7 +133,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset BreastMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset BreastMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -142,7 +142,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset BreastMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset BreastMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \
@@ -152,7 +152,7 @@ python run_train.py \
 
 # HAM10000
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -161,7 +161,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -170,7 +170,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -179,7 +179,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -188,7 +188,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -198,7 +198,7 @@ python run_train.py \
 
 # Drishti
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Drishti --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Drishti --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -207,7 +207,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Drishti --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Drishti --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -216,7 +216,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Drishti --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Drishti --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -225,7 +225,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Drishti --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Drishti --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -234,7 +234,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Drishti --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Drishti --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -244,7 +244,7 @@ python run_train.py \
 
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Drishti --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Drishti --split train \
 #     --image_path ../DataSets \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \
@@ -254,7 +254,7 @@ python run_train.py \
 
 # Camelyon17
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -263,7 +263,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -272,7 +272,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -281,7 +281,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -290,7 +290,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -300,7 +300,7 @@ python run_train.py \
 
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \
@@ -311,7 +311,7 @@ python run_train.py \
 
 # GF3300
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -320,7 +320,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -329,7 +329,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -338,7 +338,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -347,7 +347,7 @@ python run_train.py \
 #     --learning_rate 5e-5
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -357,7 +357,7 @@ python run_train.py \
 
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \
@@ -368,7 +368,7 @@ python run_train.py \
 
 # PAPILA
 CUDA_VISIBLE_DEVICES=4 python run_train.py \
-    --task diagnosis --usage lp --dataset PAPILA --split train \
+    --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
     --image_path /data/rjin02/project/FairMedFM-DNE/data \
     --output_dir ./log \
     --model CLIP --model_path not_given \
@@ -378,7 +378,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # HarvardFairVLMed10k
 CUDA_VISIBLE_DEVICES=4 python run_train.py \
-    --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+    --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
     --image_path /data/rjin02/project/FairMedFM-DNE/data \
     --output_dir ./log \
     --model CLIP --model_path not_given \
@@ -390,7 +390,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 # # Train DermaMNIST
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=3 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -401,7 +401,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=0 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -411,7 +411,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=5 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -421,7 +421,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=2 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -431,7 +431,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=1 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model XrayGPT --model_path not_given \
@@ -441,7 +441,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=6 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -450,7 +450,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 #     --learning_rate 5e-5
 
 # CUDA_VISIBLE_DEVICES=1 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \
@@ -460,7 +460,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Camelyon17
 # CUDA_VISIBLE_DEVICES=1 python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -469,7 +469,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 #     --learning_rate 5e-5
 
 # CUDA_VISIBLE_DEVICES=5 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP --model_path not_given \
@@ -479,7 +479,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=6 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -489,7 +489,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=1 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -499,7 +499,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=5 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model XrayGPT --model_path not_given \
@@ -509,7 +509,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 
 # # Ongoing
 # CUDA_VISIBLE_DEVICES=6 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -518,7 +518,7 @@ CUDA_VISIBLE_DEVICES=4 python run_train.py \
 #     --learning_rate 5e-5
 
 # CUDA_VISIBLE_DEVICES=1 python run_train.py \
-#     --task diagnosis --usage lp --dataset DermaMNIST --split train \
+#     --task diagnosis --usage img-lora-lp --dataset DermaMNIST --split train \
 #     --image_path ./data \
 #     --output_dir ./log \
 #     --model PMCCLIP --model_path not_given \

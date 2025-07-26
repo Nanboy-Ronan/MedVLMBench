@@ -73,7 +73,7 @@ def get_model(args, **kwargs):
         text = ["a photo of {}".format(txt) for txt in text]
         num_classes = len(INFO[args.dataset.lower()]["label"])
 
-        if args.usage == "lp":
+        if args.usage in ["lp", "img-lora-lp"]:
             if args.model == "BLIP":
                 from model.blip import BLIPLPForDiagnosis
 
@@ -146,8 +146,7 @@ def get_model(args, **kwargs):
             else:
                 raise NotImplementedError()
             
-        elif args.usage in ["clip-zs", "clip-img-lora", "clip-txt-lora", "clip-full-lora"]:
-            raise NotImplementedError("CLIP-based models are not supported for diagnosis task with usage {}".format(args.usage))
+        elif args.usage in ["clip-zs", "clip-img-lora"]:
             if args.model == "BLIP":
                 from model.blip import BLIPForDiagnosis
 
@@ -177,6 +176,7 @@ def get_model(args, **kwargs):
             else:
                 raise NotImplementedError()
         elif args.usage in ["clip-adapter"]:
+            raise NotImplementedError()
             text = get_prototype(args)
             text = ["a photo of {}".format(txt) for txt in text]
             if args.model == "CLIP":

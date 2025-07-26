@@ -113,31 +113,45 @@ class CLIPLPTrainer(Trainer):
         if self.image_processor is not None and pixel_values.dtype == torch.uint8:
             pixel_values = self.image_processor(pixel_values)
 
+        def _forward_once():
+            out = model(pixel_values)
+            cls_name = out.__class__.__name__
+            if isinstance(out, torch.Tensor):
+                logits = out
+                class_weights = self.train_dataset.class_weights.to(
+                    logits.device, logits.dtype
+                )
+                loss = F.cross_entropy(logits, labels, weight=class_weights)
+                return loss, logits
+            elif hasattr(out, "loss"):
+                loss = out.loss
+                if hasattr(out, "logits_per_image"):
+                    logits = out.logits_per_image
+                else:
+                    raise ValueError(
+                        "Model output does not contain logits_per_image."
+                    )
+                return loss, logits
+            else:
+                raise TypeError(
+                    f"Model forward returned {type(out)} — expected Tensor or output with loss."
+                )
+        
+
         if self.profile:
-            # Profile the Forward Pass ONLY
             with profile(
                 activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                 record_shapes=True,
-                with_flops=True,  
-                profile_memory=True  
+                with_flops=True,
+                profile_memory=True,
             ) as prof:
                 with record_function("forward_pass"):
-                    logits = model(pixel_values)
-                    class_weights = self.train_dataset.class_weights
-                    cw = class_weights.to(logits.device, logits.dtype)
-                    loss = F.cross_entropy(logits, labels, weight=cw)
-
-            # Extract Forward FLOPS
-            flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
-            self.epoch_forward_flops += flops_forward
-
-            # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
-            # print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
+                    loss, logits = _forward_once()
+            self.epoch_forward_flops += sum(
+                evt.flops for evt in prof.key_averages() if evt.flops is not None
+            )
         else:
-            logits = model(pixel_values)
-            class_weights = self.train_dataset.class_weights
-            cw = class_weights.to(logits.device, logits.dtype)
-            loss = F.cross_entropy(logits, labels, weight=cw)
+            loss, logits = _forward_once()
 
         return (loss, logits) if return_outputs else loss
     

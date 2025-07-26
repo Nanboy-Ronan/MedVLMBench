@@ -4,7 +4,7 @@ from transformers import Blip2ForConditionalGeneration, Blip2Processor, Blip2For
 from peft import LoraConfig, get_peft_model
 from model.chat import ChatMetaModel
 from model.lora_base import LoRALPModel
-from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, CLIPImgLPModel
 
 
 class BLIP2(ChatMetaModel):
@@ -73,7 +73,7 @@ class BLIP2ForDiagnosis(CLIPBase):
         return outputs.logits_per_image
 
 
-class BLIP2LPForDiagnosis(LPModel):
+class BLIP2LPForDiagnosis(CLIPImgLPModel):
     def __init__(self, args, text, num_classes) -> None:
         super().__init__(
                 text=text,

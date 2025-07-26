@@ -35,7 +35,7 @@ nvidia-smi
 
 # HAM10000
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -46,7 +46,7 @@ nvidia-smi
 
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -56,7 +56,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model SigLIP --model_path not_given \
@@ -66,7 +66,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -76,7 +76,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -87,7 +87,7 @@ nvidia-smi
 
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PLIP --model_path not_given \
@@ -97,7 +97,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedSigLIP --model_path not_given \
@@ -107,7 +107,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HAM10000 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HAM10000 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PubMedCLIP --model_path not_given \
@@ -120,7 +120,7 @@ nvidia-smi
 
 # CheXpert
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -130,7 +130,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -140,7 +140,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model SigLIP --model_path not_given \
@@ -150,7 +150,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -160,7 +160,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -170,7 +170,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model PLIP --model_path not_given \
@@ -180,7 +180,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model MedSigLIP --model_path not_given \
@@ -190,7 +190,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset CheXpert --split train \
+#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
 #     --output_dir ./log \
 #     --model PubMedCLIP --model_path not_given \
@@ -202,7 +202,7 @@ nvidia-smi
 
 # GF3300
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -212,7 +212,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -221,7 +221,7 @@ nvidia-smi
 #     --learning_rate 5e-5 # Ongoing
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model SigLIP --model_path not_given \
@@ -231,7 +231,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -241,7 +241,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -251,7 +251,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PLIP --model_path not_given \
@@ -261,7 +261,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedSigLIP --model_path not_given \
@@ -271,7 +271,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset GF3300 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PubMedCLIP --model_path not_given \
@@ -283,7 +283,7 @@ nvidia-smi
 
 # PAPILA
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -293,7 +293,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -303,7 +303,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model SigLIP --model_path not_given \
@@ -313,7 +313,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -323,7 +323,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -333,7 +333,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PLIP --model_path not_given \
@@ -343,7 +343,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedSigLIP --model_path not_given \
@@ -353,7 +353,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset PAPILA --split train \
+#     --task diagnosis --usage img-lora-lp --dataset PAPILA --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PubMedCLIP --model_path not_given \
@@ -365,7 +365,7 @@ nvidia-smi
 
 # HarvardFairVLMed10k
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -375,7 +375,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -385,7 +385,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model SigLIP --model_path not_given \
@@ -395,7 +395,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model BioMedCLIP --model_path not_given \
@@ -405,7 +405,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -415,7 +415,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PLIP --model_path not_given \
@@ -425,7 +425,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model MedSigLIP --model_path not_given \
@@ -435,7 +435,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset HarvardFairVLMed10k --split train \
+#     --task diagnosis --usage img-lora-lp --dataset HarvardFairVLMed10k --split train \
 #     --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
 #     --output_dir ./log \
 #     --model PubMedCLIP --model_path not_given \
@@ -447,7 +447,7 @@ nvidia-smi
 
 # # Camelyon17
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model CLIP --model_path not_given \
@@ -457,7 +457,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model BLIP2-2.7b --model_path not_given \
@@ -467,7 +467,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model SigLIP --model_path not_given \
@@ -476,18 +476,18 @@ nvidia-smi
 #     --learning_rate 5e-5 \
 #     --save_pred
 
-# python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
-#     --image_path ./data/camelyon17_v1.0/patches \
-#     --output_dir ./log \
-#     --model BioMedCLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 10 \
-#     --learning_rate 5e-5 \
-#     --save_pred
+python run_train.py \
+    --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
+    --image_path ./data/camelyon17_v1.0/patches \
+    --output_dir ./log \
+    --model BioMedCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 10 \
+    --learning_rate 5e-5 \
+    --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model MedCLIP --model_path not_given \
@@ -497,7 +497,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model PLIP --model_path not_given \
@@ -507,7 +507,7 @@ nvidia-smi
 #     --save_pred
 
 # python run_train.py \
-#     --task diagnosis --usage lp --dataset Camelyon17 --split train \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
 #     --image_path ./data/camelyon17_v1.0/patches \
 #     --output_dir ./log \
 #     --model MedSigLIP --model_path not_given \
@@ -516,12 +516,12 @@ nvidia-smi
 #     --learning_rate 5e-5 \
 #     --save_pred
 
-python run_train.py \
-    --task diagnosis --usage lp --dataset Camelyon17 --split train \
-    --image_path ./data/camelyon17_v1.0/patches \
-    --output_dir ./log \
-    --model PubMedCLIP --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 10 \
-    --learning_rate 5e-5 \
-    --save_pred
+# python run_train.py \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
+#     --image_path ./data/camelyon17_v1.0/patches \
+#     --output_dir ./log \
+#     --model PubMedCLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 10 \
+#     --learning_rate 5e-5 \
+#     --save_pred

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from peft import LoraConfig, get_peft_model
 from torchvision import transforms
 from medclip import MedCLIPModel, MedCLIPVisionModelViT, MedCLIPProcessor
-from model.clip_base import CLIPBase, ImageProcessorCallable, LPModel
+from model.clip_base import CLIPBase, ImageProcessorCallable, CLIPImgLPModel
 from model.lora_base import LoRALPModel
 
 
@@ -79,7 +79,7 @@ class MedCLIPForDiagnosis(CLIPBase):
 
 
 
-class MedCLIPLPForDiagnosis(LPModel):
+class MedCLIPLPForDiagnosis(CLIPImgLPModel):
     def __init__(self, args, text, num_classes) -> None:
         model = MedCLIPModel(vision_cls=MedCLIPVisionModelViT)
         model.from_pretrained()
