@@ -52,8 +52,8 @@ class BioMedCLIPLPForDiagnosis(CLIPImgLPModel):
         self.image_processor_evaluation = self.image_processor
     
     def setup_encoders(self):
-        self.vision_model = self.model.visual
-        self.text_model = self.model.text
+        self.model.vision_model = self.model.visual
+        self.model.text_model = self.model.text
         self.text_embed_dim = 512
         self.vision_embed_dim = 512
 

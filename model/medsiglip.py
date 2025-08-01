@@ -66,6 +66,7 @@ class MedSigLIPForDiagnosis(CLIPBase):
 
 
 class MedSigLIPLPForDiagnosis(CLIPImgLPModel):
+    _keys_to_ignore_on_save = []
     def __init__(self, args, text, num_classes) -> None:
         super().__init__(text=text, num_classes=num_classes, model=SiglipModel.from_pretrained("google/medsiglip-448"), args=args)
         

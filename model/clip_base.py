@@ -76,8 +76,6 @@ class CLIPBase(BaseModel, nn.Module):
             self.prototype.to(self.args.device)
     
     def setup_encoders(self):
-        self.vision_model = self.model.vision_model
-        self.text_model = self.model.text_model
         self.text_embed_dim = self.model.text_embed_dim
         self.vision_embed_dim = self.model.vision_embed_dim
 
@@ -158,19 +156,19 @@ class CLIPImgLPModel(CLIPBase):
 
 
 
-# class CLIPVisionLoRALPModel(BaseModel, nn.Module):
-#     def __init__(self, args, model, num_classes, lora_config):
-#         super().__init__(args)
+class CLIPVisionLoRALPModel(BaseModel, nn.Module):
+    def __init__(self, args, model, num_classes, lora_config):
+        super().__init__(args)
         
-#         for param in self.model.parameters():
-#             param.requires_grad = False
+        for param in self.model.parameters():
+            param.requires_grad = False
             
-#         self.model.vision_model = get_peft_model(self.model.vision_model, lora_config)
+        self.model.vision_model = get_peft_model(self.model.vision_model, lora_config)
         
-#         self.head = nn.Linear(self.feat_dim, self.num_classes).to(self.device)
+        self.head = nn.Linear(self.feat_dim, self.num_classes).to(self.device)
         
 
-#     def forward(self, images):
-#         image_features = self.encode_image(images)
+    def forward(self, images):
+        image_features = self.encode_image(images)
         
-#         return self.head(image_features)        
+        return self.head(image_features)

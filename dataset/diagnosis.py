@@ -882,18 +882,17 @@ class GF3300Dataset(torch.utils.data.Dataset):
 
 
 class CXPDataset(torch.utils.data.Dataset):
-    # Uses the original CheXpert dataset split.
+    # Uses the original CheXpert dataset split. https://github.com/FairMedFM/FairMedFM/blob/main/pre-processing/classification/CXP.ipynb
 
     def __init__(
         self,
         data_args,
         transform=None,
         split: str = "train",
-        target_col: str = "Pneumonia",
     ):
         split = "valid" if split == "test" else "train"
         self.CLASSES = 2
-        self.class_dict = {f"no {target_col.lower()}": 0, target_col.lower(): 1}
+        self.class_dict = {f"no finding": 0, "has findings": 1}
         self.transform = transform
 
         # --- metadata ---
@@ -902,17 +901,11 @@ class CXPDataset(torch.utils.data.Dataset):
         )
         self.df = pd.read_csv(self.meta_path)
 
-        if target_col not in self.df.columns:
-            raise KeyError(
-                f"Column '{target_col}' not found in {self.meta_path}. "
-                "Make sure the split CSVs include this label column."
-            )
-
         # Treat uncertain (-1) or NaN as negative (0)
         labels = (
-            self.df[target_col]
-            .replace(-1, 0)        # CheXpert convention: -1 = uncertain
-            .fillna(0)             # blank → negative
+            self.df["No Finding"]
+            .replace(-1, 0)
+            .fillna(0)
             .astype(int)
             .to_numpy()
         )
@@ -928,7 +921,6 @@ class CXPDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         item = self.df.iloc[idx]
 
-        # Full path to the image
         img_path = os.path.join(self.path_to_images, item["Path"])
         image = Image.open(img_path).convert("RGB")
 
