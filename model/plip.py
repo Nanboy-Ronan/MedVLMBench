@@ -14,14 +14,6 @@ class PLIPForDiagnosis(CLIPBase):
     def __init__(self, text, num_classes, args=None, *kargs, **kwargs):
         # Load base PLIP model
         model = CLIPModel.from_pretrained("vinid/plip")
-
-        # Optional LoRA on the vision encoder (matching CLIPForDiagnosis logic)
-        if args and getattr(args, "usage", None) == "plip-img-lora":
-            lora_config = LoraConfig(target_modules=["k_proj", "q_proj", "v_proj"])
-            for _, p in model.named_parameters():
-                p.requires_grad = False
-            model.vision_model = get_peft_model(model.vision_model, lora_config)
-        breakpoint()
         super().__init__(text=text,
                          num_classes=num_classes,
                          model=model,
@@ -51,6 +43,9 @@ class PLIPForDiagnosis(CLIPBase):
 
     def encode_image(self, images):
         return self.model.get_image_features(images)
+    
+    def forward(self, pixel_values, return_loss=False):
+        return super().forward(pixel_values, return_loss).logits_per_image
 
 
 class PLIPLPForDiagnosis(CLIPImgLPModel):

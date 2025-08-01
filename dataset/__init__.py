@@ -17,7 +17,7 @@ datasets = {
     "VQA-RAD-vqa": VQARAD,
     "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
     "MIMIC_CXR-caption": MIMIC_CXRCaption,
-    "PneumoniaMNIST": PneumoniaMNIST,
+    "PneumoniaMNIST-diagnosis": PneumoniaMNIST,
     "BreastMNIST-diagnosis": BreastMNIST,
     "DermaMNIST-diagnosis": DermaMNIST,
     "Camelyon17-diagnosis": Camelyon17,

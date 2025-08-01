@@ -29,6 +29,10 @@ class CLIPForDiagnosis(CLIPBase):
     def encode_image(self, images):
         return self.model.get_image_features(images)
 
+    def forward(self, pixel_values, return_loss=False):
+        output = super().forward(pixel_values=pixel_values, return_loss=return_loss)
+        return output.logits_per_image
+
 
 class CLIPLPForDiagnosis(CLIPImgLPModel):
     def __init__(self, args, text, num_classes) -> None:

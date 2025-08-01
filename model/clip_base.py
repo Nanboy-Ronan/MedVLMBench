@@ -171,4 +171,4 @@ class CLIPVisionLoRALPModel(BaseModel, nn.Module):
     def forward(self, images):
         image_features = self.encode_image(images)
         
-        return self.head(image_features)
+        return self.head(image_features)        

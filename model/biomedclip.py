@@ -39,6 +39,11 @@ class BiomedCLIPForDiagnosis(CLIPBase):
     
     def encode_image(self, images):
         return self.model.encode_image(images)
+    
+    def forward(self, pixel_values, return_loss=True):
+        output = super().forward(pixel_values=pixel_values, return_loss=return_loss)
+        
+        return output.logits_per_image
 
 
 class BioMedCLIPLPForDiagnosis(CLIPImgLPModel):

@@ -22,16 +22,13 @@ class MedSigLIPForDiagnosis(CLIPBase):
     def __init__(self, text, num_classes, args=None, *kargs, **kwargs):
         # Load MedSigLIP checkpoint
         model = SiglipModel.from_pretrained("google/medsiglip-448")
-
-        # Optional: apply LoRA on vision encoder
-        if args and getattr(args, "usage", None) == "medsiglip-img-lora":
-            lora_cfg = LoraConfig(target_modules=["q_proj", "k_proj", "v_proj"])
-            # Freeze all parameters before applying LoRA
-            for _, p in model.named_parameters():
-                p.requires_grad = False
-            model.vision_model = get_peft_model(model.vision_model, lora_cfg)
+        # if args and getattr(args, "usage", None) == "clipimg-lora":
+        #     lora_cfg = LoraConfig(target_modules=["q_proj", "k_proj", "v_proj"])
+        #     # Freeze all parameters before applying LoRA
+        #     for _, p in model.named_parameters():
+        #         p.requires_grad = False
+            # model.vision_model = get_peft_model(model.vision_model, lora_cfg)
         
-        # Inherit from the correct SiglipBase
         super().__init__(
             text=text,
             num_classes=num_classes,
@@ -40,17 +37,19 @@ class MedSigLIPForDiagnosis(CLIPBase):
             **kwargs,
         )
 
-        # Processor components
         processor = SiglipProcessor.from_pretrained("google/medsiglip-448")
         self.tokenizer: SiglipTokenizer = processor.tokenizer
         
-        # The ImageProcessorCallable handles the output correctly without a custom transform
         self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
-
-        # DO NOT add a new logit_scale. SiglipBase will use the one from the model.
         
         self.initialize_prototypes()
+    
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.text_model
+        self.text_embed_dim = 1152
+        self.vision_embed_dim = 1152
 
     @torch.no_grad()
     def encode_text(self, text):
@@ -63,6 +62,10 @@ class MedSigLIPForDiagnosis(CLIPBase):
 
     def encode_image(self, images):
         return self.model.get_image_features(images)
+
+    def forward(self, pixel_values, return_loss=False):
+        output = self.model.forward(input_ids=self.prototype["input_ids"], pixel_values=pixel_values, return_loss=return_loss)
+        return output.logits_per_image
 
 
 class MedSigLIPLPForDiagnosis(CLIPImgLPModel):
