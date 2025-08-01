@@ -158,6 +158,14 @@ python run_eval.py \
     --save_pred \
     --cache_dir ./cache
 
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset Camelyon17 --split test \
+    --image_path ./data/camelyon17_v1.0/patches \
+    --exp_path ./log \
+    --model SigLIP --model_path "original_pretrained" \
+    --save_pred \
+    --cache_dir ./cache
+
 # Drishti
 python run_eval.py \
     --task diagnosis --usage clip-zs --dataset Drishti --split test \
