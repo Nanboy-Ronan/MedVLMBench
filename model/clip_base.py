@@ -73,7 +73,7 @@ class CLIPBase(BaseModel, nn.Module):
         """Initializes text prototypes. Should be called at the end of subclass __init__."""
         if self.prototype is None:
             self.prototype = self.tokenizer(self.prototype_text, padding=True, return_tensors="pt")
-            self.prototype.to(self.args.device)
+            self.prototype = self.prototype.to(self.args.device)
     
     def setup_encoders(self):
         self.text_embed_dim = self.model.text_embed_dim

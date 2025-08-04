@@ -437,17 +437,17 @@ INFO = {
     },
     "gf3300":{
         "label" : {
-            "0" : "benign retina image", "1": "glaucomatous retina image"
+            "0" : "benign retina", "1": "glaucomatous retina"
         }
     },
     "chexpert":{
         "label" : {
-            "0" : "chest xray with no finding", "1": " chest xray with disease"
+            "0" : "diseased xray", "1": "normal xray"
         }
     },
     "papila":{
         "label" : {
-            "0" : "a benign fundus image", "1": " a glaucoma fundus image"
+            "0" : "benign fundus", "1": "glaucoma fundus"
         }
     },
     "harvardfairvlmed10k":{

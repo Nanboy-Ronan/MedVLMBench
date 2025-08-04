@@ -30,6 +30,12 @@ class BiomedCLIPForDiagnosis(CLIPBase):
         self.logit_scale = self.model.logit_scale
         
         self.initialize_prototypes()
+    
+    def setup_encoders(self):
+        self.model.vision_model = self.model.visual
+        self.model.text_model = self.model.text
+        self.text_embed_dim = 512
+        self.vision_embed_dim = 512
 
     @torch.no_grad()
     def encode_text(self, text):
@@ -40,10 +46,16 @@ class BiomedCLIPForDiagnosis(CLIPBase):
     def encode_image(self, images):
         return self.model.encode_image(images)
     
-    def forward(self, pixel_values, return_loss=True):
-        output = super().forward(pixel_values=pixel_values, return_loss=return_loss)
-        
-        return output.logits_per_image
+    def initialize_prototypes(self):
+        """Initializes text prototypes. Should be called at the end of subclass __init__."""
+        if self.prototype is None:
+            self.prototype = self.tokenizer(self.prototype_text)
+            self.prototype = self.prototype.to(self.args.device)
+    
+    def forward(self, pixel_values):
+        image_features, text_features, logit_scale = self.model(pixel_values, self.prototype)
+        logits = (logit_scale * image_features @ text_features.t()).detach().softmax(dim=-1)
+        return logits
 
 
 class BioMedCLIPLPForDiagnosis(CLIPImgLPModel):
