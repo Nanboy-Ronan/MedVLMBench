@@ -55,6 +55,14 @@ def get_model(args, **kwargs):
             from model.lingshu import Lingshu
 
             model = Lingshu(args=args)
+        elif args.model == "o3":
+            from model.gpt import o3
+
+            model = o3(args=args)
+        elif args.model == "gemini-2.5-pro":
+            from model.gemini import Gemini25Pro
+
+            model = Gemini25Pro(args=args)
         else:
             raise NotImplementedError()
     elif args.task == "caption":

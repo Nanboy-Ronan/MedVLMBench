@@ -18,6 +18,8 @@ LANGUAGE_MODELS = [
     "NVILA",
     "VILA-M3",
     "VILA1.5",
+    "o3",
+    "gemini-2.5-pro",
 ]
 
 MODELS = CLIP_MODELS + LANGUAGE_MODELS
