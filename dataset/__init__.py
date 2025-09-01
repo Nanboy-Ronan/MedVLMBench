@@ -60,6 +60,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
 
     try:
         args.logger.info("Loaded dataset: " + dataset.name)
+        args.logger.info(f"Dataset size: {len(dataset)}")
     except:
         print("Logger is not set.")
 
