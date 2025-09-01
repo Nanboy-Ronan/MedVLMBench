@@ -171,3 +171,5 @@ pretrained/
 wandb/
 cache/
 *.out
+
+script/

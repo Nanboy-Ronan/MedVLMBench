@@ -408,7 +408,7 @@ CUDA_VISIBLE_DEVICES=3 python run_eval.py \
 ################################## Lingshu ##################################
 conda activate torch2.6
 # SLAKE, Lingshu
-CUDA_VISIBLE_DEVICE=0 python run_train.py \
+CUDA_VISIBLE_DEVICE=4 python run_train.py \
     --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --task vqa --dataset SLAKE \
     --model Lingshu \
@@ -423,7 +423,7 @@ CUDA_VISIBLE_DEVICE=0 python run_train.py \
     --bf16 True \
     --output_dir ./log \
     --cache_dir ./cache \
-    --num_train_epochs 1 \
+    --num_train_epochs 5 \
     --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 1 \
@@ -451,8 +451,8 @@ CUDA_VISIBLE_DEVICES=4 python run_eval.py \
 
 
 # PathVQA, Lingshu
-CUDA_VISIBLE_DEVICES=1 python run_train.py \
-    --peft lora --lora_r 8 --lora_alpha 256 --mm_projector_lr 2e-5 \
+CUDA_VISIBLE_DEVICES=4 python run_train.py \
+    --peft lora --lora_r 32 --lora_alpha 8 --mm_projector_lr 2e-5 \
     --task vqa --dataset PathVQA \
     --model Lingshu \
     --image_path ./notnedded \
@@ -485,7 +485,7 @@ CUDA_VISIBLE_DEVICES=1 python run_train.py \
     --tune_modules ML
 
 
-CUDA_VISIBLE_DEVICES=5 python run_eval.py \
+CUDA_VISIBLE_DEVICES=4 python run_eval.py \
     --task vqa --dataset PathVQA --split test \
     --image_path /notgiven \
     --model Lingshu --model_path /bigdata/rjin02/MedVLMBench/log/vqa/PathVQA/Lingshu/train_lora_ML_seed42_lingshu \

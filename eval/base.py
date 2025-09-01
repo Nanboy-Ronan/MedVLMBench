@@ -43,7 +43,7 @@ class EvalEngine:
 
         self.metric_logger.synchronize_between_processes()
 
-        self.save(self.args.save_folder, model)
+        self.save(self.args.output_dir, model)
 
         results = {k: meter.global_avg for k, meter in self.metric_logger.meters.items()}
 
