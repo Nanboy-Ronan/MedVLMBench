@@ -78,11 +78,56 @@ mkdir data
 | SigLIP       | Diagnosis             | Done |
 
 
+## Notebook Tutorial
+
+We offer some examples of how to use our package through the notebook.
+
+| Feature                  | Notebook                                                                 |
+|---------------------------|--------------------------------------------------------------------------|
+| Off-the-shelf Diagnosis          | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
+| Off-the-shelf VQA | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
+| Off-the-shelf Captioning              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
+| LP Diagnosis              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
+| LoRA Adaptation VQA              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
+
+
 ## Implementation Logic
-To be added soon.
+`run_train.py` is the major entry for training all models (including the lightweight adaptation).
+`run_eval.py` is the major entry for off the shelf evaluation of all models.
+
+### Off-the-shelf Evaluation
+
+#### Diagnosis
+
+Example
+```bash
+python run_eval.py \
+    --task diagnosis --usage clip-zs --dataset PAPILA --split test \
+    --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
+    --exp_path ./log \
+    --model CLIP --model_path "original_pretrained" \
+    --save_pred \
+    --cache_dir ./cache
+```
+
+
+#### VQA
+
+Example
+```bash
+python run_eval.py \
+    --task vqa --dataset SLAKE --split test \
+    --image_path ./data/SLAKE/imgs \
+    --model LLaVA-1.5 --model_path ./pretrained_models/llava-v1.5-7b \
+    --exp_path ./log \
+    --cache_dir ./cache \
+    --save_pred
+```
 
 ### Training
 
 
+
 #### Diagnosis
-First finetune the linear layer using `run_train.py` then load the pretrained model for evaluation in `run_eval.py`
+
+#### VQA
