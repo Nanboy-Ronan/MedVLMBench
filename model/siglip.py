@@ -10,17 +10,9 @@ from model.clip_base import CLIPBase, ImageProcessorCallable, CLIPImgLPModel
 
 class SiglipForDiagnosis(CLIPBase):
     def __init__(self, text, num_classes, args=None, *kargs, **kwargs) -> None:
-        model = SiglipModel.from_pretrained("google/siglip-base-patch16-224")
-
-        if args and args.usage == "siglip-img-lora": # Assuming a new usage key for siglip lora
-            lora_config = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
-            for name, para in model.named_parameters():
-                para.requires_grad = False
-            model.vision_model = get_peft_model(model.vision_model, lora_config)
-        
+        model = SiglipModel.from_pretrained("google/siglip-base-patch16-224")        
         super().__init__(text=text, num_classes=num_classes, model=model, args=args, **kwargs)
         
-        # SiglipProcessor combines the tokenizer and image processor
         processor = SiglipProcessor.from_pretrained("google/siglip-base-patch16-224")
         self.tokenizer = processor.tokenizer
         image_processor_hf = processor.image_processor
@@ -29,6 +21,12 @@ class SiglipForDiagnosis(CLIPBase):
         self.image_processor_evaluation = self.image_processor
 
         self.initialize_prototypes()
+    
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.text_model
+        self.text_embed_dim = 768
+        self.vision_embed_dim = 768
     
     @torch.no_grad()
     def encode_text(self, text):
@@ -39,6 +37,10 @@ class SiglipForDiagnosis(CLIPBase):
     
     def encode_image(self, images):
         return self.model.get_image_features(images)
+
+    def forward(self, pixel_values, return_loss=False):
+        output = self.model.forward(input_ids=self.prototype["input_ids"], pixel_values=pixel_values, return_loss=return_loss)
+        return output.logits_per_image
 
 
 class SiglipLPForDiagnosis(CLIPImgLPModel):

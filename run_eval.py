@@ -61,11 +61,11 @@ def collect_args():
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
-    args.save_folder = os.path.join(
+    args.output_dir = os.path.join(
         args.exp_path, args.task, args.dataset, args.model, f"eval_seed{args.seed}", os.path.basename(args.model_path)
     )
 
-    basics.creat_folder(args.save_folder)
+    basics.creat_folder(args.output_dir)
 
     if args.cache_dir is not None:
         os.environ["HF_HOME"] = args.cache_dir
@@ -77,7 +77,7 @@ def collect_args():
 if __name__ == "__main__":
     args = collect_args()
 
-    logger = basics.setup_logger("eval", args.save_folder, "eval.log", screen=True, tofile=True)
+    logger = basics.setup_logger("eval", args.output_dir, "eval.log", screen=True, tofile=True)
     logger.info("Using following arguments for evaluation.")
     logger.info(args)
 

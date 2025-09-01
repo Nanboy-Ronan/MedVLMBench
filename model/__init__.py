@@ -173,6 +173,18 @@ def get_model(args, **kwargs):
                 from model.plip import PLIPForDiagnosis
 
                 model = PLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "SigLIP":
+                from model.siglip import SiglipForDiagnosis
+
+                model = SiglipForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "MedSigLIP":
+                from model.medsiglip import MedSigLIPForDiagnosis
+
+                model = MedSigLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "PubMedCLIP":
+                from model.pubmedclip import PubMedCLIPForDiagnosis
+
+                model = PubMedCLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.usage in ["clip-adapter"]:

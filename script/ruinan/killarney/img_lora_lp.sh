@@ -189,15 +189,15 @@ nvidia-smi
 #     --learning_rate 5e-5 \
 #     --save_pred
 
-# python run_train.py \
-#     --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
-#     --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
-#     --output_dir ./log \
-#     --model PubMedCLIP --model_path not_given \
-#     --cache_dir ./cache \
-#     --num_train_epochs 10 \
-#     --learning_rate 5e-5 \
-#     --save_pred
+python run_train.py \
+    --task diagnosis --usage img-lora-lp --dataset CheXpert --split train \
+    --image_path /home/nanboy/projects/aip-xli135/nanboy/DataSets \
+    --output_dir ./log \
+    --model PubMedCLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 10 \
+    --learning_rate 5e-5 \
+    --save_pred
 
 
 # GF3300
@@ -218,7 +218,8 @@ nvidia-smi
 #     --model BLIP2-2.7b --model_path not_given \
 #     --cache_dir ./cache \
 #     --num_train_epochs 10 \
-#     --learning_rate 5e-5 # Ongoing
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage img-lora-lp --dataset GF3300 --split train \
@@ -476,15 +477,15 @@ nvidia-smi
 #     --learning_rate 5e-5 \
 #     --save_pred
 
-python run_train.py \
-    --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
-    --image_path ./data/camelyon17_v1.0/patches \
-    --output_dir ./log \
-    --model BioMedCLIP --model_path not_given \
-    --cache_dir ./cache \
-    --num_train_epochs 10 \
-    --learning_rate 5e-5 \
-    --save_pred
+# python run_train.py \
+#     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \
+#     --image_path ./data/camelyon17_v1.0/patches \
+#     --output_dir ./log \
+#     --model BioMedCLIP --model_path not_given \
+#     --cache_dir ./cache \
+#     --num_train_epochs 10 \
+#     --learning_rate 5e-5 \
+#     --save_pred
 
 # python run_train.py \
 #     --task diagnosis --usage img-lora-lp --dataset Camelyon17 --split train \

@@ -57,7 +57,7 @@ class MedCLIPForDiagnosis(CLIPBase):
             for name, para in model.named_parameters():
                 para.requires_grad = False
             model.vision_model = get_peft_model(model.vision_model, lora_config)
-        
+
         super().__init__(text=text, num_classes=num_classes, model=model, args=args, **kwargs)
     
         self.processor = MedCLIPProcessor()
@@ -67,6 +67,12 @@ class MedCLIPForDiagnosis(CLIPBase):
         
         self.initialize_prototypes()
 
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.text_model
+        self.text_embed_dim = 512
+        self.vision_embed_dim = 512
+        
     @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes
@@ -76,6 +82,14 @@ class MedCLIPForDiagnosis(CLIPBase):
     
     def encode_image(self, images):
         return self.model.encode_image(images)
+
+    def forward(self, pixel_values, return_loss=False):
+        output = super().forward(pixel_values=pixel_values, return_loss=return_loss)
+        return output.logits_per_image
+
+    def forward(self, pixel_values, return_loss=False):
+        outputs = super().forward(pixel_values=pixel_values, return_loss=return_loss)
+        return outputs["logits"]
 
 
 

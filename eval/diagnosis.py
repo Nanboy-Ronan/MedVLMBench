@@ -28,7 +28,11 @@ class DiagnosisEvalEngine(EvalEngine):
             raise ValueError(f"Unsupported task: {task}")
         
         self.device = device 
-        self.records = []
+        self.records = {
+            "true_label": [],
+            "pred_label": [],
+            "pred_score": [],
+        }
 
     def evaluate(self, args, model):
         """Run evaluation on the classification dataset."""
@@ -36,7 +40,11 @@ class DiagnosisEvalEngine(EvalEngine):
         data_loader = DataLoader(self.dataset, batch_size=64, collate_fn=DiagnosisDataCollator(), shuffle=False)
         self.num_classes = model.num_classes
         self.init_metric_logger()
-        self.records = []
+        self.records = {
+            "true_label": [],
+            "pred_label": [],
+            "pred_score": [],
+        }
         all_true = []
         all_out = []
 
@@ -88,12 +96,9 @@ class DiagnosisEvalEngine(EvalEngine):
             out_np = np.vstack([1 - out_np, out_np]).T
 
         if self.args.save_pred:
-            record = {
-                "true_label": true_np.tolist(),
-                "pred_label": pred.cpu().numpy().tolist(),
-                "pred_score": out_np[:, 1].tolist(),
-            }
-            self.records.append(record)
+            self.records["true_label"].extend(true_np.tolist())
+            self.records["pred_label"].extend(pred.cpu().numpy().tolist())
+            self.records["pred_score"].extend(out_np[:, 1].tolist())
 
         return true_np, out_np, acc
 

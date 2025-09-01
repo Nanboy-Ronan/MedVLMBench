@@ -40,41 +40,23 @@ class PubMedCLIPForDiagnosis(CLIPBase):
     """
 
     def __init__(self, text, num_classes, args=None, *kargs, **kwargs):
-        # ------------------------------------------------------------------
-        # 1. Load PubMedCLIP (same architecture as ViT-B/32).
-        # ------------------------------------------------------------------
         model = CLIPModel.from_pretrained(_PUBMED_CLIP_REPO)
 
-        # ------------------------------------------------------------------
-        # 2. Optional: vision-side LoRA for PEFT fine-tuning.
-        # ------------------------------------------------------------------
-        if args and getattr(args, "usage", "") == "pubmedclip-img-lora":
-            lora_cfg = LoraConfig(target_modules=["k_proj", "v_proj", "q_proj"])
-            # Freeze *all* params first to ensure only LoRA adapters update.
-            for _, p in model.named_parameters():
-                p.requires_grad = False
-            model.vision_model = get_peft_model(model.vision_model, lora_cfg)
-
-        # ------------------------------------------------------------------
-        # 3. Initialise CLIPBase.
-        # ------------------------------------------------------------------
         super().__init__(text=text, num_classes=num_classes, model=model, args=args, **kwargs)
 
-        # ------------------------------------------------------------------
-        # 4. Tokenizer & image pre-processing pipeline taken from PubMedCLIP.
-        # ------------------------------------------------------------------
         self.tokenizer = CLIPTokenizer.from_pretrained(_PUBMED_CLIP_REPO)
         _feature_extractor = CLIPFeatureExtractor.from_pretrained(_PUBMED_CLIP_REPO)
         self.image_processor = ImageProcessorCallable(_feature_extractor)
-        # Same transform in training and evaluation.
         self.image_processor_evaluation = self.image_processor
 
-        # Build class prototypes from *text*.
         self.initialize_prototypes()
+    
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.text_model
+        self.text_embed_dim = 512
+        self.vision_embed_dim = 512
 
-    # ------------------------------------------------------------------
-    # Encoding helpers.
-    # ------------------------------------------------------------------
     @torch.no_grad()
     def encode_text(self, text):
         assert len(text) == self.num_classes, "#text prompts must equal num_classes"
@@ -84,6 +66,12 @@ class PubMedCLIPForDiagnosis(CLIPBase):
 
     def encode_image(self, images):
         return self.model.get_image_features(images)
+
+    def forward(self, pixel_values, return_loss=True):
+        output = super().forward(pixel_values=pixel_values, return_loss=return_loss)
+        
+        return output.logits_per_image
+
     
 
 class PubMedCLIPLPForDiagnosis(CLIPImgLPModel):
