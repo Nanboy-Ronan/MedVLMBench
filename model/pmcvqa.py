@@ -8,10 +8,11 @@ from easydict import EasyDict as edict
 
 from release.pmcvqa.model.qa_model import QA_model
 
+
 class PMCVQA(ChatMetaModel):
     def __init__(self, args=None):
         super().__init__(args)
-        
+
         # Default configuration values from the PMCVQA code snippet
         self.model_path = "./LLAMA/llama-7b-hf"
         self.checkpoint_path = "./Results/QA_no_pretrain_no_aug/Slake/checkpoint-16940"
@@ -32,27 +33,28 @@ class PMCVQA(ChatMetaModel):
         self.model = QA_model(
             model_path=self.model_path,
             ckp=self.checkpoint_path,
-            Vision_module='PMC-CLIP',
+            Vision_module="PMC-CLIP",
             visual_model_path=self.visual_model_path,
             # Other default parameters from the original code can be passed if needed,
             # If QA_model uses dataclasses internally, ensure these match the defaults.
         )
 
         # Load model checkpoint
-        ckp_file = self.checkpoint_path + '/pytorch_model.bin'
-        ckpt = torch.load(ckp_file, map_location='cpu')
+        ckp_file = self.checkpoint_path + "/pytorch_model.bin"
+        ckpt = torch.load(ckp_file, map_location="cpu")
         self.model.load_state_dict(ckpt)
         self.model.to(self.device)
         self.model.eval()
 
         # Define image transformations similar to what Slake_Dataset might have used.
         # These might need adjusting based on the dataset's original transforms.
-        self.image_transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
-        ])
+        self.image_transform = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
 
     def infer_vision_language(self, image: Image.Image, qs: str, image_size=None):
         """
@@ -70,6 +72,7 @@ class PMCVQA(ChatMetaModel):
 
         generated_text = self.tokenizer.decode(generation_ids[0], skip_special_tokens=True).strip()
         return generated_text
+
 
 if __name__ == "__main__":
     # blip_caption = BLIP(mode="caption")

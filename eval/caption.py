@@ -30,7 +30,7 @@ class CaptionEvalEngine(EvalEngine):
         device = self.args.device
         image = image.to(device, non_blocking=True)
 
-        prompt = prompt_template.format(query)
+        prompt = prompt_template.format("").strip()
         output = model.infer_vision_language(image, prompt, image_size=image_size)
         output_l = output.lower()
 
@@ -53,7 +53,7 @@ class CaptionEvalEngine(EvalEngine):
             "rougeL_recall",
             "methor",
             "exact_match",
-            "bertscore"
+            "bertscore",
             # "bert_score_precision",
             # "bert_score_recall",
             # "bert_score_f1",
