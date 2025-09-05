@@ -19,6 +19,14 @@ def get_model(args, **kwargs):
             from model.llava_med import LLaVAMed
 
             model = LLaVAMed(args=args)
+        elif args.model == "Gemma3":
+            from model.gemma3 import Gemma3
+
+            model = Gemma3(args=args)
+        elif args.model == "InternVL3":
+            from model.internvl import InternVL3
+
+            model = InternVL3(args=args)
         elif args.model == "MedGemma":
             from model.medgemma import MedGemma
 
@@ -45,7 +53,16 @@ def get_model(args, **kwargs):
             model = VILA(args=args)
         elif args.model == "Lingshu":
             from model.lingshu import Lingshu
+
             model = Lingshu(args=args)
+        elif args.model == "o3":
+            from model.gpt import o3
+
+            model = o3(args=args)
+        elif args.model == "gemini-2.5-pro":
+            from model.gemini import Gemini25Pro
+
+            model = Gemini25Pro(args=args)
         else:
             raise NotImplementedError()
     

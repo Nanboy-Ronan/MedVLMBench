@@ -36,8 +36,7 @@ mkdir data
 | SLAKE                      | VQA       | Done   |
 | PathVQA                    | VQA       | Done   |
 | VQA-RAD                    | VQA       | Done   |
-| Harvard-FairVLMed10k       | VQA       | Done   |
-| MIMIC_CXR              | Caption   | Done   |
+| FairVLMed       | VQA       | Done   |
 | PneumoniaMNIST       | Diagnosis | Done   |
 | BreastMNIST          | Diagnosis | Done   |
 | DermaMNIST           | Diagnosis | Done   |
@@ -46,40 +45,41 @@ mkdir data
 | Drishti                        | Diagnosis | Done   |
 | ChestXray            | Diagnosis | Done   |
 | GF3300               | Diagnosis | Done   |
-| HarvardFairVLMed10k-caption    | Caption   | Done   |
 | CheXpert             | Diagnosis | Done   |
 | PAPILA               | Diagnosis | Done   |
-| HarvardFairVLMed10k  | Diagnosis | Done   |
+| FairVLMed  | Diagnosis | Done   |
 
 
 ## Model
-| Model        | Type      | Status |
-|--------------|-----------|--------|
-| BLIP         | VQA/Caption/Diagnosis | Done |
-| LLaVA-1.5    | VQA/Caption           | Done |
-| BLIP2-2.7b   | VQA/Caption/Diagnosis | Done |
-| LLaVA-Med    | VQA/Caption           | Done |
-| MedGemma     | VQA                   | Done |
-| Qwen2-VL     | VQA                   | Done |
-| Qwen25-VL    | VQA                   | Done |
-| XGenMiniV1   | VQA/Caption           | Done |
-| XrayGPT      | VQA/Caption/Diagnosis | Done |
-| NVILA        | VQA                   | Done |
-| VILA-M3      | VQA                   | Done |
-| VILA1.5      | VQA                   | Done |
-| Lingshu      | VQA                   | Done |
-| BioMedCLIP   | Diagnosis             | Done |
-| CLIP         | Diagnosis             | Done |
-| MedCLIP      | Diagnosis             | Done |
-| PMCCLIP      | Diagnosis             | Done |
-| PLIP         | Diagnosis             | Done |
-| MedSigLIP    | Diagnosis             | Done |
-| PubMedCLIP   | Diagnosis             | Done |
-| SigLIP       | Diagnosis             | Done |
+| Model        | Type      | Evaluation | Training |
+|--------------|-----------|--------|--------------|
+| o3 | VQA | Done | NA |
+| Gemini 2.5 Pro | VQA | Done | NA |
+| InternVL3 | VQA | Done | Coming Soon |
+| LLaVA-1.5    | VQA           | Done | Done |
+| LLaVA-Med | VQA | Done | Done |
+| Gemma3 | VQA         | Done | Coming Soon |
+| MedGemma     | VQA                   | Done | Done |
+| Qwen2-VL     | VQA                   | Done | Coming Soon |
+| Qwen25-VL    | VQA                   | Done | Coming Soon |
+| NVILA        | VQA                   | Done | Done |
+| VILA-M3      | VQA                   | Done | Done |
+| VILA1.5      | VQA                   | Done | Done |
+| Lingshu      | VQA                   | Done | Done |
+| BLIP | Diagnosis/VQA | Done | Done |
+| BLIP2 | Diagnosis/VQA | Done | Done |
+| XrayGPTVQA | Diagnosis/VQA | Done | Done |
+| BioMedCLIP   | Diagnosis             | Done | Done |
+| CLIP         | Diagnosis             | Done | Done |
+| MedCLIP      | Diagnosis             | Done | Done |
+| PMCCLIP      | Diagnosis             | Done | Done |
+| PLIP         | Diagnosis             | Done | Done |
+| MedSigLIP    | Diagnosis             | Done | Done |
+| PubMedCLIP   | Diagnosis             | Done | Done |
+| SigLIP       | Diagnosis             | Done | Done |
 
 
 ## Notebook Tutorial
-
 We offer some examples of how to use our package through the notebook. Coming soon.
 
 <!-- | Feature                  | Notebook                                                                 |
@@ -126,8 +126,45 @@ python run_eval.py \
 
 ### Training
 
-
-
 #### Diagnosis
 
+
 #### VQA
+
+Example
+```bash
+deepspeed run_train.py \
+    --peft lora --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --deepspeed ./script/zero3.json \
+    --task vqa --dataset SLAKE \
+    --model LLaVA-1.5 --version v1 \
+    --image_path ./data/SLAKE/imgs \
+    --model_path ./pretrained_models/llava-v1.5-7b \
+    --mm_projector_type mlp2x_gelu \
+    --mm_vision_select_layer -2 \
+    --mm_use_im_start_end False \
+    --mm_use_im_patch_token False \
+    --image_aspect_ratio pad \
+    --group_by_modality_length True \
+    --bf16 True \
+    --output_dir ./log \
+    --cache_dir ./cache \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 8 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 2 \
+    --evaluation_strategy "no" \
+    --save_strategy "steps" \
+    --save_steps 50000 \
+    --save_total_limit 1 \
+    --learning_rate 2e-4 \
+    --weight_decay 0. \
+    --warmup_ratio 0.03 \
+    --lr_scheduler_type "cosine" \
+    --logging_steps 1 \
+    --tf32 True \
+    --model_max_length 2048 \
+    --gradient_checkpointing True \
+    --dataloader_num_workers 4 \
+    --tune_modules L
+```

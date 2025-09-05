@@ -75,6 +75,8 @@ def collect_args():
 
 
 if __name__ == "__main__":
+    torch._dynamo.config.cache_size_limit = 128
+
     args = collect_args()
 
     logger = basics.setup_logger("eval", args.output_dir, "eval.log", screen=True, tofile=True)
