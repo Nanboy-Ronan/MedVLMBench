@@ -82,13 +82,12 @@ mkdir data
 ## Notebook Tutorial
 We offer some examples of how to use our package through the notebook. Coming soon.
 
-<!-- | Feature                  | Notebook                                                                 |
+| Feature                  | Notebook                                                                 |
 |---------------------------|--------------------------------------------------------------------------|
-| Off-the-shelf Diagnosis          | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
-| Off-the-shelf VQA | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
-| Off-the-shelf Captioning              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
-| LP Diagnosis              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
-| LoRA Adaptation VQA              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) | -->
+| Off-the-shelf Diagnosis          | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/Nanboy-Ronan/MedVLMBench/blob/main/examples/MedVLMBench_OTS_Diagnosis.ipynb) |
+| Off-the-shelf VQA | [![Open In Colab](https://github.com/Nanboy-Ronan/MedVLMBench/blob/main/examples/MedVLMBench_OTS_VQA.ipynb) |
+| LP Diagnosis              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/Nanboy-Ronan/MedVLMBench/blob/main/examples/MedVLMBench_LP_Diagnosis.ipynb) |
+| LoRA Adaptation VQA              | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/Nanboy-Ronan/MedVLMBench/blob/main/examples/MedVLMBench_LoRA_VQA.ipynb) |
 
 
 ## Implementation Logic
