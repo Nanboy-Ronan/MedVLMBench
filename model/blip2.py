@@ -29,6 +29,7 @@ class BLIP2(ChatMetaModel):
 class BLIP2ForDiagnosis(CLIPBase):
     def __init__(self, text, num_classes, args=None, model_name="Salesforce/blip2-itm-vit-g", *kargs, **kwargs):
         model = Blip2ForImageTextRetrieval.from_pretrained(model_name)
+
         if args and args.usage == "clip-img-lora":
             lora_config = LoraConfig(target_modules=["qkv"]) # qkv for image encoder and ("query", "key", "value") for qformer
             for name, para in model.named_parameters():
