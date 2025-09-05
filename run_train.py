@@ -194,6 +194,10 @@ if __name__ == "__main__":
     model_wrapped = get_model(args=args, device=args.device.type)
     model_wrapped.load_for_training(args.model_path)
 
+    total_params = sum(p.numel() for p in model_wrapped.parameters())
+    trainable_params = sum(p.numel() for p in model_wrapped.parameters() if p.requires_grad)
+    trainable_percentage = 100 * trainable_params / total_params
+
     dataset = get_dataset(args, image_processor_callable=getattr(model_wrapped, "image_processor", None))
     train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
     train_engine.train()

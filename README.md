@@ -80,11 +80,9 @@ mkdir data
 
 
 ## Notebook Tutorial
+We offer some examples of how to use our package through the notebook. Coming soon.
 
-Comming Soon.
-<!-- We offer some examples of how to use our package through the notebook.
-
-| Feature                  | Notebook                                                                 |
+<!-- | Feature                  | Notebook                                                                 |
 |---------------------------|--------------------------------------------------------------------------|
 | Off-the-shelf Diagnosis          | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
 | Off-the-shelf VQA | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com) |
