@@ -102,7 +102,7 @@ Example
 ```bash
 python run_eval.py \
     --task diagnosis --usage clip-zs --dataset PAPILA --split test \
-    --image_path /home/nanboy/projects/aip-xli135/nanboy/FairMedFM-DNE/data \
+    --image_path ./data \
     --exp_path ./log \
     --model CLIP --model_path "original_pretrained" \
     --save_pred \
@@ -126,6 +126,19 @@ python run_eval.py \
 ### Training
 
 #### Diagnosis
+In our code, we have implemented more fine-tune method than the things reported in the paper. Specifically, you can do linear probing (`lp`), linear probing with the image encoder (`img-lora-lp`), and CLIP with lora finetune on image encoder (`clip-img-lora`).
+
+Example.
+```bash
+python run_train.py \
+    --task diagnosis --usage lp --dataset HAM10000 --split train \
+    --image_path ./data \
+    --output_dir ./log \
+    --model CLIP --model_path not_given \
+    --cache_dir ./cache \
+    --num_train_epochs 50 \
+    --learning_rate 5e-5
+```
 
 
 #### VQA
