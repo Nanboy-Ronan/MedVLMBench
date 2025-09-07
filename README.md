@@ -17,6 +17,18 @@ MedVLMBench is the first unified benchmark for systematically evaluating general
 - [Abstract](#abstract)
 - [Citation](#citation)
 
+
+## Abstract
+
+>**Background:** Vision–Language Models (VLMs) have shown promise in automating image diagnosis and interpretation in clinical settings. However, developing medical-specialist VLMs requires substantial computational resources and carefully curated datasets, and it remains unclear under which conditions generalist and medical specialist VLMs each perform best.
+
+>**Methods:** This paper introduces MedVLMBench, the first unified benchmark for systematically evaluating generalist and medical-specialist VLMs. We assessed 18 models spanning contrastive and generative paradigms on 10 publicly available datasets across radiology, pathology, dermatology, and ophthalmology, encompassing 144 diagnostic and 80 VQA settings. MedVLMBench focusing on assessing both in-domain (ID) and out-of-domain (OOD) performance, with off-the-shelf and parameter-efficient fine-tuning (e.g., linear probing, LoRA). Diagnostic classification tasks were evaluated using AUROC, while visual question answering (VQA) tasks were assessed with BLEU-1, ROUGE-L, Exact Match, F1 Score, and GPT-based semantic scoring, covering both open- and closed-ended formats. Computational efficiency was estimated relative to the cost of full medical pretraining.
+
+>**Results:** As expected, off-the-shelf medical VLMs generally outperformed generalist VLMs on ID tasks given their pretraining. However, with lightweight fine-tuning, general-purpose VLMs achieved superior performance in most of ID task evaluations and demonstrated better generalization on OOD tasks in approximately all comparisons. Fine-tuning required only 3% of the total parameters associated with full medical pretraining. In contrast, fine-tuned medical VLMs showed degraded performance even on ID tasks when subjected to rigorous hyperparameter optimization, further highlighting their limited adaptability.
+
+>**Conclusions:** This study highlights the complementary strengths of medical-specialist and generalist VLMs. Specialists remain valuable in modality-aligned use cases, but we find that efficiently fine-tuned generalist VLMs can achieve comparable or even superior performance in most tasks, particularly when transferring to unseen or rare OOD medical modalities. These results suggest that generalist VLMs, rather than being constrained by their lack of medical-specific pretraining, may offer a scalable and cost-effective pathway for advancing clinical AI development.
+
+
 ## Getting Started
 
 ### Prerequisites
@@ -223,25 +235,15 @@ deepspeed run_train.py \
 
 </details>
 
-## Abstract
-
-**Background:** Vision–Language Models (VLMs) have shown promise in automating image diagnosis and interpretation in clinical settings. However, developing medical-specialist VLMs requires substantial computational resources and carefully curated datasets, and it remains unclear under which conditions generalist and medical specialist VLMs each perform best.
-
-**Methods:** This paper introduces MedVLMBench, the first unified benchmark for systematically evaluating generalist and medical-specialist VLMs. We assessed 18 models spanning contrastive and generative paradigms on 10 publicly available datasets across radiology, pathology, dermatology, and ophthalmology, encompassing 144 diagnostic and 80 VQA settings. MedVLMBench focusing on assessing both in-domain (ID) and out-of-domain (OOD) performance, with off-the-shelf and parameter-efficient fine-tuning (e.g., linear probing, LoRA). Diagnostic classification tasks were evaluated using AUROC, while visual question answering (VQA) tasks were assessed with BLEU-1, ROUGE-L, Exact Match, F1 Score, and GPT-based semantic scoring, covering both open- and closed-ended formats. Computational efficiency was estimated relative to the cost of full medical pretraining.
-
-**Results:** As expected, off-the-shelf medical VLMs generally outperformed generalist VLMs on ID tasks given their pretraining. However, with lightweight fine-tuning, general-purpose VLMs achieved superior performance in most of ID task evaluations and demonstrated better generalization on OOD tasks in approximately all comparisons. Fine-tuning required only 3% of the total parameters associated with full medical pretraining. In contrast, fine-tuned medical VLMs showed degraded performance even on ID tasks when subjected to rigorous hyperparameter optimization, further highlighting their limited adaptability.
-
-**Conclusions:** This study highlights the complementary strengths of medical-specialist and generalist VLMs. Specialists remain valuable in modality-aligned use cases, but we find that efficiently fine-tuned generalist VLMs can achieve comparable or even superior performance in most tasks, particularly when transferring to unseen or rare OOD medical modalities. These results suggest that generalist VLMs, rather than being constrained by their lack of medical-specific pretraining, may offer a scalable and cost-effective pathway for advancing clinical AI development.
-
 ## Citation
 
 If you find this repository useful, please consider citing our paper:
 
 ```
-@article{MedVLMBench,
-  title={MedVLMBench: A Unified Benchmark for Generalist and Specialist Medical Vision-Language Models},
-  author={Anonymous},
-  journal={Anonymous},
-  year={2024}
+@article{zhong2025can,
+  title={Can Common VLMs Rival Medical VLMs? Evaluation and Strategic Insights},
+  author={Zhong, Yuan and Jin, Ruinan and Li, Xiaoxiao and Dou, Qi},
+  journal={arXiv preprint arXiv:2506.17337},
+  year={2025}
 }
 ```
