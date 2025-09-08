@@ -16,6 +16,7 @@ MedVLMBench is the first unified benchmark for systematically evaluating general
   - [Command-Line Interface](#command-line-interface)
 - [Abstract](#abstract)
 - [Citation](#citation)
+- [License](#license)
 
 
 ## Abstract
@@ -67,6 +68,7 @@ cd ..
 ```
 
 ## Available Models and Datasets
+This code base mainly supports the image diagnostics and the VQA tasks. It also supports image captioning, which does not report the results in the paper.
 
 <details>
 <summary><b>Supported Datasets</b></summary>
@@ -141,25 +143,44 @@ We offer some examples of how to use our package through the notebook.
 
 ### Command-Line Interface
 
-#### Off-the-shelf Evaluation
+This section provides detailed documentation for the command-line arguments used in `run_eval.py` and `run_train.py`.
 
-<details>
-<summary><b>Diagnosis Example</b></summary>
+#### `run_eval.py`
+
+This script is used for evaluating the performance of a trained model on a given dataset.
+
+**Usage:**
 
 ```bash
-python run_eval.py \
---task diagnosis --usage clip-zs --dataset PAPILA --split test \
---image_path ./data \
---exp_path ./log \
---model CLIP --model_path "original_pretrained" \
---save_pred \
---cache_dir ./cache
+python run_eval.py [OPTIONS]
 ```
 
-</details>
+**Arguments:**
 
-<details>
-<summary><b>VQA Example</b></summary>
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `--task` | str | `vqa` | The task to perform. Choices: `vqa`, `diagnosis`, `caption`. |
+| `--dataset` | str | `SLAKE` | The dataset to use for evaluation. |
+| `--image_path` | str | | The local path to the directory containing the images. |
+| `--split` | str | `all` | The dataset split to use for evaluation (e.g., `test`, `val`). |
+| `--seed` | int | `0` | The random seed for reproducibility. |
+| `--print_freq` | int | `10` | The frequency of logging during evaluation. |
+| `--save_pred` | bool | `False` | Whether to save the model's predictions. |
+| `--gpt_eval` | bool | `False` | Whether to use GPT for evaluation (for VQA tasks). |
+| `--hash_id` | str | | A unique hash ID for the experiment. |
+| `--model` | str | `BLIP` | The model to evaluate. |
+| `--context_length` | int | `77` | The context length for the model. |
+| `--model_path` | str | | The path to the pretrained model checkpoint. |
+| `--model_base` | str | | The base model name. |
+| `--usage` | str | | The usage mode for the model. |
+| `--device` | str | `cuda` | The device to use for evaluation (e.g., `cuda`, `cpu`). |
+| `--cache_dir` | str | | The directory to cache pretrained models and other data. |
+| `--eval_print_freq` | int | `100` | The logging frequency (in steps) during evaluation. |
+| `--exp_path` | str | `./output` | The path to the experiment output directory. |
+| `--wandb_name` | str | `baseline` | The name for the Weights & Biases run. |
+| `--if_wandb` | bool | `False` | Whether to use Weights & Biases for logging. |
+
+**Example:**
 
 ```bash
 python run_eval.py \
@@ -171,30 +192,79 @@ python run_eval.py \
 --save_pred
 ```
 
-</details>
+---
 
-#### Training
+#### `run_train.py`
 
-<details>
-<summary><b>Diagnosis Example</b></summary>
+This script is used for training or fine-tuning a model on a given dataset.
 
-In our code, we have implemented more fine-tune method than the things reported in the paper. Specifically, you can do linear probing (`lp`), linear probing with the image encoder (`img-lora-lp`), and CLIP with lora finetune on image encoder (`clip-img-lora`).
+**Usage:**
 
 ```bash
-python run_train.py \
---task diagnosis --usage lp --dataset HAM10000 --split train \
---image_path ./data \
---output_dir ./log \
---model CLIP --model_path not_given \
---cache_dir ./cache \
---num_train_epochs 50 \
---learning_rate 5e-5
+python run_train.py [OPTIONS]
 ```
 
-</details>
+**Arguments:**
 
-<details>
-<summary><b>VQA Example</b></summary>
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `task` | str | `vqa` | The task to perform. Choices: `vqa`, `diagnosis`, `caption`. |
+| `dataset` | str | `SLAKE` | The dataset to use for training. |
+| `peft` | str | | The parameter-efficient fine-tuning method to use. |
+| `image_path` | str | | The local path to the directory containing the images. |
+| `image_aspect_ratio` | str | `pad` | The aspect ratio handling for images. |
+| `optim` | str | `adamw_torch` | The optimizer to use for training. |
+| `bits` | int | `16` | The number of bits to use for quantization. |
+| `tune_modules` | str | `VML` | The modules to tune during training (V: vision, M: multimodal, L: language). |
+| `lora_enable` | bool | `False` | Whether to enable LoRA for fine-tuning. |
+| `lora_r` | int | `128` | The rank for LoRA. |
+| `lora_alpha` | int | `256` | The alpha parameter for LoRA. |
+| `lora_dropout` | float | `0.05` | The dropout rate for LoRA. |
+| `lora_weight_path` | str | | The path to LoRA weights. |
+| `lora_bias` | str | `none` | The bias to use for LoRA. |
+| `num_train_epochs` | int | | The number of training epochs. |
+| `learning_rate` | float | `3e-5` | The learning rate for training. |
+| `eval_print_freq` | int | `100` | The frequency of logging during evaluation. |
+| `save_pred` | bool | `False` | Whether to save the model's predictions. |
+| `save_total_limit` | int | `2` | The maximum number of checkpoints to save. |
+| `mm_projector_lr` | float | | The learning rate for the multimodal projector. |
+| `remove_unused_columns` | bool | `False` | Whether to remove unused columns from the dataset. |
+| `mpt_attn_impl` | str | `triton` | The implementation for MPT attention. |
+| `model_max_length` | int | `2048` | The maximum sequence length for the model. |
+| `double_quant` | bool | `True` | Whether to use double quantization. |
+| `quant_type` | str | `nf4` | The quantization data type to use. |
+| `group_by_modality_length` | bool | `False` | Whether to group inputs by modality length. |
+| `deepspeed_plugin` | str | | The DeepSpeed plugin to use. |
+| `model` | str | `LLaVA` | The model to train. |
+| `version` | str | `v1` | The model version. |
+| `context_length` | int | `77` | The context length for the model. |
+| `model_path` | str | | The path to the pretrained model checkpoint. |
+| `model_base` | str | | The base model name. |
+| `freeze_backbone` | bool | `False` | Whether to freeze the backbone of the model. |
+| `usage` | str | | The usage mode for the model. |
+| `tune_mm_mlp_adapter` | bool | `False` | Whether to tune the multimodal MLP adapter. |
+| `freeze_mm_mlp_adapter` | bool | `False` | Whether to freeze the multimodal MLP adapter. |
+| `mm_vision_select_layer` | int | `-2` | The layer to select from the vision encoder. |
+| `pretrain_mm_mlp_adapter` | str | | The path to a pretrained multimodal MLP adapter. |
+| `mm_projector_type` | str | `mlp2x_gelu` | The type of multimodal projector to use. |
+| `mm_use_im_start_end` | bool | `False` | Whether to use start and end tokens for images. |
+| `mm_use_im_patch_token` | bool | `True` | Whether to use patch tokens for images. |
+| `mm_patch_merge_type` | str | `flat` | The patch merging type to use. |
+| `mm_vision_select_feature` | str | `patch` | The feature to select from the vision encoder. |
+| `longvila_sampler` | bool | `False` | Whether to use the LongVILA sampler. |
+| `seq_parallel_size` | int | `-1` | The sequence parallel size. |
+| `vision_tower_lr` | float | | The learning rate for the vision tower. |
+| `num_time_tokens` | int | `0` | The number of time tokens to use. |
+| `time_token_format` | str | `<t{t}>` | The format for time tokens. |
+| `soft_ce_std` | float | `1.0` | The standard deviation for soft cross-entropy. |
+| `max_num_images` | int | `6` | The maximum number of images to use. |
+| `debug_e2e` | bool | `False` | Whether to enable end-to-end debugging. |
+| `cache_dir` | str | | The directory to cache pretrained models and other data. |
+| `if_wandb` | bool | `False` | Whether to use Weights &amp; Biases for logging. |
+| `wandb_name` | str | | The name for the Weights &amp; Biases run. |
+| `split` | str | `train` | The dataset split to use for training. |
+
+**Example:**
 
 ```bash
 deepspeed run_train.py \
@@ -233,7 +303,6 @@ deepspeed run_train.py \
 --tune_modules L
 ```
 
-</details>
 
 ## Citation
 
@@ -247,3 +316,7 @@ If you find this repository useful, please consider citing our paper:
   year={2025}
 }
 ```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
