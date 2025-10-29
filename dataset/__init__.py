@@ -7,7 +7,7 @@ from easydict import EasyDict as edict
 from collections import Counter
 
 from dataset.utils import get_transform
-from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA, MedXpertQA
+from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA, MedXpertQA, OmniMedVQA
 from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
 from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset, CXPDataset, PAPILADataset, FairVLMed10kDataset
 
@@ -17,6 +17,7 @@ datasets = {
     "VQA-RAD-vqa": VQARAD,
     "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
     "MedXpertQA-vqa": MedXpertQA,
+    "OmniMedVQA-vqa": OmniMedVQA,
     "MIMIC_CXR-caption": MIMIC_CXRCaption,
     "PneumoniaMNIST-diagnosis": PneumoniaMNIST,
     "BreastMNIST-diagnosis": BreastMNIST,

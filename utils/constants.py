@@ -27,7 +27,14 @@ MODELS = CLIP_MODELS + LANGUAGE_MODELS
 
 
 # datasets
-VQA_DATASETS = ["SLAKE", "PathVQA", "VQA-RAD", "Harvard-FairVLMed10k", "MedXpertQA"]
+VQA_DATASETS = [
+    "SLAKE",
+    "PathVQA",
+    "VQA-RAD",
+    "Harvard-FairVLMed10k",
+    "MedXpertQA",
+    "OmniMedVQA",
+]
 CAPTION_DATASETS = ["HarvardFairVLMed10k", "MIMIC_CXR"]
 DIAGNOSIS_DATASETS = [
     "PneumoniaMNIST",

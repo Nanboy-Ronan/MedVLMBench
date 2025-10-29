@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 import pandas as pd
 import numpy as np
 from PIL import Image
@@ -249,9 +250,7 @@ class MedXpertQA(VQADataset):
             paths.append(path)
 
         if not images:
-            # create a blank placeholder to keep pipeline consistent
-            placeholder = Image.new("RGB", (224, 224), color=(255, 255, 255))
-            return placeholder, [""], placeholder.size
+            raise RuntimeError("No images found for the given image files.")
 
         if len(images) == 1:
             return images[0], paths, images[0].size
@@ -291,11 +290,163 @@ class MedXpertQA(VQADataset):
         return {
             "image": image,
             "query": question,
-            "label": answer,
+            "label": answer, # letter only
             "is_open": True,
-            "prompt_template": prompt_template,
+            "prompt_template": prompt_template, # '{}\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
             "image_path": ";".join(image_paths),
+        }
+
+
+class OmniMedVQA(VQADataset):
+    _SPLIT_BUCKETS = {
+        "train": (0.0, 0.8),
+        "validation": (0.8, 0.9),
+        "test": (0.9, 1.0),
+    }
+
+    def __init__(self, data_args, split, transform=None):
+        super().__init__(data_args, split, transform)
+
+        if split not in ["train", "validation", "test", "all"]:
+            raise ValueError(f"Unsupported split '{split}' for OmniMedVQA")
+
+        self.name = "OmniMedVQA"
+        self.modality = "medical"
+
+        self.data_dir = data_args.image_path
+        self.qa_root = os.path.join(self.data_dir, "QA_information")
+
+        if not os.path.isdir(self.qa_root):
+            fallback_root = self._locate_nested_root(self.data_dir)
+            if fallback_root is None:
+                raise FileNotFoundError(
+                    f"OmniMedVQA QA information directory not found: {self.qa_root}"
+                )
+            self.data_dir = fallback_root
+            self.qa_root = os.path.join(self.data_dir, "QA_information")
+
+        records = self._load_records()
+
+        if split != "all":
+            lower, upper = self._SPLIT_BUCKETS[split]
+            records = [
+                rec
+                for rec in records
+                if lower <= self._split_selector(rec["question_id"]) < upper
+            ]
+
+        self.samples = records
+
+    def _split_selector(self, question_id):
+        digest = hashlib.md5(question_id.encode("utf-8")).hexdigest()
+        bucket = int(digest[:8], 16) / 0x100000000
+        return bucket
+
+    def _locate_nested_root(self, base_dir):
+        try:
+            for entry in os.listdir(base_dir):
+                candidate = os.path.join(base_dir, entry)
+                if not os.path.isdir(candidate):
+                    continue
+                qa_dir = os.path.join(candidate, "QA_information")
+                if os.path.isdir(qa_dir):
+                    return candidate
+        except FileNotFoundError:
+            return None
+        return None
+
+    def _load_records(self):
+        samples = []
+        missing_images = 0
+        for access_type in ["Open-access", "Restricted-access"]:
+            dir_path = os.path.join(self.qa_root, access_type)
+            if not os.path.isdir(dir_path):
+                continue
+            for filename in sorted(os.listdir(dir_path)):
+                if not filename.endswith(".json"):
+                    continue
+                annotation_path = os.path.join(dir_path, filename)
+                with open(annotation_path, "r", encoding="utf-8") as f:
+                    annotations = json.load(f)
+
+                for record in annotations:
+                    rel_path = record.get("image_path", "").strip()
+                    abs_path = os.path.normpath(os.path.join(self.data_dir, rel_path))
+                    if not os.path.exists(abs_path):
+                        missing_images += 1
+                        continue
+                    record["_abs_image_path"] = abs_path
+                    record["_access_type"] = access_type
+                    samples.append(record)
+
+        if not samples:
+            raise RuntimeError(
+                "No OmniMedVQA samples found with accessible images. "
+                "Please ensure the dataset is correctly downloaded and the image paths are valid."
+            )
+
+        if missing_images > 0:
+            print(
+                f"[OmniMedVQA] Skipped {missing_images} annotations due to missing image files."
+            )
+
+        return samples
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        sample = self.samples[index]
+
+        image_path = sample["_abs_image_path"]
+        with Image.open(image_path) as img:
+            image = img.convert("RGB")
+        image_size = image.size
+
+        question = sample["question"].strip()
+        answer_text = sample.get("gt_answer", "").strip()
+
+        option_keys = sorted(k for k in sample.keys() if k.startswith("option_"))
+        options = []
+        answer_letter = None
+        normalized_answer = answer_text.lower()
+        for key in option_keys:
+            letter = key.split("_")[-1]
+            text = str(sample[key]).strip()
+            options.append((letter, text))
+            if normalized_answer and normalized_answer == text.lower():
+                answer_letter = letter.upper()
+
+        prompt_template = "{}"
+        is_open = True
+
+        if options:
+            option_lines = "\n".join(f"({letter}) {text}" for letter, text in options)
+            prompt_template = (
+                "{}\nOptions:\n"
+                + option_lines
+                + "\nAnswer with the single letter corresponding to the best choice."
+            )
+            if answer_letter is None:
+                # fall back to textual answer if it does not match provided options
+                answer_letter = answer_text.strip()
+            is_open = len(answer_letter) != 1 or not answer_letter.isalpha()
+        else:
+            answer_letter = answer_text.strip()
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+
+        return {
+            "image": image,
+            "query": question,
+            "label": answer_letter, # TODO answer_letter is a bad choice and need to be updated.
+            "is_open": is_open, # Not important here
+            "prompt_template": prompt_template, # '{}\nOptions:\n(A) Biopsy\n(B) CT scan\n(C) Colonoscopy\n(D) Fundus imaging\nAnswer with the single letter corresponding to the best choice.'
+            "image_size": image_size,
+            "image_path": image_path,
         }
 
 
