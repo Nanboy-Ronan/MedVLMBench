@@ -99,6 +99,13 @@ cd data
 git clone https://huggingface.co/datasets/TsinghuaC3I/MedXpertQA
 ```
 
+For OminiMedVQA.
+
+```bash
+cd data
+git clone https://huggingface.co/datasets/foreverbeliever/OmniMedVQA
+```
+
 <details>
 <summary><b>Supported Models</b></summary>
 
