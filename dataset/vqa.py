@@ -1,4 +1,5 @@
 import os
+import json
 import pandas as pd
 import numpy as np
 from PIL import Image
@@ -197,6 +198,104 @@ class HarvardFairVLMed10kVQA(VQADataset):
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
+        }
+
+
+class MedXpertQA(VQADataset):
+    _SPLIT_MAP = {
+        "train": ["dev"],
+        "validation": ["dev"],
+        "test": ["test"],
+        "all": ["dev", "test"],
+    }
+
+    def __init__(self, data_args, split, transform=None):
+        super().__init__(data_args, split, transform)
+
+        if split not in self._SPLIT_MAP:
+            raise ValueError(f"Unsupported split '{split}' for MedXpertQA")
+
+        self.name = "MedXpertQA-MM"
+        self.modality = "medical"
+
+        self.data_dir = data_args.image_path
+        self.image_root = os.path.join(self.data_dir, "images")
+        self.annotation_root = os.path.join(self.data_dir, "MM")
+
+        self.samples = []
+        for subset in self._SPLIT_MAP[split]:
+            annotation_path = os.path.join(self.annotation_root, f"{subset}.jsonl")
+            if not os.path.exists(annotation_path):
+                raise FileNotFoundError(f"MedXpertQA annotation file not found: {annotation_path}")
+
+            with open(annotation_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    record = json.loads(line)
+                    record["_subset"] = subset
+                    self.samples.append(record)
+
+    def __len__(self):
+        return len(self.samples)
+
+    def _load_and_merge_images(self, image_files):
+        images = []
+        paths = []
+        for image_file in image_files:
+            path = os.path.join(self.image_root, image_file)
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"MedXpertQA image not found: {path}")
+            with Image.open(path) as img:
+                images.append(img.convert("RGB"))
+            paths.append(path)
+
+        if not images:
+            # create a blank placeholder to keep pipeline consistent
+            placeholder = Image.new("RGB", (224, 224), color=(255, 255, 255))
+            return placeholder, [""], placeholder.size
+
+        if len(images) == 1:
+            return images[0], paths, images[0].size
+
+        target_height = max(img.height for img in images)
+        resized = []
+        total_width = 0
+        for img in images:
+            if img.height != target_height:
+                new_width = int(img.width * target_height / img.height)
+                img = img.resize((new_width, target_height), Image.BICUBIC)
+            resized.append(img)
+            total_width += img.width
+
+        canvas = Image.new("RGB", (total_width, target_height), color=(255, 255, 255))
+        x_offset = 0
+        for img in resized:
+            canvas.paste(img, (x_offset, 0))
+            x_offset += img.width
+
+        return canvas, paths, canvas.size
+
+    def __getitem__(self, index):
+        sample = self.samples[index]
+
+        question = sample["question"].strip()
+        answer = sample["label"].strip()
+        image_files = sample.get("images", [])
+
+        image, image_paths, image_size = self._load_and_merge_images(image_files)
+
+        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice."
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return {
+            "image": image,
+            "query": question,
+            "label": answer,
+            "is_open": True,
+            "prompt_template": prompt_template,
+            "image_size": image_size,
+            "image_path": ";".join(image_paths),
         }
 
 

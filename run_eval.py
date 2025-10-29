@@ -97,8 +97,8 @@ if __name__ == "__main__":
 
     model_wrapped = get_model(args=args, device=args.device)
 
-    total_params = sum(p.numel() for p in model_wrapped.parameters())
-    args.logger.info(f"Total number of parameters: {total_params/1e6:.2f}M")
+    # total_params = sum(p.numel() for p in model_wrapped.parameters())
+    # args.logger.info(f"Total number of parameters: {total_params/1e6:.2f}M")
 
     if args.model_path != "original_pretrained":
         model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)

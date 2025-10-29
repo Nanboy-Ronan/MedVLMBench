@@ -91,6 +91,14 @@ cd ..
 
 </details>
 
+
+For MedXpertQA.
+
+```bash
+cd data
+git clone https://huggingface.co/datasets/TsinghuaC3I/MedXpertQA
+```
+
 <details>
 <summary><b>Supported Models</b></summary>
 
