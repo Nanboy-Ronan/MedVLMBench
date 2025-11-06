@@ -61,11 +61,11 @@ def collect_args():
         constants, f"{str.upper(args.task)}_DATASETS"
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
-    args.save_folder = os.path.join(
+    args.output_dir = os.path.join(
         args.exp_path, args.task, args.dataset, args.model, f"eval_seed{args.seed}", os.path.basename(args.model_path)
     )
 
-    basics.creat_folder(args.save_folder)
+    basics.creat_folder(args.output_dir)
 
     if args.cache_dir is not None:
         os.environ["HF_HOME"] = args.cache_dir
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     args = collect_args()
 
-    logger = basics.setup_logger("eval", args.save_folder, "eval.log", screen=True, tofile=True)
+    logger = basics.setup_logger("eval", args.output_dir, "eval.log", screen=True, tofile=True)
     logger.info("Using following arguments for evaluation.")
     logger.info(args)
 
@@ -97,10 +97,13 @@ if __name__ == "__main__":
 
     model_wrapped = get_model(args=args, device=args.device)
 
+    # total_params = sum(p.numel() for p in model_wrapped.parameters())
+    # args.logger.info(f"Total number of parameters: {total_params/1e6:.2f}M")
+
     if args.model_path != "original_pretrained":
         model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
 
-    dataset = get_dataset(args, image_processor_callable=model_wrapped.image_processor_callable)
+    dataset = get_dataset(args, getattr(model_wrapped, "image_processor", None))
 
     eval_engine = get_eval_engine(args=args, dataset=dataset)
     eval_engine.evaluate(args=args, model=model_wrapped)

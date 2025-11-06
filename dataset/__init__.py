@@ -7,34 +7,30 @@ from easydict import EasyDict as edict
 from collections import Counter
 
 from dataset.utils import get_transform
-from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA
+from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA, MedXpertQA, OmniMedVQA
 from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
-from dataset.diagnosis import (
-    PneumoniaMNIST,
-    BreastMNIST,
-    DermaMNIST,
-    Camelyon17,
-    HAM10000Dataset,
-    DrishtiDataset,
-    ChestXrayDataset,
-    GF3300Dataset,
-)
+from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset, CXPDataset, PAPILADataset, FairVLMed10kDataset
 
 datasets = {
     "SLAKE-vqa": SLAKE,
     "PathVQA-vqa": PathVQA,
     "VQA-RAD-vqa": VQARAD,
     "Harvard-FairVLMed10k-vqa": HarvardFairVLMed10kVQA,
-    "Harvard-FairVLMed10k-caption": HarvardFairVLMed10kCaption,
+    "MedXpertQA-vqa": MedXpertQA,
+    "OmniMedVQA-vqa": OmniMedVQA,
     "MIMIC_CXR-caption": MIMIC_CXRCaption,
     "PneumoniaMNIST-diagnosis": PneumoniaMNIST,
     "BreastMNIST-diagnosis": BreastMNIST,
     "DermaMNIST-diagnosis": DermaMNIST,
     "Camelyon17-diagnosis": Camelyon17,
     "HAM10000-diagnosis": HAM10000Dataset,
-    "Drishti-diagnosis": DrishtiDataset,
+    "Drishti": DrishtiDataset,
     "ChestXray-diagnosis": ChestXrayDataset,
     "GF3300-diagnosis": GF3300Dataset,
+    "HarvardFairVLMed10k-caption": HarvardFairVLMed10kCaption,
+    "CheXpert-diagnosis": CXPDataset,
+    "PAPILA-diagnosis": PAPILADataset,
+    "HarvardFairVLMed10k-diagnosis": FairVLMed10kDataset,
 }
 
 
@@ -55,6 +51,8 @@ def get_dataset(args, image_processor_callable=None, split=None):
         assert args.split in ["train", "validation", "test", "all"]
         split = args.split
 
+    assert image_processor_callable is not None or args.task != "diagnosis"
+    
     if image_processor_callable is not None:
         transform = image_processor_callable
     else:
@@ -64,6 +62,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
 
     try:
         args.logger.info("Loaded dataset: " + dataset.name)
+        args.logger.info(f"Dataset size: {len(dataset)}")
     except:
         print("Logger is not set.")
 
@@ -85,3 +84,11 @@ def report_label_distribution(dataset, args):
     args.logger.info("Label Distribution:")
     for label, freq in distribution.items():
         args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")
+    
+    num_classes = max(label_counts.keys()) + 1
+    weights = [0.0] * num_classes
+    for lbl, cnt in label_counts.items():
+        weights[lbl] = total / (cnt * num_classes)
+
+    dataset.class_weights = torch.tensor(weights, dtype=torch.float)
+    args.logger.info(f"Class weights: {dataset.class_weights.tolist()}")

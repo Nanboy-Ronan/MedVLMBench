@@ -29,13 +29,9 @@ class BLIPForDiagnosis(CLIPBase):
         self.tokenizer = AutoTokenizer.from_pretrained("Salesforce/blip-image-captioning-base")
         image_processor_hf = BlipImageProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
         
-        # BLIP processor's output for a single image needs to be handled
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(image_processor_hf, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
-        
-        self.logit_scale = torch.nn.Parameter(torch.log(torch.tensor(100.0)))
-        
+                
         self.initialize_prototypes()
     
     @torch.no_grad()
@@ -62,8 +58,7 @@ class BLIPForQA(ChatMetaModel):
         self.processor = BlipProcessor.from_pretrained(self.model_name)
         self.model = BlipForQuestionAnswering.from_pretrained(self.model_name).to(self.args.device)
         
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor_callable = ImageProcessorCallable(self.processor.image_processor, transform_func=transform_func)
+        self.image_processor_callable = ImageProcessorCallable(self.processor.image_processor)
         self.tokenizer = self.processor.tokenizer
 
     def infer_vision_language(self, image, qs, image_size=None):
@@ -86,8 +81,7 @@ class BLIPLPForDiagnosis(LPModel):
         super().__init__(encoder=vision_model, *args, **kwargs)
 
         image_processor_hf = BlipImageProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(image_processor_hf, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
     
     def extract_features(self, images):
@@ -103,8 +97,7 @@ class BLIPLoRALPForDiagnosis(LoRALPModel):
         super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
         
         image_processor_hf = BlipImageProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(image_processor_hf, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(image_processor_hf)
         self.image_processor_evaluation = self.image_processor
     
     def extract_features(self, images):

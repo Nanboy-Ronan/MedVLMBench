@@ -205,7 +205,8 @@ class VILA(ChatMetaModel):
         device="cuda",
         use_flash_attn=False,
         **kwargs,
-    ):
+    ):  
+
         if "NVILA" in model_path:
             if "lora" in model_path.lower():
                 model_base = "Efficient-Large-Model/NVILA-8B"
@@ -404,9 +405,10 @@ class VILA(ChatMetaModel):
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
         image = transforms.ToPILImage()(image)
-        image = image.resize((image_size, image_size), Image.BICUBIC)
+        # image = image.resize((image_size, image_size), Image.BICUBIC)
         prompt = [image, qs]
         answer_generated = self.model.generate_content(prompt)
+        print(answer_generated)
         return answer_generated
 
 

@@ -1,5 +1,6 @@
 import os
 import csv
+import glob
 import warnings
 import numpy as np
 import pandas as pd
@@ -431,12 +432,27 @@ INFO = {
     },
     "chestxray": {
         "label": {
-            "0": "chest x with no finding", "1": " chest xray with pneumonia"
+            "0": "chest xray with no finding", "1": " chest xray with pneumonia"
         }
     },
     "gf3300":{
         "label" : {
-            "0" : "normal retina image", "1": "glaucomatous retina image"
+            "0" : "benign retina", "1": "glaucomatous retina"
+        }
+    },
+    "chexpert":{
+        "label" : {
+            "0" : "diseased xray", "1": "normal xray"
+        }
+    },
+    "papila":{
+        "label" : {
+            "0" : "benign fundus", "1": "glaucoma fundus"
+        }
+    },
+    "harvardfairvlmed10k":{
+        "label" : {
+            "0" : "a benign scanning laser ophthalmoscope fundus image", "1": " a glaucoma scanning laser ophthalmoscope fundus image"
         }
     }
 }
@@ -863,6 +879,144 @@ class GF3300Dataset(torch.utils.data.Dataset):
             "label": label
         }
 
+
+
+class CXPDataset(torch.utils.data.Dataset):
+    # Uses the original CheXpert dataset split. https://github.com/FairMedFM/FairMedFM/blob/main/pre-processing/classification/CXP.ipynb
+
+    def __init__(
+        self,
+        data_args,
+        transform=None,
+        split: str = "train",
+    ):
+        split = "valid" if split == "test" else "train"
+        self.CLASSES = 2
+        self.class_dict = {f"no finding": 0, "has findings": 1}
+        self.transform = transform
+
+        # --- metadata ---
+        self.meta_path = os.path.join(
+            data_args.image_path, "CheXpert-v1.0-small", f"{split}.csv"
+        )
+        self.df = pd.read_csv(self.meta_path)
+
+        # Treat uncertain (-1) or NaN as negative (0)
+        labels = (
+            self.df["No Finding"]
+            .replace(-1, 0)
+            .fillna(0)
+            .astype(int)
+            .to_numpy()
+        )
+        self.Y = np.where(labels == 1, 1, 0).astype(np.int64)
+
+        self.class_nums = 2
+        self.path_to_images = os.path.join(data_args.image_path)
+        self.name = "CXP"
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        item = self.df.iloc[idx]
+
+        img_path = os.path.join(self.path_to_images, item["Path"])
+        image = Image.open(img_path).convert("RGB")
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        label = torch.tensor(self.Y[idx])
+
+        return {
+            "pixel_values": image,
+            "label": label,
+        }
+    
+
+
+class PAPILADataset(torch.utils.data.Dataset):
+
+    def __init__(self, data_args, transform, split: str = "train"):
+        # ── labels ───────────────────────────────────────────────────────
+        self.CLASSES = 2
+        # normal → 0, glaucoma → 1  (edit if you have different naming)
+        self.class_dict = {"normal": 0, "glaucoma": 1}
+
+        # ── bookkeeping ─────────────────────────────────────────────────
+        self.transform = transform
+        self.name = "PAPILA"
+
+        # CSV with file list + metadata
+        self.meta_path = os.path.join(
+            data_args.image_path, "PAPILA", "split", f"new_{split}.csv"
+        )
+        self.df = pd.read_csv(self.meta_path)
+
+        self.Y = self.df["Diagnosis"].values.astype(np.int64)
+
+        self.path_to_images = os.path.join(
+            data_args.image_path, "PAPILA", "data", "FundusImages"
+        )
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        path_in_csv = str(self.df.iloc[idx]["Path"])
+        img_path = os.path.join(self.path_to_images, path_in_csv)
+        image = Image.open(img_path).convert("RGB")
+
+        label = torch.tensor(self.Y[idx], dtype=torch.long)
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
+    
+class FairVLMed10kDataset(torch.utils.data.Dataset):
+
+    def __init__(self, data_args, transform, split: str = "train"):
+        self.CLASSES = 2
+        self.class_dict = {"benign": 0, "glaucoma": 1}
+        self.transform = transform
+        self.name = "FairVLMed10k"
+
+        self.meta_path = os.path.join(
+            data_args.image_path, "FairVLMed10k", "split", f"{split}.csv"
+        )
+        self.df = pd.read_csv(self.meta_path)
+
+        self.Y = np.where(self.df["glaucoma"].str.lower() == "yes", 1, 0).astype(
+            np.int64
+        )
+
+        self.path_to_images = os.path.join(
+            data_args.image_path, "FairVLMed10k"
+        )
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        img_rel_path = str(self.df.iloc[idx]["path"])
+        img_path = os.path.join(self.path_to_images, img_rel_path)
+        image = Image.open(img_path).convert("RGB")
+
+        label = torch.tensor(self.Y[idx], dtype=torch.long)
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return {
+            "pixel_values": image,
+            "label": label
+        }
+    
 
 class DrishtiDataset(torch.utils.data.Dataset):
     def __init__(self, data_args, transform, split="train"):

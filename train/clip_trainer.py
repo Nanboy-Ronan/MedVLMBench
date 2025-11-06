@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Sequence, Optional
 from eval import get_eval_engine
 from dataset import get_dataset
-from dataset.utils import LinearProbingDataCollator
+from dataset.utils import DiagnosisDataCollator
 from torch.profiler import profile, record_function, ProfilerActivity
 
 
@@ -26,37 +26,37 @@ class CustomCallback(TrainerCallback):
             metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
             print(f"Evaluation metrics at epoch {self.trainer.current_epoch}: {metrics}")
         self.trainer.current_epoch += 1
+        if self.trainer.profile:
+            total_epoch_forward = self.trainer.epoch_forward_flops
+            total_epoch_backward = self.trainer.epoch_backward_flops
+            total_epoch_flops = total_epoch_forward + total_epoch_backward
 
-        total_epoch_forward = self.trainer.epoch_forward_flops
-        total_epoch_backward = self.trainer.epoch_backward_flops
-        total_epoch_flops = total_epoch_forward + total_epoch_backward
+            avg_epoch_forward = total_epoch_forward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
+            avg_epoch_backward = total_epoch_backward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
 
-        avg_epoch_forward = total_epoch_forward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
-        avg_epoch_backward = total_epoch_backward / self.trainer.batch_count if self.trainer.batch_count > 0 else 0
+            self.trainer.total_train_forward_flops += total_epoch_forward
+            self.trainer.total_train_backward_flops += total_epoch_backward
+            total_train_flops = self.trainer.total_train_forward_flops + self.trainer.total_train_backward_flops
 
-        self.trainer.total_train_forward_flops += total_epoch_forward
-        self.trainer.total_train_backward_flops += total_epoch_backward
-        total_train_flops = self.trainer.total_train_forward_flops + self.trainer.total_train_backward_flops
+            self.trainer.args.logger.info(
+                f"Epoch {self.trainer.current_epoch} FLOPs: "
+                f"Total Forward: {total_epoch_forward/1e9:.2f} GFLOPS, "
+                f"Total Backward: {total_epoch_backward/1e9:.2f} GFLOPS, "
+                f"Combined: {total_epoch_flops/1e9:.2f} GFLOPS "
+                f"(Avg per batch: Forward: {avg_epoch_forward/1e9:.2f} GFLOPS, "
+                f"Backward: {avg_epoch_backward/1e9:.2f} GFLOPS)"
+            )
 
-        self.trainer.args.logger.info(
-            f"Epoch {self.trainer.current_epoch} FLOPs: "
-            f"Total Forward: {total_epoch_forward/1e9:.2f} GFLOPS, "
-            f"Total Backward: {total_epoch_backward/1e9:.2f} GFLOPS, "
-            f"Combined: {total_epoch_flops/1e9:.2f} GFLOPS "
-            f"(Avg per batch: Forward: {avg_epoch_forward/1e9:.2f} GFLOPS, "
-            f"Backward: {avg_epoch_backward/1e9:.2f} GFLOPS)"
-        )
+            self.trainer.args.logger.info(
+                f"Total training FLOPs up to epoch {self.trainer.current_epoch}: "
+                f"Forward: {self.trainer.total_train_forward_flops/1e9:.2f} GFLOPS, "
+                f"Backward: {self.trainer.total_train_backward_flops/1e9:.2f} GFLOPS, "
+                f"Combined: {total_train_flops/1e9:.2f} GFLOPS"
+            )
 
-        self.trainer.args.logger.info(
-            f"Total training FLOPs up to epoch {self.trainer.current_epoch}: "
-            f"Forward: {self.trainer.total_train_forward_flops/1e9:.2f} GFLOPS, "
-            f"Backward: {self.trainer.total_train_backward_flops/1e9:.2f} GFLOPS, "
-            f"Combined: {total_train_flops/1e9:.2f} GFLOPS"
-        )
-
-        self.trainer.epoch_forward_flops = 0
-        self.trainer.epoch_backward_flops = 0
-        self.trainer.batch_count = 0
+            self.trainer.epoch_forward_flops = 0
+            self.trainer.epoch_backward_flops = 0
+            self.trainer.batch_count = 0
     
     def on_train_end(self, args, state, control, **kwargs):
         """
@@ -76,7 +76,8 @@ class CLIPLPTrainer(Trainer):
             eval_dataset=eval_dataset,
             **kwargs
         )
-        dataset = get_dataset(args=args, split="test")
+
+        dataset = get_dataset(args=args, image_processor_callable=getattr(model, "image_processor"), split="test") # safeguard that it is really testset here
         self.eval_engine = get_eval_engine(args=args, dataset=dataset)
         self.image_processor = image_processor
         self.current_epoch = 0
@@ -106,34 +107,51 @@ class CLIPLPTrainer(Trainer):
         Returns:
             Loss value (and logits if return_outputs=True).
         """
-        device = inputs["pixel_values"].device
         pixel_values = inputs["pixel_values"]
         labels = inputs["labels"]
 
         if self.image_processor is not None and pixel_values.dtype == torch.uint8:
             pixel_values = self.image_processor(pixel_values)
 
+        def _forward_once():
+            out = model(pixel_values)
+            cls_name = out.__class__.__name__
+            if isinstance(out, torch.Tensor):
+                logits = out
+                class_weights = self.train_dataset.class_weights.to(
+                    logits.device, logits.dtype
+                )
+                loss = F.cross_entropy(logits, labels, weight=class_weights)
+                return loss, logits
+            elif hasattr(out, "loss"):
+                loss = out.loss
+                if hasattr(out, "logits_per_image"):
+                    logits = out.logits_per_image
+                else:
+                    raise ValueError(
+                        "Model output does not contain logits_per_image."
+                    )
+                return loss, logits
+            else:
+                raise TypeError(
+                    f"Model forward returned {type(out)} — expected Tensor or output with loss."
+                )
+        
+
         if self.profile:
-            # Profile the Forward Pass ONLY
             with profile(
                 activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                 record_shapes=True,
-                with_flops=True,  
-                profile_memory=True  
+                with_flops=True,
+                profile_memory=True,
             ) as prof:
                 with record_function("forward_pass"):
-                    logits = model(pixel_values)
-                    loss = F.cross_entropy(logits, labels)
-
-            # Extract Forward FLOPS
-            flops_forward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
-            self.epoch_forward_flops += flops_forward
-
-            # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
-            # print(f"🔹 Forward FLOPS per batch: {flops_forward / 1e9:.2f} GFLOPS")
+                    loss, logits = _forward_once()
+            self.epoch_forward_flops += sum(
+                evt.flops for evt in prof.key_averages() if evt.flops is not None
+            )
         else:
-            logits = model(pixel_values)
-            loss = F.cross_entropy(logits, labels)
+            loss, logits = _forward_once()
 
         return (loss, logits) if return_outputs else loss
     
@@ -189,32 +207,14 @@ class CLIPLPTrainer(Trainer):
 
 
 
-def make_lp_data_module(args, dataset, image_processor):
-    from dataset.diagnosis import PneumoniaMNIST
-    if image_processor is None:
-        transform = transforms.Compose([
-            transforms.PILToTensor(),
-            # transforms.Normalize(mean=model_constants['image_mean'], std=model_constants['image_std']),
-        ])
-    else:
-        transform = image_processor
+def make_diagnosis_data_module(train_dataset, eval_dataset=None):
 
-    data_collator = LinearProbingDataCollator()
-    # TODO: check transform
-    train_dataset = PneumoniaMNIST(
-        data_args=args,
-        split="train", # 'train', 'val' or 'test'
-        transform=transform,
-        target_transform=None,
-        download=True,
-        as_rgb=True,
-        size=224,
-        mmap_mode=None,
-    )
+    data_collator = DiagnosisDataCollator()
 
-    return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
+    return dict(train_dataset=train_dataset, eval_dataset=eval_dataset, data_collator=data_collator)
 
-# TODO
+
+
 class CLIPTrainer(Trainer):
     def __init__(self, 
                  model, 

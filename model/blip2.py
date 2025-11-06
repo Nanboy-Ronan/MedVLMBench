@@ -3,9 +3,8 @@ import torch.nn.functional as F
 from transformers import Blip2ForConditionalGeneration, Blip2Processor, Blip2ForImageTextRetrieval
 from peft import LoraConfig, get_peft_model
 from model.chat import ChatMetaModel
-from model.lp_base import LPModel
 from model.lora_base import LoRALPModel
-from model.clip_base import CLIPBase, ImageProcessorCallable
+from model.clip_base import CLIPBase, ImageProcessorCallable, CLIPImgLPModel
 
 
 class BLIP2(ChatMetaModel):
@@ -32,63 +31,52 @@ class BLIP2ForDiagnosis(CLIPBase):
         model = Blip2ForImageTextRetrieval.from_pretrained(model_name)
 
         if args and args.usage == "clip-img-lora":
-            lora_config = LoraConfig(target_modules=["qkv"])
+            lora_config = LoraConfig(target_modules=["qkv"]) # qkv for image encoder and ("query", "key", "value") for qformer
             for name, para in model.named_parameters():
                 para.requires_grad = False
             model.vision_model = get_peft_model(model.vision_model, lora_config)
 
-        # Note: We don't call super().__init__ here because this model has a unique forward pass.
-        # We will re-implement the necessary parts from BaseModel and nn.Module.
-        super(CLIPBase, self).__init__(args=args, **kwargs) # Call grandparent's init
-        torch.nn.Module.__init__(self) # Call nn.Module init
-        
-        self.model = model
-        self.num_classes = num_classes
+        super().__init__(text=text, num_classes=num_classes, model=model, args=args, **kwargs)
         
         processor = Blip2Processor.from_pretrained(model_name)
         self.tokenizer = processor.tokenizer
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(processor.image_processor, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
 
-        # BLIP2-ITM computes logits directly, so we don't need text prototypes in the same way.
-        self.prototype_text_inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+        self.initialize_prototypes()
+    
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.embeddings
+        self.text_embed_dim = 1408
+        self.vision_embed_dim = 1408
 
-    def forward(self, images):
-        """
-        BLIP2-ITM's forward pass is different from standard CLIP. It computes the image-text
-        matching scores directly.
-        """
-        device = images.device
-        self.model.to(device)
-        
-        input_ids = self.prototype_text_inputs["input_ids"].to(device)
-        attention_mask = self.prototype_text_inputs["attention_mask"].to(device)
-        
-        outputs = self.model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            pixel_values=images,
-            return_dict=True
-        )
-        # `logits_per_image` is shape (image_batch_size, text_batch_size)
-        return outputs.logits_per_image
+    def forward(self, pixel_values):
+        return self.model.forward(input_ids=self.prototype["input_ids"], attention_mask=self.prototype["attention_mask"], pixel_values=pixel_values).logits_per_image
 
 
-class BLIP2LPForDiagnosis(LPModel):
-    def __init__(self, model_name="Salesforce/blip2-itm-vit-g", *args, **kwargs) -> None:
-        model = Blip2ForImageTextRetrieval.from_pretrained(model_name)
-        vision_model = model.vision_model
-        vision_model.feat_dim = 1408
-        super().__init__(encoder=vision_model, *args, **kwargs)
+class BLIP2LPForDiagnosis(CLIPImgLPModel):
+    def __init__(self, args, text, num_classes) -> None:
+        super().__init__(
+                text=text,
+                num_classes=num_classes,
+                model=Blip2ForImageTextRetrieval.from_pretrained("Salesforce/blip2-itm-vit-g"),
+                args=args
+            )
 
-        processor = Blip2Processor.from_pretrained(model_name)
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(processor.image_processor, transform_func=transform_func)
+        processor = Blip2Processor.from_pretrained("Salesforce/blip2-itm-vit-g")
+        self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
     
-    def extract_features(self, images):
-        return self.encoder(images)["last_hidden_state"][:, 0, :]
+    def setup_encoders(self):
+        self.vision_model = self.model.vision_model
+        self.text_model = self.model.embeddings
+        self.text_embed_dim = 1408
+        self.vision_embed_dim = 1408
+
+    def encode_image(self, images):
+        # https://github.com/huggingface/transformers/blob/main/src/transformers/models/blip_2/modeling_blip_2.py#L2376
+        return self.vision_model(images)[0][:, 0, :]
 
 
 class BLIP2LPLoRAForDiagnosis(LoRALPModel):
@@ -100,8 +88,7 @@ class BLIP2LPLoRAForDiagnosis(LoRALPModel):
         super().__init__(args=args, lora_config=lora_config, encoder=vision_model, num_classes=kwargs['num_classes'])
 
         processor = Blip2Processor.from_pretrained(model_name)
-        transform_func = lambda p: torch.tensor(p['pixel_values'][0])
-        self.image_processor = ImageProcessorCallable(processor.image_processor, transform_func=transform_func)
+        self.image_processor = ImageProcessorCallable(processor.image_processor)
         self.image_processor_evaluation = self.image_processor
     
     def extract_features(self, images):

@@ -168,5 +168,8 @@ data/
 pretrained_models/
 log/
 pretrained/
+script/
+notebooks/
 wandb/
+cache/
 *.out
