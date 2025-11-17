@@ -101,13 +101,8 @@ class Qwen25_VL(ChatMetaModel):
             if not os.path.isabs(candidate_path):
                 base_dir = getattr(self.args, "image_path", "") or ""
                 candidate_path = os.path.join(base_dir, image_path)
-            if not os.path.exists(candidate_path):
-                warnings.warn(f"[Qwen2.5-VL] Image path not found: {candidate_path}")
-                continue
-            try:
-                with Image.open(candidate_path) as img:
-                    loaded_images.append(img.convert("RGB"))
-            except Exception as exc:
-                warnings.warn(f"[Qwen2.5-VL] Failed to open image {candidate_path}: {exc}")
+
+            with Image.open(candidate_path) as img:
+                loaded_images.append(img.convert("RGB"))
 
         return loaded_images

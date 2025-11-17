@@ -204,10 +204,9 @@ class HarvardFairVLMed10kVQA(VQADataset):
 
 class MedXpertQA(VQADataset):
     _SPLIT_MAP = {
-        "train": ["dev"],
-        "validation": ["dev"],
-        "test": ["test"],
-        "all": ["dev", "test"],
+        "train": ["cus_train_fold0"],
+        "test": ["cus_test_fold0"],
+        "all": ["cus_train_fold0", "cus_test_fold0"],
     }
 
     def __init__(self, data_args, split, transform=None):
@@ -218,7 +217,6 @@ class MedXpertQA(VQADataset):
 
         self.name = "MedXpertQA-MM"
         self.modality = "medical"
-
         self.data_dir = data_args.image_path
         self.image_root = os.path.join(self.data_dir, "images")
         self.annotation_root = os.path.join(self.data_dir, "MM")

@@ -31,14 +31,13 @@ class EvalEngine:
         self.logger = logger
 
     def evaluate(self, args, model):
-        data_loader = DataLoader(self.dataset, batch_size=1)
+        # Keep samples intact so metadata like image_paths (possibly multi-image) is preserved.
+        data_loader = DataLoader(self.dataset, batch_size=1, collate_fn=lambda batch: batch[0])
 
         self.init_metric_logger()
 
         with torch.inference_mode():
-            for batch in self.metric_logger.log_every(data_loader, args.eval_print_freq, header="Test:"):
-                # subject = [x[0] for x in batch]
-                subject = {k: v[0] for k, v in batch.items()}
+            for subject in self.metric_logger.log_every(data_loader, args.eval_print_freq, header="Test:"):
                 self.evaluate_subject(subject, model)
 
         self.metric_logger.synchronize_between_processes()
