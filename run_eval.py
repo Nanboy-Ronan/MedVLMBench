@@ -2,6 +2,7 @@ import json
 import os
 import random
 import argparse
+import warnings
 from utils import constants
 
 import numpy as np
@@ -78,6 +79,10 @@ if __name__ == "__main__":
     torch._dynamo.config.cache_size_limit = 128
 
     args = collect_args()
+
+    if args.device == "cuda" and not torch.cuda.is_available():
+        warnings.warn("CUDA requested but is not available. Falling back to CPU.")
+        args.device = "cpu"
 
     logger = basics.setup_logger("eval", args.output_dir, "eval.log", screen=True, tofile=True)
     logger.info("Using following arguments for evaluation.")

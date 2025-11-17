@@ -281,8 +281,9 @@ class MedXpertQA(VQADataset):
         image_files = sample.get("images", [])
 
         image, image_paths, image_size = self._load_and_merge_images(image_files)
+        relative_image_paths = [os.path.relpath(path, start=self.data_dir) for path in image_paths]
 
-        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice."
+        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice." # we can consider putting it in argument.
 
         if self.transform is not None:
             image = self.transform(image)
@@ -294,7 +295,8 @@ class MedXpertQA(VQADataset):
             "is_open": True,
             "prompt_template": prompt_template, # '{}\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
-            "image_path": ";".join(image_paths),
+            "image_path": ";".join(relative_image_paths),
+            "image_paths": relative_image_paths,
         }
 
 
