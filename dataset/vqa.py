@@ -204,10 +204,9 @@ class HarvardFairVLMed10kVQA(VQADataset):
 
 class MedXpertQA(VQADataset):
     _SPLIT_MAP = {
-        "train": ["dev"],
-        "validation": ["dev"],
-        "test": ["test"],
-        "all": ["dev", "test"],
+        "train": ["cus_train_fold0"],
+        "test": ["cus_test_fold0"],
+        "all": ["cus_train_fold0", "cus_test_fold0"],
     }
 
     def __init__(self, data_args, split, transform=None):
@@ -218,7 +217,6 @@ class MedXpertQA(VQADataset):
 
         self.name = "MedXpertQA-MM"
         self.modality = "medical"
-
         self.data_dir = data_args.image_path
         self.image_root = os.path.join(self.data_dir, "images")
         self.annotation_root = os.path.join(self.data_dir, "MM")
@@ -281,8 +279,9 @@ class MedXpertQA(VQADataset):
         image_files = sample.get("images", [])
 
         image, image_paths, image_size = self._load_and_merge_images(image_files)
+        relative_image_paths = [os.path.relpath(path, start=self.data_dir) for path in image_paths]
 
-        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice."
+        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice." # we can consider putting it in argument.
 
         if self.transform is not None:
             image = self.transform(image)
@@ -294,7 +293,8 @@ class MedXpertQA(VQADataset):
             "is_open": True,
             "prompt_template": prompt_template, # '{}\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
-            "image_path": ";".join(image_paths),
+            "image_path": ";".join(relative_image_paths),
+            "image_paths": relative_image_paths,
         }
 
 

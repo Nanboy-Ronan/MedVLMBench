@@ -1,3 +1,5 @@
+import os
+import warnings
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
@@ -6,7 +8,6 @@ from torch.nn.utils.rnn import pad_sequence
 from PIL import Image
 from torchvision.transforms.functional import to_pil_image
 from model.chat import ChatMetaModel
-
 
 
 def _to_pil(img: Image.Image | torch.Tensor | str):
@@ -123,33 +124,67 @@ class Lingshu(ChatMetaModel):
         # 8) update context length
         self.context_len = getattr(self.model.model.config, "max_position_embeddings", self.context_len)
 
-    def _build_messages(self, image: Image.Image | str | None, text: str):
+    def _build_messages(self, images, text: str):
         """
         Build the messages list in the format expected by
         `processor.apply_chat_template`.
         """
-        if image is None:
-
+        if not images:
             return [{"role": "user", "content": text}]
-        else:
-            return [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "image", "image": image, "resized_height": 224, "resized_width": 224},
-                        {"type": "text",  "text": text},
-                    ],
-                }
-            ]
+        content = []
+        for image in images:
+            if image is None:
+                continue
+            content.append(
+                # {"type": "image", "image": image, "resized_height": 224, "resized_width": 224}
+                {"type": "image", "image": image}
+            )
+        content.append({"type": "text", "text": text})
+        return [{"role": "user", "content": content}]
+
+    def _load_context_images(self):
+        """
+        Load optional auxiliary images that were provided via `set_inference_context`.
+        """
+        context = getattr(self, "_inference_context", None) or {}
+        image_paths = context.get("image_paths")
+        self._inference_context = {}
+
+        if not image_paths:
+            return []
+
+        if isinstance(image_paths, str):
+            image_paths = [p for p in image_paths.split(";") if p]
+
+        loaded_images = []
+        for image_path in image_paths:
+            candidate_path = image_path
+            if not os.path.isabs(candidate_path):
+                base_dir = getattr(self.args, "image_path", "") or ""
+                candidate_path = os.path.join(base_dir, image_path)
+            if not os.path.exists(candidate_path):
+                warnings.warn(f"[Lingshu] Image path not found: {candidate_path}")
+                continue
+            try:
+                with Image.open(candidate_path) as img:
+                    loaded_images.append(img.convert("RGB"))
+            except Exception as exc:
+                warnings.warn(f"[Lingshu] Failed to open image {candidate_path}: {exc}")
+
+        return loaded_images
 
     @torch.inference_mode()
     def infer_vision_language(self, image, qs, temperature: float = 0.2, **gen_kwargs):
         """
-        Single-image VL-QA / captioning.  Accepts PIL.Image, filepath or URL (the
-        processor handles URLs transparently).
+        VL-QA / captioning that accepts one or multiple images.  Each image can be a
+        PIL.Image, filepath or URL and the processor handles URLs transparently.
         """
-        image = _to_pil(image)
-        messages = self._build_messages(image, qs)
+        context_images = self._load_context_images()
+        if context_images:
+            images = context_images
+        else:
+            images = [_to_pil(image)]
+        messages = self._build_messages(images, qs)
 
         chat_text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True

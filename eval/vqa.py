@@ -34,6 +34,12 @@ class VQAEvalEngine(EvalEngine):
         image_size = subject["image_size"]
         image_path = subject["image_path"]
 
+        context = {}
+        if "image_paths" in subject:
+            context["image_paths"] = subject["image_paths"]
+        if hasattr(model, "set_inference_context"):
+            model.set_inference_context(context)
+
         qs_l, answer_l = qs.lower(), answer.lower()
 
         device = self.args.device
