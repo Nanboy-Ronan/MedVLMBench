@@ -281,7 +281,7 @@ class MedXpertQA(VQADataset):
         image, image_paths, image_size = self._load_and_merge_images(image_files)
         relative_image_paths = [os.path.relpath(path, start=self.data_dir) for path in image_paths]
 
-        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice." # we can consider putting it in argument.
+        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice."  # we can consider putting it in argument.
 
         if self.transform is not None:
             image = self.transform(image)
@@ -289,12 +289,12 @@ class MedXpertQA(VQADataset):
         return {
             "image": image,
             "query": question,
-            "label": answer, # letter only
+            "label": answer,  # letter only
             "is_open": True,
-            "prompt_template": prompt_template, # '{}\nAnswer with the single letter corresponding to the best choice.'
+            "prompt_template": prompt_template,  # '{}\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
-            "image_path": ";".join(relative_image_paths),
-            "image_paths": relative_image_paths,
+            "image_path": ";".join(image_paths),
+            "image_paths": image_paths,
         }
 
 
@@ -320,9 +320,7 @@ class OmniMedVQA(VQADataset):
         if not os.path.isdir(self.qa_root):
             fallback_root = self._locate_nested_root(self.data_dir)
             if fallback_root is None:
-                raise FileNotFoundError(
-                    f"OmniMedVQA QA information directory not found: {self.qa_root}"
-                )
+                raise FileNotFoundError(f"OmniMedVQA QA information directory not found: {self.qa_root}")
             self.data_dir = fallback_root
             self.qa_root = os.path.join(self.data_dir, "QA_information")
 
@@ -330,11 +328,7 @@ class OmniMedVQA(VQADataset):
 
         if split != "all":
             lower, upper = self._SPLIT_BUCKETS[split]
-            records = [
-                rec
-                for rec in records
-                if lower <= self._split_selector(rec["question_id"]) < upper
-            ]
+            records = [rec for rec in records if lower <= self._split_selector(rec["question_id"]) < upper]
 
         self.samples = records
 
@@ -387,9 +381,7 @@ class OmniMedVQA(VQADataset):
             )
 
         if missing_images > 0:
-            print(
-                f"[OmniMedVQA] Skipped {missing_images} annotations due to missing image files."
-            )
+            print(f"[OmniMedVQA] Skipped {missing_images} annotations due to missing image files.")
 
         return samples
 
@@ -424,9 +416,7 @@ class OmniMedVQA(VQADataset):
         if options:
             option_lines = "\n".join(f"({letter}) {text}" for letter, text in options)
             prompt_template = (
-                "{}\nOptions:\n"
-                + option_lines
-                + "\nAnswer with the single letter corresponding to the best choice."
+                "{}\nOptions:\n" + option_lines + "\nAnswer with the single letter corresponding to the best choice."
             )
             if answer_letter is None:
                 # fall back to textual answer if it does not match provided options
@@ -438,13 +428,12 @@ class OmniMedVQA(VQADataset):
         if self.transform is not None:
             image = self.transform(image)
 
-
         return {
             "image": image,
             "query": question,
-            "label": answer_letter, # TODO answer_letter is a bad choice and need to be updated.
-            "is_open": is_open, # Not important here
-            "prompt_template": prompt_template, # '{}\nOptions:\n(A) Biopsy\n(B) CT scan\n(C) Colonoscopy\n(D) Fundus imaging\nAnswer with the single letter corresponding to the best choice.'
+            "label": answer_letter,  # TODO answer_letter is a bad choice and need to be updated.
+            "is_open": is_open,  # Not important here
+            "prompt_template": prompt_template,  # '{}\nOptions:\n(A) Biopsy\n(B) CT scan\n(C) Colonoscopy\n(D) Fundus imaging\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
             "image_path": image_path,
         }
