@@ -290,7 +290,7 @@ class MedXpertQA(VQADataset):
             "image": image,
             "query": question,
             "label": answer, # letter only
-            "is_open": True,
+            "is_open": False,  # MedXpertQA is multiple-choice; treat as closed-form
             "prompt_template": prompt_template, # '{}\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
             "image_path": ";".join(relative_image_paths),
