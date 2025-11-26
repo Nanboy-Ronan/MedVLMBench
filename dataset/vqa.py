@@ -1,6 +1,5 @@
 import os
 import json
-import hashlib
 import pandas as pd
 import numpy as np
 from PIL import Image
@@ -299,10 +298,10 @@ class MedXpertQA(VQADataset):
 
 
 class OmniMedVQA(VQADataset):
-    _SPLIT_BUCKETS = {
-        "train": (0.0, 0.8),
-        "validation": (0.8, 0.9),
-        "test": (0.9, 1.0),
+    _INDEX_FILES = {
+        "train": "omnimedvqa_train_index.jsonl",
+        "validation": "omnimedvqa_train_index.jsonl",  # reuse train split when val is requested
+        "test": "omnimedvqa_test_index.jsonl",
     }
 
     def __init__(self, data_args, split, transform=None):
@@ -329,19 +328,17 @@ class OmniMedVQA(VQADataset):
         records = self._load_records()
 
         if split != "all":
-            lower, upper = self._SPLIT_BUCKETS[split]
-            records = [
-                rec
-                for rec in records
-                if lower <= self._split_selector(rec["question_id"]) < upper
-            ]
+            index_set = self._load_split_index(split)
+            records = [rec for rec in records if rec["question_id"] in index_set]
+
+            missing = len(index_set) - len(records)
+            if missing > 0:
+                print(
+                    f"[OmniMedVQA] Warning: {missing} entries from {split} index not found with accessible images. "
+                    "Ensure dataset paths are correct."
+                )
 
         self.samples = records
-
-    def _split_selector(self, question_id):
-        digest = hashlib.md5(question_id.encode("utf-8")).hexdigest()
-        bucket = int(digest[:8], 16) / 0x100000000
-        return bucket
 
     def _locate_nested_root(self, base_dir):
         try:
@@ -392,6 +389,40 @@ class OmniMedVQA(VQADataset):
             )
 
         return samples
+
+    def _load_split_index(self, split):
+        """
+        Load pre-generated train/test indices so splits are fixed across machines.
+        """
+        index_filename = self._INDEX_FILES.get(split)
+        if index_filename is None:
+            raise ValueError(f"Unsupported split '{split}' for OmniMedVQA")
+
+        # Search in current data dir and one level up to support nested layouts.
+        candidate_roots = [self.data_dir, os.path.dirname(self.data_dir)]
+        for root in candidate_roots:
+            if not root:
+                continue
+            candidate = os.path.join(root, index_filename)
+            if os.path.isfile(candidate):
+                index_set = set()
+                with open(candidate, "r", encoding="utf-8") as f:
+                    for line in f:
+                        try:
+                            entry = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        qid = entry.get("question_id")
+                        if qid:
+                            index_set.add(qid)
+                if not index_set:
+                    raise RuntimeError(f"Index file {candidate} is empty.")
+                return index_set
+
+        raise FileNotFoundError(
+            f"Index file for split '{split}' not found. "
+            f"Expected {index_filename} in {self.data_dir} or its parent."
+        )
 
     def __len__(self):
         return len(self.samples)

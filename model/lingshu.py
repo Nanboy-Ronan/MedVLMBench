@@ -124,28 +124,41 @@ class Lingshu(ChatMetaModel):
         # 8) update context length
         self.context_len = getattr(self.model.model.config, "max_position_embeddings", self.context_len)
 
-    def _build_messages(self, images, text: str):
-        """
-        Build the messages list in the format expected by
-        `processor.apply_chat_template`.
-        """
-        if not images:
-            return [{"role": "user", "content": text}]
-        content = []
-        for image in images:
-            if image is None:
-                continue
-            content.append(
-                # {"type": "image", "image": image, "resized_height": 224, "resized_width": 224}
-                {"type": "image", "image": image}
-            )
-        content.append({"type": "text", "text": text})
-        return [{"role": "user", "content": content}]
+    def infer_vision_language(self, image, qs, image_size=None):
+        context_images = self._load_context_images()
+        print(len(context_images))
+        if context_images:
+            image_contents = [{"type": "image", "image": img} for img in context_images]
+        else:
+            image_contents = [{"type": "image", "image": to_pil_image(image)}]
+
+        messages = [{"role": "user", "content": [*image_contents, {"type": "text", "text": qs}]}]
+        print(messages)
+
+        text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        image_inputs, video_inputs = process_vision_info(messages)
+
+        inputs = self.processor(
+            text=[text],
+            images=image_inputs,
+            videos=video_inputs,
+            padding=True,
+            return_tensors="pt",
+        )
+
+        inputs = inputs.to(self.device)
+
+        generated_ids = self.model.generate(**inputs, max_new_tokens=128)
+        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+        output_text = self.processor.batch_decode(
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )
+
+        print(output_text)
+
+        return output_text[0].strip()
 
     def _load_context_images(self):
-        """
-        Load optional auxiliary images that were provided via `set_inference_context`.
-        """
         context = getattr(self, "_inference_context", None) or {}
         image_paths = context.get("image_paths")
         self._inference_context = {}
@@ -162,79 +175,12 @@ class Lingshu(ChatMetaModel):
             if not os.path.isabs(candidate_path):
                 base_dir = getattr(self.args, "image_path", "") or ""
                 candidate_path = os.path.join(base_dir, image_path)
-            if not os.path.exists(candidate_path):
-                warnings.warn(f"[Lingshu] Image path not found: {candidate_path}")
-                continue
-            try:
-                with Image.open(candidate_path) as img:
-                    loaded_images.append(img.convert("RGB"))
-            except Exception as exc:
-                warnings.warn(f"[Lingshu] Failed to open image {candidate_path}: {exc}")
+
+            with Image.open(candidate_path) as img:
+                loaded_images.append(img.convert("RGB"))
 
         return loaded_images
 
-    @torch.inference_mode()
-    def infer_vision_language(self, image, qs, temperature: float = 0.2, **gen_kwargs):
-        """
-        VL-QA / captioning that accepts one or multiple images.  Each image can be a
-        PIL.Image, filepath or URL and the processor handles URLs transparently.
-        """
-        context_images = self._load_context_images()
-        if context_images:
-            images = context_images
-        else:
-            images = [_to_pil(image)]
-        messages = self._build_messages(images, qs)
-
-        chat_text = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        ) # 'Can you provide a medical report for this image? '
-
-        image_inputs, video_inputs = process_vision_info(messages)
-
-        inputs = self.processor(
-            text=[chat_text],
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            return_tensors="pt",
-        ).to(self.model.device)
-
-        gen_ids = self.model.generate(
-            **inputs,
-            max_new_tokens=gen_kwargs.get("max_new_tokens", 256),
-            temperature=temperature,
-        )
-
-        answer_ids = gen_ids[:, inputs.input_ids.shape[-1] :]
-        answer = self.processor.batch_decode(
-            answer_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )[0]
-        return answer.strip()
-
-    @torch.inference_mode()
-    def infer_language(self, qs, temperature: float = 0.7, **gen_kwargs):
-        """
-        Text-only inference.  We still let Qwen format the prompt so that system /
-        assistant roles work in the same way as multimodal chats.
-        """
-        messages = self._build_messages(None, qs)
-        chat_text = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
-        inputs = self.processor(
-            text=[chat_text], padding=True, return_tensors="pt"
-        ).to(self.model.device)
-
-        gen_ids = self.model.generate(
-            **inputs,
-            max_new_tokens=gen_kwargs.get("max_new_tokens", 512),
-            temperature=temperature,
-        )
-        answer_ids = gen_ids[:, inputs.input_ids.shape[-1] :]
-        return self.processor.batch_decode(
-            answer_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )[0].strip()
 
     def save(self, output_folder, trainer=None):
         self.model.save_pretrained(output_folder)
