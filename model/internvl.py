@@ -22,7 +22,10 @@ class InternVL3(ChatMetaModel):
         self.processor = AutoProcessor.from_pretrained(model_path)
 
     def infer_vision_language(self, image, qs, image_size=None):
-        image = to_pil_image(image)
+        if not type(image) == list:
+            image = [image]
+
+        image_contents = [{"type": "image", "image": to_pil_image(x)} for x in image]
 
         # prepare messages
         messages = [
@@ -33,8 +36,8 @@ class InternVL3(ChatMetaModel):
             {
                 "role": "user",
                 "content": [
+                    *image_contents
                     {"type": "text", "text": qs},
-                    {"type": "image", "image": image},
                 ],
             },
         ]

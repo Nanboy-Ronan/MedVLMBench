@@ -21,12 +21,9 @@ class Gemma3(ChatMetaModel):
         self.processor = AutoProcessor.from_pretrained(model_path)
 
     def infer_vision_language(self, image, qs, image_size=None):
-        primary_image = to_pil_image(image)
-        context_images = self._load_context_images()
-        if context_images:
-            image_entries = [{"type": "image", "image": img} for img in context_images]
-        else:
-            image_entries = [{"type": "image", "image": primary_image}]
+        if not type(image) == list:
+            image = [image]
+        image_contents = [{"type": "image", "image": to_pil_image(x)} for x in image]
 
         # prepare messages
         messages = [
@@ -37,8 +34,8 @@ class Gemma3(ChatMetaModel):
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": qs},
                     *image_entries,
+                    {"type": "text", "text": qs},
                 ],
             },
         ]
@@ -51,7 +48,6 @@ class Gemma3(ChatMetaModel):
             generation = generation[0][input_len:]
 
         decoded = self.processor.decode(generation, skip_special_tokens=True)
-        # print(decoded)
 
         return decoded.strip()
 
