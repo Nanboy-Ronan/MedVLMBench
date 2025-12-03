@@ -4,6 +4,7 @@ import warnings
 import torch
 from torchvision.transforms.functional import to_pil_image
 from transformers import AutoProcessor, Gemma3ForConditionalGeneration
+from PIL import Image
 
 from model.chat import ChatMetaModel
 
@@ -20,7 +21,12 @@ class Gemma3(ChatMetaModel):
         self.processor = AutoProcessor.from_pretrained(model_path)
 
     def infer_vision_language(self, image, qs, image_size=None):
-        image = to_pil_image(image)
+        primary_image = to_pil_image(image)
+        context_images = self._load_context_images()
+        if context_images:
+            image_entries = [{"type": "image", "image": img} for img in context_images]
+        else:
+            image_entries = [{"type": "image", "image": primary_image}]
 
         # prepare messages
         messages = [
@@ -32,14 +38,12 @@ class Gemma3(ChatMetaModel):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": qs},
-                    {"type": "image", "image": image},
+                    *image_entries,
                 ],
             },
         ]
 
-        inputs = self.processor.apply_chat_template(
-            messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt"
-        ).to(self.model.device, dtype=torch.bfloat16)
+        inputs = self._prepare_inputs(messages).to(self.model.device, dtype=torch.bfloat16)
         input_len = inputs["input_ids"].shape[-1]
 
         with torch.inference_mode():
@@ -50,3 +54,86 @@ class Gemma3(ChatMetaModel):
         # print(decoded)
 
         return decoded.strip()
+
+    def _prepare_inputs(self, messages):
+        chat_template = getattr(self.processor, "chat_template", None)
+        if chat_template:
+            return self.processor.apply_chat_template(
+                messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt"
+            )
+
+        prompt, images = self._build_default_prompt(messages)
+        processor_kwargs = {
+            "text": [prompt],
+            "padding": True,
+            "return_tensors": "pt",
+            "return_dict": True,
+        }
+        if images:
+            processor_kwargs["images"] = [images]
+
+        return self.processor(**processor_kwargs)
+
+    def _build_default_prompt(self, messages, add_generation_prompt=True):
+        """
+        Fallback prompt builder for processor checkpoints that do not ship a chat template
+        (e.g. Gemma-3 PT variants). It formats messages using the simple "role\\ncontent"
+        layout recommended by Google and inserts image placeholders so the processor can
+        inject vision embeddings.
+        """
+        boi_token = getattr(self.processor, "boi_token", "<start_of_image>")
+        role_map = {"assistant": "model", "user": "user"}
+
+        prompt_segments = []
+        images = []
+
+        for message in messages:
+            role = role_map.get(message.get("role", "user"), message.get("role", "user"))
+            prompt_segments.append(f"{role}\n")
+            for content in message.get("content", []):
+                content_type = content.get("type")
+                if content_type == "text":
+                    text = content.get("text", "")
+                    if text:
+                        prompt_segments.append(text.rstrip())
+                        prompt_segments.append("\n")
+                elif content_type == "image":
+                    prompt_segments.append(f"{boi_token}\n")
+                    image_value = content.get("image")
+                    if image_value is not None:
+                        images.append(image_value)
+            prompt_segments.append("\n")
+
+        if add_generation_prompt:
+            prompt_segments.append("model\n")
+
+        prompt = "".join(prompt_segments)
+        return prompt, images
+
+    def _load_context_images(self):
+        context = getattr(self, "_inference_context", None) or {}
+        image_paths = context.get("image_paths")
+        self._inference_context = {}
+
+        if not image_paths:
+            return []
+
+        if isinstance(image_paths, str):
+            image_paths = [p for p in image_paths.split(";") if p]
+
+        loaded_images = []
+        for image_path in image_paths:
+            candidate_path = image_path
+            if not os.path.isabs(candidate_path):
+                base_dir = getattr(self.args, "image_path", "") or ""
+                candidate_path = os.path.join(base_dir, image_path)
+            if not os.path.exists(candidate_path):
+                warnings.warn(f"[Gemma3] Image path not found: {candidate_path}")
+                continue
+            try:
+                with Image.open(candidate_path) as img:
+                    loaded_images.append(img.convert("RGB"))
+            except Exception as exc:
+                warnings.warn(f"[Gemma3] Failed to open image {candidate_path}: {exc}")
+
+        return loaded_images
