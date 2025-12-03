@@ -51,12 +51,17 @@ class Qwen25_VL(ChatMetaModel):
         self.processor = AutoProcessor.from_pretrained(model_path)
 
     def infer_vision_language(self, image, qs, image_size=None):
-        context_images = self._load_context_images()
-        print(len(context_images))
-        if context_images:
-            image_contents = [{"type": "image", "image": img} for img in context_images]
-        else:
-            image_contents = [{"type": "image", "image": to_pil_image(image)}]
+        if not type(image) == list:
+            image = [image]
+
+        # context_images = self._load_context_images()
+        # print(len(context_images))
+        # if context_images:
+        #     image_contents = [{"type": "image", "image": img} for img in context_images]
+        # else:
+        #     image_contents = [{"type": "image", "image": to_pil_image(image)}]
+
+        image_contents = [{"type": "image", "image": to_pil_image(x)} for x in image]
 
         messages = [{"role": "user", "content": [*image_contents, {"type": "text", "text": qs}]}]
         print(messages)

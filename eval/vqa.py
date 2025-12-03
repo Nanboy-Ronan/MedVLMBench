@@ -34,16 +34,20 @@ class VQAEvalEngine(EvalEngine):
         image_size = subject["image_size"]
         image_path = subject["image_path"]
 
-        context = {}
-        if "image_paths" in subject:
-            context["image_paths"] = subject["image_paths"]
-        if hasattr(model, "set_inference_context"):
-            model.set_inference_context(context)
+        # model reload api solution for multi-image inputs
+        # context = {}
+        # if "image_paths" in subject:
+        #     context["image_paths"] = subject["image_paths"]
+        # if hasattr(model, "set_inference_context"):
+        #     model.set_inference_context(context)
 
         qs_l, answer_l = qs.lower(), answer.lower()
 
         device = self.args.device
-        image = image.to(device, non_blocking=True)
+        if type(image) is list:
+            image = [x.to(device, non_blocking=True) for x in image]
+        else:
+            image = image.to(device, non_blocking=True)
 
         prompt = prompt_template.format(qs)
         output = model.infer_vision_language(image, prompt, image_size=image_size)

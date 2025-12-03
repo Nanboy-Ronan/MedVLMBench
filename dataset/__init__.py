@@ -9,7 +9,19 @@ from collections import Counter
 from dataset.utils import get_transform
 from dataset.vqa import SLAKE, PathVQA, VQARAD, HarvardFairVLMed10kVQA, MedXpertQA, OmniMedVQA
 from dataset.caption import HarvardFairVLMed10kCaption, MIMIC_CXRCaption
-from dataset.diagnosis import PneumoniaMNIST, BreastMNIST, DermaMNIST, Camelyon17, HAM10000Dataset, DrishtiDataset, ChestXrayDataset, GF3300Dataset, CXPDataset, PAPILADataset, FairVLMed10kDataset
+from dataset.diagnosis import (
+    PneumoniaMNIST,
+    BreastMNIST,
+    DermaMNIST,
+    Camelyon17,
+    HAM10000Dataset,
+    DrishtiDataset,
+    ChestXrayDataset,
+    GF3300Dataset,
+    CXPDataset,
+    PAPILADataset,
+    FairVLMed10kDataset,
+)
 
 datasets = {
     "SLAKE-vqa": SLAKE,
@@ -52,7 +64,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
         split = args.split
 
     assert image_processor_callable is not None or args.task != "diagnosis"
-    
+
     if image_processor_callable is not None:
         transform = image_processor_callable
     else:
@@ -84,7 +96,7 @@ def report_label_distribution(dataset, args):
     args.logger.info("Label Distribution:")
     for label, freq in distribution.items():
         args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")
-    
+
     num_classes = max(label_counts.keys()) + 1
     weights = [0.0] * num_classes
     for lbl, cnt in label_counts.items():
