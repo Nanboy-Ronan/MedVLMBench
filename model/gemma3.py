@@ -34,11 +34,12 @@ class Gemma3(ChatMetaModel):
             {
                 "role": "user",
                 "content": [
-                    *image_entries,
+                    *image_contents,
                     {"type": "text", "text": qs},
                 ],
             },
         ]
+        print(messages)
 
         inputs = self._prepare_inputs(messages).to(self.model.device, dtype=torch.bfloat16)
         input_len = inputs["input_ids"].shape[-1]
@@ -48,6 +49,7 @@ class Gemma3(ChatMetaModel):
             generation = generation[0][input_len:]
 
         decoded = self.processor.decode(generation, skip_special_tokens=True)
+        print(decoded)
 
         return decoded.strip()
 

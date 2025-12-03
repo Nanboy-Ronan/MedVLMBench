@@ -30,6 +30,7 @@ class VQAEvalEngine(EvalEngine):
         qs = subject["query"]
         answer = subject["label"]
         is_open = subject["is_open"]
+        question_type = subject["question_type"]
         prompt_template = subject["prompt_template"]
         image_size = subject["image_size"]
         image_path = subject["image_path"]
@@ -59,7 +60,7 @@ class VQAEvalEngine(EvalEngine):
         f1_score, precision, recall = calculate_f1score(output_l, answer_l)
         exact_match = calculate_exactmatch(output_l, answer_l)
 
-        if is_open:
+        if question_type == "open":
             # evaluation of open questions
             open_metrics = [
                 "bleu1",
@@ -97,7 +98,7 @@ class VQAEvalEngine(EvalEngine):
 
             if self.args.gpt_eval:
                 pass
-        else:
+        elif question_type == "yes/no":
             closed_metrics = [
                 "exact_match",
                 "recall",
@@ -109,6 +110,20 @@ class VQAEvalEngine(EvalEngine):
 
             for metric in closed_metrics:
                 self.metric_logger.meters[f"{metric}_closed"].update(eval(metric), n=1)
+        elif question_type == "multi-choice":
+            closed_metrics = [
+                "exact_match",
+                "recall",
+                "precision",
+                "f1_score",
+                "accuracy",
+            ]
+            accuracy = 1 if answer_l in output_l else 0
+
+            for metric in closed_metrics:
+                self.metric_logger.meters[f"{metric}_closed"].update(eval(metric), n=1)
+        else:
+            raise NotImplementedError
 
         self.metric_logger.meters["exact_match_overall"].update(exact_match, n=1)
         self.metric_logger.meters["recall_overall"].update(recall, n=1)
@@ -119,8 +134,8 @@ class VQAEvalEngine(EvalEngine):
             self.records.append(
                 {
                     "image_path": image_path,
-                    "question_type": "open" if is_open else "closed",
-                    "qs": qs,
+                    "question_type": question_type,
+                    "qs": prompt,
                     "answer": answer,
                     "prediction": output,
                 }

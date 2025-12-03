@@ -60,6 +60,7 @@ class SLAKE(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -106,6 +107,7 @@ class PathVQA(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -150,6 +152,7 @@ class VQARAD(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -195,6 +198,7 @@ class HarvardFairVLMed10kVQA(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -293,6 +297,7 @@ class MedXpertQA(VQADataset):
             "query": question,
             "label": answer,  # letter only
             "is_open": False,  # MedXpertQA is multiple-choice; treat as closed-form
+            "question_type": "multi-choice",
             "prompt_template": prompt_template,  # '{}\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_sizes,
             "image_path": ";".join(image_paths),
