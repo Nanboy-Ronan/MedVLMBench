@@ -531,6 +531,10 @@ class LLaVA(ChatMetaModel):
     def infer_vision_language(self, image, qs, temperature=0, image_size=None):
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
+        if type(image) is list:
+            assert len(image) == 1, f"LLaVA-1.5 only support single image input, while got {len(image)}."
+            image = image[0]
+
         qs = qs.replace(self.constants.DEFAULT_IMAGE_TOKEN, "").strip()
         if self.model.config.mm_use_im_start_end:
             qs = (

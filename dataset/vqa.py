@@ -60,6 +60,7 @@ class SLAKE(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -106,6 +107,7 @@ class PathVQA(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -150,6 +152,7 @@ class VQARAD(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -195,6 +198,7 @@ class HarvardFairVLMed10kVQA(VQADataset):
             "query": qs,
             "label": answer,
             "is_open": is_open,
+            "question_type": "open" if is_open else "yes/no",
             "prompt_template": prompt_template,
             "image_size": image_size,
             "image_path": image_path,
@@ -205,7 +209,7 @@ class MedXpertQA(VQADataset):
     _SPLIT_MAP = {
         "train": ["cus_train_fold0"],
         "test": ["cus_test_fold0"],
-        "all": ["cus_train_fold0", "cus_test_fold0"],
+        "all": ["test"],  # official split for testing (N=2000)
     }
 
     def __init__(self, data_args, split, transform=None):
@@ -249,26 +253,29 @@ class MedXpertQA(VQADataset):
         if not images:
             raise RuntimeError("No images found for the given image files.")
 
-        if len(images) == 1:
-            return images[0], paths, images[0].size
+        return images, paths, [x.size for x in images]
 
-        target_height = max(img.height for img in images)
-        resized = []
-        total_width = 0
-        for img in images:
-            if img.height != target_height:
-                new_width = int(img.width * target_height / img.height)
-                img = img.resize((new_width, target_height), Image.BICUBIC)
-            resized.append(img)
-            total_width += img.width
+        # combine multiple images into one
+        # if len(images) == 1:
+        #     return images[0], paths, images[0].size
 
-        canvas = Image.new("RGB", (total_width, target_height), color=(255, 255, 255))
-        x_offset = 0
-        for img in resized:
-            canvas.paste(img, (x_offset, 0))
-            x_offset += img.width
+        # target_height = max(img.height for img in images)
+        # resized = []
+        # total_width = 0
+        # for img in images:
+        #     if img.height != target_height:
+        #         new_width = int(img.width * target_height / img.height)
+        #         img = img.resize((new_width, target_height), Image.BICUBIC)
+        #     resized.append(img)
+        #     total_width += img.width
 
-        return canvas, paths, canvas.size
+        # canvas = Image.new("RGB", (total_width, target_height), color=(255, 255, 255))
+        # x_offset = 0
+        # for img in resized:
+        #     canvas.paste(img, (x_offset, 0))
+        #     x_offset += img.width
+
+        # return canvas, paths, canvas.size
 
     def __getitem__(self, index):
         sample = self.samples[index]
@@ -277,23 +284,24 @@ class MedXpertQA(VQADataset):
         answer = sample["label"].strip()
         image_files = sample.get("images", [])
 
-        image, image_paths, image_size = self._load_and_merge_images(image_files)
+        images, image_paths, image_sizes = self._load_and_merge_images(image_files)
         relative_image_paths = [os.path.relpath(path, start=self.data_dir) for path in image_paths]
 
-        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice." # we can consider putting it in argument.
+        prompt_template = "{}\nAnswer with the single letter corresponding to the best choice."  # we can consider putting it in argument.
 
         if self.transform is not None:
-            image = self.transform(image)
+            images = [self.transform(image) for image in images]
 
         return {
-            "image": image,
+            "image": images,
             "query": question,
-            "label": answer, # letter only
+            "label": answer,  # letter only
             "is_open": False,  # MedXpertQA is multiple-choice; treat as closed-form
-            "prompt_template": prompt_template, # '{}\nAnswer with the single letter corresponding to the best choice.'
-            "image_size": image_size,
-            "image_path": ";".join(relative_image_paths),
-            "image_paths": relative_image_paths,
+            "question_type": "multi-choice",
+            "prompt_template": prompt_template,  # '{}\nAnswer with the single letter corresponding to the best choice.'
+            "image_size": image_sizes,
+            "image_path": ";".join(image_paths),
+            "image_paths": image_paths,
         }
 
 
@@ -319,9 +327,7 @@ class OmniMedVQA(VQADataset):
         if not os.path.isdir(self.qa_root):
             fallback_root = self._locate_nested_root(self.data_dir)
             if fallback_root is None:
-                raise FileNotFoundError(
-                    f"OmniMedVQA QA information directory not found: {self.qa_root}"
-                )
+                raise FileNotFoundError(f"OmniMedVQA QA information directory not found: {self.qa_root}")
             self.data_dir = fallback_root
             self.qa_root = os.path.join(self.data_dir, "QA_information")
 
@@ -384,9 +390,7 @@ class OmniMedVQA(VQADataset):
             )
 
         if missing_images > 0:
-            print(
-                f"[OmniMedVQA] Skipped {missing_images} annotations due to missing image files."
-            )
+            print(f"[OmniMedVQA] Skipped {missing_images} annotations due to missing image files.")
 
         return samples
 
@@ -455,9 +459,7 @@ class OmniMedVQA(VQADataset):
         if options:
             option_lines = "\n".join(f"({letter}) {text}" for letter, text in options)
             prompt_template = (
-                "{}\nOptions:\n"
-                + option_lines
-                + "\nAnswer with the single letter corresponding to the best choice."
+                "{}\nOptions:\n" + option_lines + "\nAnswer with the single letter corresponding to the best choice."
             )
             if answer_letter is None:
                 # fall back to textual answer if it does not match provided options
@@ -469,13 +471,12 @@ class OmniMedVQA(VQADataset):
         if self.transform is not None:
             image = self.transform(image)
 
-
         return {
             "image": image,
             "query": question,
-            "label": answer_letter, # TODO answer_letter is a bad choice and need to be updated.
-            "is_open": is_open, # Not important here
-            "prompt_template": prompt_template, # '{}\nOptions:\n(A) Biopsy\n(B) CT scan\n(C) Colonoscopy\n(D) Fundus imaging\nAnswer with the single letter corresponding to the best choice.'
+            "label": answer_letter,  # TODO answer_letter is a bad choice and need to be updated.
+            "is_open": is_open,  # Not important here
+            "prompt_template": prompt_template,  # '{}\nOptions:\n(A) Biopsy\n(B) CT scan\n(C) Colonoscopy\n(D) Fundus imaging\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
             "image_path": image_path,
         }
