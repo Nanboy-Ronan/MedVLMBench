@@ -476,6 +476,7 @@ class OmniMedVQA(VQADataset):
             "query": question,
             "label": answer_letter,  # TODO answer_letter is a bad choice and need to be updated.
             "is_open": is_open,  # Not important here
+            "question_type": "multi-choice",
             "prompt_template": prompt_template,  # '{}\nOptions:\n(A) Biopsy\n(B) CT scan\n(C) Colonoscopy\n(D) Fundus imaging\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
             "image_path": image_path,
