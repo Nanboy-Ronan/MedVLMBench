@@ -128,9 +128,9 @@ class Lingshu(ChatMetaModel):
         context_images = self._load_context_images()
         print(len(context_images))
         if context_images:
-            image_contents = [{"type": "image", "image": img} for img in context_images]
+            image_contents = [{"type": "image", "image": img, "resized_height": 224, "resized_width": 224} for img in context_images]
         else:
-            image_contents = [{"type": "image", "image": to_pil_image(image)}]
+            image_contents = [{"type": "image", "image": to_pil_image(image), "resized_height": 224, "resized_width": 224}]
 
         messages = [{"role": "user", "content": [*image_contents, {"type": "text", "text": qs}]}]
         print(messages)
