@@ -9,7 +9,7 @@ from eval.metrics import (
     calculate_bertscore,
     calculate_meteor,
 )
-from eval.utils import normalize_word
+from eval.utils import normalize_word, extract_choice_letter
 
 
 def process_tokens(text):
@@ -118,7 +118,12 @@ class VQAEvalEngine(EvalEngine):
                 "f1_score",
                 "accuracy",
             ]
-            accuracy = 1 if answer_l in output_l else 0
+            choices = "".join(list(subject["options"].keys()))
+            print(choices)
+            answer_letter = extract_choice_letter(output_l, tuple(choices))
+            print(answer_letter)
+            accuracy = int(str.lower(answer_letter) == answer_l)
+            # accuracy = 1 if answer_l in output_l else 0
 
             for metric in closed_metrics:
                 self.metric_logger.meters[f"{metric}_closed"].update(eval(metric), n=1)

@@ -282,6 +282,7 @@ class MedXpertQA(VQADataset):
 
         question = sample["question"].strip()
         answer = sample["label"].strip()
+        options = sample["options"]
         image_files = sample.get("images", [])
 
         images, image_paths, image_sizes = self._load_and_merge_images(image_files)
@@ -302,6 +303,7 @@ class MedXpertQA(VQADataset):
             "image_size": image_sizes,
             "image_path": ";".join(image_paths),
             "image_paths": image_paths,
+            "options": options,  # {"A": "...", "B": "...", ...}
         }
 
 
@@ -480,6 +482,7 @@ class OmniMedVQA(VQADataset):
             "prompt_template": prompt_template,  # '{}\nOptions:\n(A) Biopsy\n(B) CT scan\n(C) Colonoscopy\n(D) Fundus imaging\nAnswer with the single letter corresponding to the best choice.'
             "image_size": image_size,
             "image_path": image_path,
+            "options": {letter: text for letter, text in options},
         }
 
 
