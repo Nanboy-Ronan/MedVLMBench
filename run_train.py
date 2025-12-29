@@ -190,16 +190,17 @@ if __name__ == "__main__":
         torch.cuda.manual_seed_all(args.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-        
+
     model_wrapped = get_model(args=args, device=args.device.type)
     model_wrapped.load_for_training(args.model_path)
 
-    total_params = sum(p.numel() for p in model_wrapped.parameters())
-    trainable_params = sum(p.numel() for p in model_wrapped.parameters() if p.requires_grad)
-    trainable_percentage = 100 * trainable_params / total_params
-    args.logger.info(f"Total number of parameters: {total_params/1e6:.2f}M")
-    args.logger.info(f"Trainable parameters: {trainable_params/1e6:.2f}M")
-    args.logger.info(f"Trainable parameters percentage: {trainable_percentage:.2f}%")
+    # Checking model param here may be not reliable. The param state may be changed when initializing HF trainers using training configs.
+    # total_params = sum(p.numel() for p in model_wrapped.parameters())
+    # trainable_params = sum(p.numel() for p in model_wrapped.parameters() if p.requires_grad)
+    # trainable_percentage = 100 * trainable_params / total_params
+    # args.logger.info(f"Total number of parameters: {total_params/1e6:.2f}M")
+    # args.logger.info(f"Trainable parameters: {trainable_params/1e6:.2f}M")
+    # args.logger.info(f"Trainable parameters percentage: {trainable_percentage:.2f}%")
 
     dataset = get_dataset(args, image_processor_callable=getattr(model_wrapped, "image_processor", None))
     train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)

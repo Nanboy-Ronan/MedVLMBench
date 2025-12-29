@@ -54,7 +54,7 @@ def get_trainer(args, model_wrapped, dataset):
                         "content": [
                             {"type": "text", "text": prompt},
                         ]
-                        + [{"type": "image"} for _ in range(len(num_images))],
+                        + [{"type": "image"} for _ in range(num_images)],
                     },
                     {
                         "role": "assistant",
