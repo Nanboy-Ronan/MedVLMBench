@@ -122,7 +122,10 @@ class VQAEvalEngine(EvalEngine):
             print(choices)
             answer_letter = extract_choice_letter(output_l, tuple(choices))
             print(answer_letter)
-            accuracy = int(str.lower(answer_letter) == answer_l)
+            if answer_letter is None:
+                accuracy = 0
+            else:
+                accuracy = int(str.lower(answer_letter) == answer_l)
             # accuracy = 1 if answer_l in output_l else 0
 
             for metric in closed_metrics:
