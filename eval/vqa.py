@@ -119,9 +119,9 @@ class VQAEvalEngine(EvalEngine):
                 "accuracy",
             ]
             choices = "".join(list(subject["options"].keys()))
-            print(choices)
+            # print(choices)
             answer_letter = extract_choice_letter(output_l, tuple(choices))
-            print(answer_letter)
+            # print(answer_letter)
             if answer_letter is None:
                 accuracy = 0
             else:
@@ -129,7 +129,7 @@ class VQAEvalEngine(EvalEngine):
             # accuracy = 1 if answer_l in output_l else 0
 
             for metric in closed_metrics:
-                self.metric_logger.meters[f"{metric}_closed"].update(eval(metric), n=1)
+                self.metric_logger.meters[f"{metric}_mc"].update(eval(metric), n=1)
         else:
             raise NotImplementedError
 

@@ -194,7 +194,7 @@ if __name__ == "__main__":
     model_wrapped = get_model(args=args, device=args.device.type)
     model_wrapped.load_for_training(args.model_path)
 
-    # Checking model param here may be not reliable. The param state may be changed when initializing HF trainers using training configs.
+    # Checking model param here may be unreliable. The param state may be changed when initializing HF trainers using training configs.
     # total_params = sum(p.numel() for p in model_wrapped.parameters())
     # trainable_params = sum(p.numel() for p in model_wrapped.parameters() if p.requires_grad)
     # trainable_percentage = 100 * trainable_params / total_params
