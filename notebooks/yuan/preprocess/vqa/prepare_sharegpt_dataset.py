@@ -24,6 +24,7 @@ DATASET_ROOTS = {
     "VQA-RAD": os.path.join(root, "VQA-RAD"),
     "Harvard-FairVLMed10k": os.path.join(root, "Harvard-FairVLMed10k"),
     "MedXpertQA": os.path.join(root, "MedXpertQA"),
+    "OmniMedVQA": os.path.join(root, "OmniMedVQA"),
 }
 
 DATA_IMG_PATH = {
@@ -32,11 +33,13 @@ DATA_IMG_PATH = {
     "VQA-RAD": "None",
     "Harvard-FairVLMed10k": "/research/d5/gds/yzhong22/datasets/Harvard-FairVLMed10k",
     "MedXpertQA": "/research/d5/gds/yzhong22/datasets/MedXpertQA",
+    "OmniMedVQA": "/research/d5/gds/yzhong22/datasets/OmniMedVQA",
 }
 
 if __name__ == "__main__":
     # datasets = ["SLAKE", "PathVQA", "VQA-RAD", "Harvard-FairVLMed10k"]
-    datasets = ["MedXpertQA"]
+    # datasets = ["MedXpertQA"]
+    datasets = ["OmniMedVQA"]
 
     for dataset in datasets:
         data_args = edict(split="train", task="vqa", dataset=dataset, seed=0, image_path=DATA_IMG_PATH[dataset])
