@@ -21,7 +21,7 @@ Example commands (LoRA rank 128) using preprocessed JSONs in script/:
 - Lingshu + MedXpertQA-MM:
   accelerate launch --main_process_port 49002 train/qwen_sft.py --model_name_or_path lingshu-medical-mllm/Lingshu-7B --dataset_name medxpertqa_mm_train_qwen --output_dir ./log/sft_lingshu_medxpertqa_lora128 --per_device_train_batch_size 1 --gradient_accumulation_steps 4 --num_train_epochs 1 --learning_rate 2e-5 --max_seq_length 2048 --logging_steps 10 --save_steps 500 --bf16 --lora_enable True --lora_rank 128 --lora_alpha 256
 - Lingshu + OmniMedVQA:
-  accelerate launch --main_process_port 49003 train/qwen_sft.py --model_name_or_path lingshu-medical-mllm/Lingshu-7B --dataset_name omnimedvqa_train_qwen --output_dir ./log/sft_lingshu_omnimedvqa_lora128 --per_device_train_batch_size 1 --gradient_accumulation_steps 4 --num_train_epochs 1 --learning_rate 2e-5 --max_seq_length 2048 --logging_steps 10 --save_steps 500 --bf16 --lora_enable True --lora_rank 128 --lora_alpha 256
+  accelerate launch --main_process_port 49003 train/qwen_sft.py --model_name_or_path lingshu-medical-mllm/Lingshu-7B --dataset_name omnimedvqa_train_qwen --output_dir ./log/sft_lingshu_omnimedvqa_lora128_v2 --per_device_train_batch_size 1 --gradient_accumulation_steps 4 --num_train_epochs 1 --learning_rate 2e-5 --max_seq_length 2048 --logging_steps 10 --save_steps 500 --bf16 --lora_enable True --lora_rank 128 --lora_alpha 256
 
 """
 import ast
@@ -189,7 +189,11 @@ def main(script_args, training_args, model_args):
     else:
         raise NotImplementedError()
 
-        
+    if len(dataset) == 0:
+        raise ValueError(
+            f"Resolved dataset '{script_args.dataset_name}' is empty. "
+            "Check the source JSON and dataset preparation step."
+        )
 
     dataset = CustomDataset(dataset)
 

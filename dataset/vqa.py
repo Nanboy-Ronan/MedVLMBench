@@ -402,8 +402,14 @@ class OmniMedVQA(VQADataset):
         if index_filename is None:
             raise ValueError(f"Unsupported split '{split}' for OmniMedVQA")
 
-        # Search in current data dir and one level up to support nested layouts.
-        candidate_roots = [self.data_dir, os.path.dirname(self.data_dir)]
+        # Search common index locations across OmniMedVQA layouts, preferring resample_v2.
+        parent_dir = os.path.dirname(self.data_dir)
+        candidate_roots = [
+            os.path.join(parent_dir, "resample_v2"),
+            os.path.join(parent_dir, "resample_v1"),
+            self.data_dir,
+            parent_dir,
+        ]
         for root in candidate_roots:
             if not root:
                 continue
@@ -425,7 +431,7 @@ class OmniMedVQA(VQADataset):
 
         raise FileNotFoundError(
             f"Index file for split '{split}' not found. "
-            f"Expected {index_filename} in {self.data_dir} or its parent."
+            f"Expected {index_filename} in {self.data_dir}, its parent, or resample_v1/resample_v2."
         )
 
     def __len__(self):

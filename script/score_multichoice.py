@@ -1,8 +1,13 @@
 
 """
 python script/score_multichoice.py \
-    --predictions ./log/vqa/MedXpertQA/Gemma3/eval_seed0/gemma-3-4b-pt/predictions.json \
-    --api-key xxxx \
+    --predictions /tealab-data/rjin02/MedVLMBench/log/vqa/MedXpertQA/Gemma3/eval_seed0/gemma-3-4b-it/predictions.json \
+    --api-key AIzaSyAjXBPQqPZaiwid_-SFRVkcWvmv64TYU04 \
+    --output ./scored_predictions.json
+
+python script/score_multichoice.py \
+    --predictions /tealab-data/rjin02/MedVLMBench/log/vqa/OmniMedVQA/Gemma3/eval_seed0/gemma-3-4b-it/predictions.json \
+    --api-key AIzaSyBY1pKYKK5rY1yqiJUNMPYB_IOgvKefmKw \
     --output ./scored_predictions.json
 """
 

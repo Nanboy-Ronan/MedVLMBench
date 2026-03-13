@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import requests
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 from eval.metrics import MetricLogger
 
@@ -30,25 +30,44 @@ class EvalEngine:
         self.records = []
         self.logger = logger
 
-    def evaluate(self, args, model):
+    def evaluate(self, args, model, indices=None, save_outputs=True):
         # Keep samples intact so metadata like image_paths (possibly multi-image) is preserved.
-        data_loader = DataLoader(self.dataset, batch_size=1, collate_fn=lambda batch: batch[0])
+        dataset = self.dataset if indices is None else Subset(self.dataset, indices)
+        data_loader = DataLoader(dataset, batch_size=1, collate_fn=lambda batch: batch[0])
+        header = getattr(args, "eval_header", "Test:")
 
         self.init_metric_logger()
 
         with torch.inference_mode():
-            for subject in self.metric_logger.log_every(data_loader, args.eval_print_freq, header="Test:"):
+            for subject in self.metric_logger.log_every(data_loader, args.eval_print_freq, header=header):
                 self.evaluate_subject(subject, model)
 
         self.metric_logger.synchronize_between_processes()
 
-        self.save(self.args.output_dir, model)
+        if save_outputs:
+            self.save(self.args.output_dir, model)
 
         results = {k: meter.global_avg for k, meter in self.metric_logger.meters.items()}
 
         self.logger.info("\nEvaluation results:\n" + "\n".join("{} {:.3f}".format(k, v) for k, v in results.items()))
 
         return results
+
+    def export_state(self, model):
+        return {
+            "model_name": model.name,
+            "model_type": model.model_type,
+            "dataset_name": self.dataset.name,
+            "dataset_modality": self.dataset.modality,
+            "records": self.records,
+            "meters": {
+                name: {
+                    "total": meter.total,
+                    "count": meter.count,
+                }
+                for name, meter in self.metric_logger.meters.items()
+            },
+        }
 
     def evaluate_subject(self, subject, model):
         pass
