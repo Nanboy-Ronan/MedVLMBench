@@ -1,6 +1,14 @@
 from dataset.utils import get_prototype
 
 
+def _maybe_wrap_vlm_agent(args, model):
+    if getattr(args, "usage", None) == "mdagent":
+        from wrappers import MDAgentWrapper
+
+        return MDAgentWrapper(backbone=model, args=args)
+    return model
+
+
 def get_model(args, **kwargs):
     if args.task == "vqa" or args.task == "caption":
         if args.model == "BLIP":
@@ -65,6 +73,7 @@ def get_model(args, **kwargs):
             model = Gemini25Pro(args=args)
         else:
             raise NotImplementedError()
+        model = _maybe_wrap_vlm_agent(args, model)
     
     elif args.task == "caption":
         if args.model == "BLIP":
@@ -83,6 +92,7 @@ def get_model(args, **kwargs):
             model = XrayGPT(args=args)
         else:
             raise NotImplementedError()
+        model = _maybe_wrap_vlm_agent(args, model)
 
     elif args.task == "diagnosis":
         from dataset.diagnosis import INFO

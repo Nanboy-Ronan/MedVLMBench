@@ -49,6 +49,13 @@ def collect_args():
     parser.add_argument("--model_path", type=str, default=None, help="explicitly indentify checkpoint path to resume.")
     parser.add_argument("--model_base", type=str, default=None)
     parser.add_argument("--usage", type=str, default=None)
+    parser.add_argument(
+        "--mdagent_mode",
+        type=str,
+        default="adaptive",
+        choices=["adaptive", "basic", "intermediate", "advanced"],
+        help="Reasoning mode used when --usage mdagent is enabled.",
+    )
 
     # misc
     parser.add_argument("--device", default="cuda")
