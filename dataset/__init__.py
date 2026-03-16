@@ -65,7 +65,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
 
     assert image_processor_callable is not None or args.task != "diagnosis"
 
-    if image_processor_callable is not None:
+    if image_processor_callable is not None and args.model not in ["LLaVA-1.5", "LLaVA-Med"]:
         transform = image_processor_callable
     else:
         transform = get_transform(args)

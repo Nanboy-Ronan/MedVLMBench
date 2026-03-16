@@ -13,6 +13,8 @@ def get_trainer(args, model_wrapped, dataset):
         from model.release.llava.train.llava_trainer import LLaVATrainer
         from train.llava_trainer import make_supervised_data_module
 
+        # dataset.transform = None
+
         data_module = make_supervised_data_module(
             args,
             dataset=dataset,
