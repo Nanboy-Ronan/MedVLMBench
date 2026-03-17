@@ -21,7 +21,7 @@ class InternVL3(ChatMetaModel):
         )
         self.processor = AutoProcessor.from_pretrained(model_path)
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         if not type(image) == list:
             image = [image]
 
@@ -46,8 +46,15 @@ class InternVL3(ChatMetaModel):
             messages, add_generation_prompt=True, tokenize=True, return_dict=True, return_tensors="pt"
         ).to(self.model.device, dtype=torch.bfloat16)
 
-        generate_ids = self.model.generate(**inputs, max_new_tokens=200)
+        if temperature is None:
+            generate_ids = self.model.generate(**inputs, max_new_tokens=200)
+        else:
+            generate_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=200,
+                do_sample=True if temperature > 0 else False,
+                temperature=temperature,
+            )
         decoded = self.processor.decode(generate_ids[0, inputs["input_ids"].shape[1] :], skip_special_tokens=True)
-        print(decoded)
 
         return decoded.strip()

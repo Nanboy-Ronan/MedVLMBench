@@ -76,6 +76,9 @@ def collect_args():
         args.exp_path, args.task, args.dataset, args.model, f"eval_seed{args.seed}", os.path.basename(args.model_path)
     )
 
+    if args.usage is not None:
+        args.output_dir = os.path.join(args.output_dir, args.usage)
+
     basics.creat_folder(args.output_dir)
 
     if args.cache_dir is not None:
@@ -151,11 +154,7 @@ def _merge_worker_payloads(args):
             meter_totals[name]["total"] += meter["total"]
             meter_totals[name]["count"] += meter["count"]
 
-    results = {
-        name: meter["total"] / meter["count"]
-        for name, meter in meter_totals.items()
-        if meter["count"] > 0
-    }
+    results = {name: meter["total"] / meter["count"] for name, meter in meter_totals.items() if meter["count"] > 0}
 
     info_payload = payloads[0]
     info = {

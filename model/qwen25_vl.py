@@ -50,7 +50,7 @@ class Qwen25_VL(ChatMetaModel):
             )
         self.processor = AutoProcessor.from_pretrained(model_path)
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         if not type(image) == list:
             image = [image]
 
@@ -64,7 +64,6 @@ class Qwen25_VL(ChatMetaModel):
         image_contents = [{"type": "image", "image": to_pil_image(x)} for x in image]
 
         messages = [{"role": "user", "content": [*image_contents, {"type": "text", "text": qs}]}]
-        print(messages)
 
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         image_inputs, video_inputs = process_vision_info(messages)
@@ -78,14 +77,23 @@ class Qwen25_VL(ChatMetaModel):
         )
 
         inputs = inputs.to(self.device)
+        if temperature is None:
+            generated_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=512,
+            )
+        else:
+            generated_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=512,
+                do_sample=True if temperature > 0 else False,
+                temperature=temperature,
+            )
 
-        generated_ids = self.model.generate(**inputs, max_new_tokens=128)
         generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
-
-        print(output_text)
 
         return output_text[0].strip()
 

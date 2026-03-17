@@ -27,7 +27,7 @@ class ChatMetaModel(BaseModel):
         )
         self._inference_context = {}
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         # input image should be type of Tensor
         pass
 

@@ -78,7 +78,7 @@ class MedGemma(ChatMetaModel):
             modules_to_save=modules_to_save,
         )
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         if not type(image) == list:
             image = [image]
 
@@ -113,7 +113,20 @@ class MedGemma(ChatMetaModel):
         input_len = inputs["input_ids"].shape[-1]
 
         with torch.inference_mode():
-            generation = self.model.generate(**inputs, max_new_tokens=200, do_sample=False)
+            if temperature is None:
+                generation = self.model.generate(
+                    **inputs,
+                    max_new_tokens=512,
+                    do_sample=False,
+                )
+            else:
+                generation = self.model.generate(
+                    **inputs,
+                    max_new_tokens=512,
+                    do_sample=True if temperature > 0 else False,
+                    temperature=temperature,
+                )
+
             generation = generation[0][input_len:]
 
         decoded = self.processor.decode(generation, skip_special_tokens=True)
