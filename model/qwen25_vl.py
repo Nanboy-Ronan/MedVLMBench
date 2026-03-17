@@ -64,7 +64,6 @@ class Qwen25_VL(ChatMetaModel):
         image_contents = [{"type": "image", "image": to_pil_image(x)} for x in image]
 
         messages = [{"role": "user", "content": [*image_contents, {"type": "text", "text": qs}]}]
-        print(messages)
 
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         image_inputs, video_inputs = process_vision_info(messages)
@@ -95,8 +94,6 @@ class Qwen25_VL(ChatMetaModel):
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
-
-        print(output_text)
 
         return output_text[0].strip()
 
