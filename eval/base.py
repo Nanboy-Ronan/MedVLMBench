@@ -40,7 +40,13 @@ class EvalEngine:
 
         with torch.inference_mode():
             for subject in self.metric_logger.log_every(data_loader, args.eval_print_freq, header=header):
-                self.evaluate_subject(subject, model)
+                try:
+                    self.evaluate_subject(subject, model)
+                except KeyboardInterrupt:
+                    raise
+                except Exception as exc:
+                    self.logger.exception("Skipping sample due to evaluation error: %s", exc)
+                    self.record_failure(subject, exc)
 
         self.metric_logger.synchronize_between_processes()
 
@@ -108,3 +114,29 @@ class EvalEngine:
         if self.args.save_pred:
             with open(os.path.join(path, "predictions.json"), "w") as fp:
                 json.dump(self.records, fp, indent=4)
+
+    def record_failure(self, subject, exc):
+        if not self.args.save_pred:
+            return
+
+        def _safe_value(value):
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                return value
+            if isinstance(value, (list, tuple)):
+                return [_safe_value(v) for v in value]
+            if isinstance(value, dict):
+                return {str(k): _safe_value(v) for k, v in value.items()}
+            return str(value)
+
+        record = {
+            "image_path": _safe_value(subject.get("image_path")),
+            "prediction": "",
+            "error": str(exc),
+            "status": "failed",
+        }
+
+        for key in ["question_type", "query", "qs", "label", "answer", "caption", "prompt_template", "image_paths"]:
+            if key in subject:
+                record[key] = _safe_value(subject.get(key))
+
+        self.records.append(record)
