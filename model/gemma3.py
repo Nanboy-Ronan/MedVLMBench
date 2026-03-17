@@ -50,7 +50,7 @@ class Gemma3(ChatMetaModel):
             else:
                 generation = self.model.generate(
                     **inputs,
-                    max_new_tokens=200,
+                    max_new_tokens=512,
                     do_sample=True if temperature > 0 else False,
                     temperature=temperature,
                 )

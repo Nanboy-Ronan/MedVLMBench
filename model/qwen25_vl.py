@@ -81,12 +81,12 @@ class Qwen25_VL(ChatMetaModel):
         if temperature is None:
             generated_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=128,
+                max_new_tokens=512,
             )
         else:
             generated_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=128,
+                max_new_tokens=512,
                 do_sample=True if temperature > 0 else False,
                 temperature=temperature,
             )

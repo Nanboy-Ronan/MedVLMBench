@@ -427,7 +427,7 @@ class OmniMedVQA(VQADataset):
 
         # OmniMedVQA splits are pinned to resample_v4 to keep evaluation consistent.
         parent_dir = os.path.dirname(self.data_dir)
-        candidate = os.path.join(parent_dir, "resample_v4", index_filename)
+        candidate = os.path.join(self.data_dir, index_filename)
         if os.path.isfile(candidate):
             index_set = set()
             with open(candidate, "r", encoding="utf-8") as f:
@@ -443,10 +443,7 @@ class OmniMedVQA(VQADataset):
                 raise RuntimeError(f"Index file {candidate} is empty.")
             return index_set
 
-        raise FileNotFoundError(
-            f"Index file for split '{split}' not found. "
-            f"Expected {candidate}."
-        )
+        raise FileNotFoundError(f"Index file for split '{split}' not found. " f"Expected {candidate}.")
 
     def __len__(self):
         return len(self.samples)

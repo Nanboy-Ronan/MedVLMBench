@@ -263,7 +263,7 @@ class UCAgentWrapper(AgentMetaWrapper):
         return leader_final_report, extraction
 
     def infer_vision_language(self, image, qs, image_size=None):
-        print(self.last_trace)
+
         self.reset()
 
         # ---------------------------
@@ -307,6 +307,7 @@ class UCAgentWrapper(AgentMetaWrapper):
             return level3_option
 
         except:
+            print(f"Error happens!\nTrace history: {self.last_trace}\nSwithing to zero-shot mode.")
             # if any formatting error happens in any stage of the conversation, use zero-shot instead
             return self._query_backbone(image, qs, image_size)
 
