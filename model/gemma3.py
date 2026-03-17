@@ -20,7 +20,7 @@ class Gemma3(ChatMetaModel):
         self.model = Gemma3ForConditionalGeneration.from_pretrained(model_path, device_map="auto").eval()
         self.processor = AutoProcessor.from_pretrained(model_path)
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         if not type(image) == list:
             image = [image]
         image_contents = [{"type": "image", "image": to_pil_image(x)} for x in image]
@@ -45,7 +45,16 @@ class Gemma3(ChatMetaModel):
         input_len = inputs["input_ids"].shape[-1]
 
         with torch.inference_mode():
-            generation = self.model.generate(**inputs, max_new_tokens=200, do_sample=False)
+            if temperature is None:
+                generation = self.model.generate(**inputs, max_new_tokens=200, do_sample=False)
+            else:
+                generation = self.model.generate(
+                    **inputs,
+                    max_new_tokens=200,
+                    do_sample=True if temperature > 0 else False,
+                    temperature=temperature,
+                )
+
             generation = generation[0][input_len:]
 
         decoded = self.processor.decode(generation, skip_special_tokens=True)
