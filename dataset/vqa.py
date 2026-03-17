@@ -31,6 +31,9 @@ class VQADataset(BaseDataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split)
 
+        if transform is not None:
+            print(f"Loading image processor: {transform}")
+
         self.transform = transform
 
         # 0 for open question, 1 for yes/no question

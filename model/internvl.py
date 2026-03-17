@@ -36,7 +36,7 @@ class InternVL3(ChatMetaModel):
             {
                 "role": "user",
                 "content": [
-                    *image_contents
+                    *image_contents,
                     {"type": "text", "text": qs},
                 ],
             },

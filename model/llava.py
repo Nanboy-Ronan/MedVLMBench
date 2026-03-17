@@ -2,11 +2,13 @@ import os
 import shutil
 import warnings
 import torch
+from torchvision.transforms.functional import to_pil_image
 import transformers
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig, LlamaForCausalLM
 from model.release.llava.model import LlavaLlamaForCausalLM, LlavaMptForCausalLM, LlavaMistralForCausalLM
 from model.release.llava.conversation import conv_templates, default_conversation
 from model.release.llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
+
 
 from model.chat import ChatMetaModel
 from utils.utils import maybe_zero_3
@@ -535,6 +537,8 @@ class LLaVA(ChatMetaModel):
             assert len(image) == 1, f"LLaVA-1.5 only support single image input, while got {len(image)}."
             image = image[0]
 
+        image = to_pil_image(image)
+
         qs = qs.replace(self.constants.DEFAULT_IMAGE_TOKEN, "").strip()
         if self.model.config.mm_use_im_start_end:
             qs = (
@@ -559,6 +563,7 @@ class LLaVA(ChatMetaModel):
         )
 
         if type(image) is Image.Image:
+
             image_tensor = process_images([image], self.image_processor, self.model.config)[0]
             image_size = image.size
         else:

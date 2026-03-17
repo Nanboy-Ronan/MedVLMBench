@@ -3,6 +3,7 @@ import shutil
 import warnings
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig
+from torchvision.transforms.functional import to_pil_image
 
 from model.release.llava_med.model import LlavaMistralForCausalLM
 from model.release.llava_med.conversation import conv_templates
@@ -371,6 +372,7 @@ class LLaVAMed(LLaVA):
         if type(image) is list:
             assert len(image) == 1, f"LLaVA-1.5 only support single image input, while got {len(image)}."
             image = image[0]
+        image = to_pil_image(image)
         # Model inference for vision-language tasks
         warnings.filterwarnings("ignore")
 
