@@ -51,6 +51,6 @@ class AgentMetaWrapper(ChatMetaModel):
     def reset(self):
         self.last_trace = {}
 
-    def _query_backbone(self, image, prompt, image_size=None):
+    def _query_backbone(self, image, prompt, image_size=None, temperature=None):
         """Run inference of backbone VLM to get response"""
-        return self.backbone.infer_vision_language(image, prompt, image_size).strip()
+        return self.backbone.infer_vision_language(image, prompt, image_size, temperature=None).strip()
