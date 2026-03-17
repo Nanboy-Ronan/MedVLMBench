@@ -139,6 +139,7 @@ class VQAEvalEngine(EvalEngine):
         self.metric_logger.meters["f1_overall"].update(f1_score, n=1)
 
         if self.args.save_pred:
+            trace = model.get_last_trace() if hasattr(model, "get_last_trace") else None
             self.records.append(
                 {
                     "image_path": image_path,
@@ -146,5 +147,6 @@ class VQAEvalEngine(EvalEngine):
                     "qs": prompt,
                     "answer": answer,
                     "prediction": output,
+                    "trace": trace,
                 }
             )

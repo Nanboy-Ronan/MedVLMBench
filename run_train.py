@@ -135,6 +135,14 @@ def setup_args(args):
             args.gradient_checkpointing is False
         ), "Currently there is a bug when training visual tower using peft + gradient checkpointing. For more info: https://github.com/huggingface/peft/issues/1402"
 
+        # HF Trainer falls back to DataParallel for plain multi-GPU `python run_train.py`
+        # launches. LLaVA produces variable sequence lengths across replicas after
+        # multimodal token expansion, which breaks DataParallel gather. Keep the
+        # plain launch on a single visible GPU unless the user explicitly uses a
+        # distributed launcher such as torchrun/deepspeed.
+        if torch.cuda.is_available() and torch.cuda.device_count() > 1 and not args.deepspeed:
+            args._n_gpu = 1
+
         if args.model == "LLaVA-1.5":
             save_folder_name += "_llava"
         if args.model == "LLaVA-Med":
@@ -202,7 +210,10 @@ if __name__ == "__main__":
     # args.logger.info(f"Trainable parameters: {trainable_params/1e6:.2f}M")
     # args.logger.info(f"Trainable parameters percentage: {trainable_percentage:.2f}%")
 
-    dataset = get_dataset(args, image_processor_callable=getattr(model_wrapped, "image_processor", None))
+    dataset_image_processor = getattr(
+        model_wrapped, "image_processor_callable", getattr(model_wrapped, "image_processor", None)
+    )
+    dataset = get_dataset(args, image_processor_callable=dataset_image_processor)
     train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
     train_engine.train()
 

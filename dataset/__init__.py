@@ -65,7 +65,14 @@ def get_dataset(args, image_processor_callable=None, split=None):
 
     assert image_processor_callable is not None or args.task != "diagnosis"
 
-    if image_processor_callable is not None and args.model not in ["LLaVA-1.5", "LLaVA-Med"]:
+    llava_train_models = {"LLaVA-1.5", "LLaVA-Med"}
+
+    # LLaVA training performs its own image padding and preprocessing in the
+    # trainer dataset wrapper. Passing a transform here causes double-processing
+    # and type mismatches for PIL/tensor/BatchFeature inputs.
+    if getattr(args, "model", None) in llava_train_models and args.task in {"vqa", "caption"} and split == "train":
+        transform = None
+    elif image_processor_callable is not None:
         transform = image_processor_callable
     else:
         transform = get_transform(args)

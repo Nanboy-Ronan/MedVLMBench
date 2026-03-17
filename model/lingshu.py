@@ -3,6 +3,7 @@ import warnings
 from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import torch
+from peft import PeftModel
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
 from PIL import Image
@@ -39,12 +40,22 @@ class Lingshu(ChatMetaModel):
         torch_dtype: str | torch.dtype = "auto",
         **kwargs,
     ):
+        load_path = model_path
+        if getattr(self.args, "model_base", None):
+            load_path = self.args.model_base
+
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_path,
+            load_path,
             device_map=device_map,
             torch_dtype=torch_dtype,
         )
-        self.processor = AutoProcessor.from_pretrained(model_path)
+
+        if getattr(self.args, "model_base", None):
+            self.model = PeftModel.from_pretrained(self.model, model_path)
+            self.processor = AutoProcessor.from_pretrained(model_path)
+        else:
+            self.processor = AutoProcessor.from_pretrained(model_path)
+
         self.tokenizer = self.processor.tokenizer
 
 
@@ -130,7 +141,11 @@ class Lingshu(ChatMetaModel):
         if context_images:
             image_contents = [{"type": "image", "image": img, "resized_height": 224, "resized_width": 224} for img in context_images]
         else:
-            image_contents = [{"type": "image", "image": to_pil_image(image), "resized_height": 224, "resized_width": 224}]
+            images = image if isinstance(image, list) else [image]
+            image_contents = [
+                {"type": "image", "image": _to_pil(img), "resized_height": 224, "resized_width": 224}
+                for img in images
+            ]
 
         messages = [{"role": "user", "content": [*image_contents, {"type": "text", "text": qs}]}]
         print(messages)

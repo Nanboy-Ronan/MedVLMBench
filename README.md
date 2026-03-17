@@ -143,6 +143,30 @@ git clone https://huggingface.co/datasets/foreverbeliever/OmniMedVQA
 `run_train.py` is the major entry for training all models (including the lightweight adaptation).
 `run_eval.py` is the major entry for off the shelf evaluation of all models.
 
+### MDAgent Wrapper
+
+This repository now includes a local `MDAgent` wrapper in `wrappers/mdagent.py`, inspired by the orchestration pattern in the [MDAgents reference implementation](https://github.com/mitmedialab/MDAgents/blob/main/main.py) and its [utility module](https://github.com/mitmedialab/MDAgents/blob/main/utils.py).
+
+The implementation here is intentionally backbone-agnostic:
+
+- It wraps any MedVLMBench VLM that already implements `infer_vision_language(...)`.
+- It keeps checkpoint loading and image preprocessing in the original backbone.
+- It adds a multi-step medical reasoning layer on top of the backbone instead of introducing a separate API-only stack.
+- It works through the existing `run_eval.py` entrypoint via `--usage mdagent`.
+
+The wrapper supports three execution modes:
+
+- `basic`: one clinician-style answer.
+- `intermediate`: visual examiner -> medical specialist -> skeptical reviewer -> moderator.
+- `advanced`: triage lead -> visual examiner -> differential diagnostician -> quality reviewer -> chief moderator.
+- `adaptive`: automatically selects one of the above from the question form.
+
+This design is useful when you want to compare:
+
+- plain backbone inference vs. multi-agent inference,
+- generalist vs. medical-specialist backbones under the same orchestration pattern,
+- different VLMs without rewriting the MDAgent logic for each model.
+
 ### Notebook Tutorials
 
 We offer some examples of how to use our package through the notebook.
@@ -187,6 +211,49 @@ python run_eval.py \
 ```
 
 </details>
+
+<details>
+<summary><b>MDAgent VQA Example</b></summary>
+
+Use any supported VLM backbone and add `--usage mdagent`.
+
+```bash
+python run_eval.py \
+--task vqa --dataset VQA-RAD --split test \
+--image_path ./data \
+--model Qwen2-VL \
+--model_path ./pretrained_models/Qwen2-VL-2B-Instruct \
+--usage mdagent \
+--mdagent_mode adaptive \
+--exp_path ./log \
+--cache_dir ./cache \
+--save_pred
+```
+
+You can switch the backbone without changing the MDAgent logic. For example:
+
+```bash
+python run_eval.py \
+--task vqa --dataset SLAKE --split test \
+--image_path ./data/SLAKE/imgs \
+--model MedGemma \
+--model_path ./pretrained_models/medgemma-4b-it \
+--usage mdagent \
+--mdagent_mode advanced \
+--exp_path ./log \
+--cache_dir ./cache \
+--save_pred
+```
+
+When `--save_pred` is enabled, the prediction file also stores the MDAgent reasoning trace for each sample.
+
+</details>
+
+#### MDAgent Notes
+
+- `MDAgent` is currently intended for generative vision-language tasks such as VQA and captioning.
+- The wrapper reuses the same backbone for every agent role, so stronger reasoning usually costs more inference calls per sample.
+- `basic` is the cheapest mode, `advanced` is the most expensive, and `adaptive` is the default recommended mode.
 
 #### Training
 

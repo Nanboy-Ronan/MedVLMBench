@@ -8,6 +8,25 @@ from datasets import load_dataset, concatenate_datasets
 from dataset.base import BaseDataset
 
 
+def _resolve_fairvlmed10k_roots(image_path):
+    image_root = os.path.abspath(image_path)
+    metadata_candidates = [
+        image_root,
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "FairVLMed10k"),
+    ]
+
+    metadata_root = None
+    for candidate in metadata_candidates:
+        if os.path.exists(os.path.join(candidate, "vqa_test.csv")):
+            metadata_root = candidate
+            break
+
+    if metadata_root is None:
+        metadata_root = image_root
+
+    return metadata_root, image_root
+
+
 class VQADataset(BaseDataset):
     def __init__(self, data_args, split, transform=None):
         super().__init__(data_args, split)
@@ -169,9 +188,8 @@ class HarvardFairVLMed10kVQA(VQADataset):
         self.name = "Harvard-FairVLMed10k"
         self.modality = "SLO Fundus"
 
-        self.image_path = data_args.image_path
-        self.ds = pd.read_csv(os.path.join(self.image_path, f"vqa_{split}.csv")).dropna()
-        # self.ds = pd.read_csv(os.path.join("./data/FairVLMed10k", f"vqa_{split}.csv")).dropna()
+        self.metadata_path, self.image_path = _resolve_fairvlmed10k_roots(data_args.image_path)
+        self.ds = pd.read_csv(os.path.join(self.metadata_path, f"vqa_{split}.csv")).dropna()
 
     def __len__(self):
         return len(self.ds)
@@ -407,30 +425,27 @@ class OmniMedVQA(VQADataset):
         if index_filename is None:
             raise ValueError(f"Unsupported split '{split}' for OmniMedVQA")
 
-        # Search in current data dir and one level up to support nested layouts.
-        candidate_roots = [self.data_dir, os.path.dirname(self.data_dir)]
-        for root in candidate_roots:
-            if not root:
-                continue
-            candidate = os.path.join(root, index_filename)
-            if os.path.isfile(candidate):
-                index_set = set()
-                with open(candidate, "r", encoding="utf-8") as f:
-                    for line in f:
-                        try:
-                            entry = json.loads(line)
-                        except json.JSONDecodeError:
-                            continue
-                        qid = entry.get("question_id")
-                        if qid:
-                            index_set.add(qid)
-                if not index_set:
-                    raise RuntimeError(f"Index file {candidate} is empty.")
-                return index_set
+        # OmniMedVQA splits are pinned to resample_v4 to keep evaluation consistent.
+        parent_dir = os.path.dirname(self.data_dir)
+        candidate = os.path.join(parent_dir, "resample_v4", index_filename)
+        if os.path.isfile(candidate):
+            index_set = set()
+            with open(candidate, "r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        entry = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    qid = entry.get("question_id")
+                    if qid:
+                        index_set.add(qid)
+            if not index_set:
+                raise RuntimeError(f"Index file {candidate} is empty.")
+            return index_set
 
         raise FileNotFoundError(
             f"Index file for split '{split}' not found. "
-            f"Expected {index_filename} in {self.data_dir} or its parent."
+            f"Expected {candidate}."
         )
 
     def __len__(self):
