@@ -62,6 +62,7 @@ def collect_args():
     parser.add_argument("--num_gpus", type=int, default=1, help="number of GPUs to use for data-parallel evaluation")
     parser.add_argument("--cache_dir", default=None)
     parser.add_argument("--eval_print_freq", type=int, default=100, help="logging frequency (step)")
+    parser.add_argument("--max_samples", type=int, default=None, help="optionally limit evaluation to the first N samples")
     parser.add_argument("--exp_path", type=str, default="./output")
     parser.add_argument("--wandb_name", type=str, default="baseline")
     parser.add_argument("--if_wandb", type=bool, default=False)

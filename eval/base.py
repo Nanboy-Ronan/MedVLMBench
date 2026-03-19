@@ -33,6 +33,9 @@ class EvalEngine:
     def evaluate(self, args, model, indices=None, save_outputs=True):
         # Keep samples intact so metadata like image_paths (possibly multi-image) is preserved.
         dataset = self.dataset if indices is None else Subset(self.dataset, indices)
+        max_samples = getattr(args, "max_samples", None)
+        if max_samples is not None:
+            dataset = Subset(dataset, list(range(min(max_samples, len(dataset)))))
         data_loader = DataLoader(dataset, batch_size=1, collate_fn=lambda batch: batch[0])
         header = getattr(args, "eval_header", "Test:")
 

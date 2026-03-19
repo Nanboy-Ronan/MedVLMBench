@@ -154,13 +154,13 @@ class UCAgentWrapper(AgentMetaWrapper):
             [Output Format] #Flaws: <Describe the specific logical flaw, risk, or overlooked possibility in 3-5 CONCISE sentences.> Counter Evidence: <Cite specific evidence from the original case supporting your critique in 4 sentences.>.
             """
 
-            critic_response = self._query_backbone(prompt, image, temperature=0.5)
+            critic_response = self._query_backbone(image, prompt, temperature=0.5)
             self.last_trace[f"level3_critic{option}"] = critic_response
             critics[option] = critic_response
 
         # leader adjudication
         critic_text = "(LEVEL-3 Expert Panel Critics)\n" + "\n".join(
-            [f"Critic Expert {i+1}: {critic[1]}" for i, critic in enumerate(critics)]
+            [f"Critic Expert {i+1}: {critic}" for i, critic in enumerate(critics.values())]
         )
 
         leader_prompt = f"""
@@ -183,7 +183,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
         retry_count = 0
         while retry_count < MAX_RETRY:
-            leader_consulations = self._query_backbone(leader_prompt, image, temperature=0.1)
+            leader_consulations = self._query_backbone(image, leader_prompt, temperature=0.1)
             self.last_trace[f"level3_leader"] = leader_consulations
 
             extraction = self._extract_inquiries(leader_consulations)
@@ -203,7 +203,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
             raise ValueError(f"Agent formatting error: {self.last_trace}")
 
-        consulations = [(x["reviewed_answer"], x["question"]) for x in leader_consulations["inquiries"]]
+        consulations = [(x["reviewed_answer"], x["question"]) for x in extraction["inquiries"]]
 
         rebuttals = []
         for consul in consulations:
@@ -212,7 +212,7 @@ class UCAgentWrapper(AgentMetaWrapper):
                 continue
 
             rebuttal_query = f"""Please answer the question from the leader toward your support report in 1-3 sentences, do not change your stance:{inquiry}."""
-            rebuttal = self._query_backbone(rebuttal_query, image, temperature=0.1)
+            rebuttal = self._query_backbone(image, rebuttal_query, temperature=0.1)
             self.last_trace[f"level3_rebuttal{answer}"] = rebuttal
             rebuttals.append(f"(Critic for {answer} - response)\n{rebuttal}")
 
@@ -241,7 +241,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
         retry_count = 0
         while retry_count < MAX_RETRY:
-            leader_final_report = self._query_backbone(leader_report_query, image, temperature=0.1)
+            leader_final_report = self._query_backbone(image, leader_report_query, temperature=0.1)
             self.last_trace[f"level3_leader_final"] = leader_final_report
             extraction = self._extract_option(leader_final_report)
 
@@ -262,7 +262,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
         return leader_final_report, extraction
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
 
         self.reset()
 
@@ -309,7 +309,7 @@ class UCAgentWrapper(AgentMetaWrapper):
         except:
             print(f"Error happens!\nTrace history: {self.last_trace}\nSwithing to zero-shot mode.")
             # if any formatting error happens in any stage of the conversation, use zero-shot instead
-            return self._query_backbone(image, qs, image_size)
+            return self._query_backbone(image, qs, image_size=image_size, temperature=temperature)
 
     def _extract_option(self, response, question_type_pre=None):
         """
@@ -473,6 +473,18 @@ class UCAgentWrapper(AgentMetaWrapper):
         )
 
         matches = pattern.findall(text)
+
+        if not matches:
+            # More permissive fallback for outputs like:
+            # Inquiries:
+            # To Expert 1:
+            # Who reviews A:
+            # Question...
+            pattern = re.compile(
+                r"To\s*Expert\s*(\d+)\s*:\s*Who\s*reviews\s*([A-Z])\s*:\s*(.*?)(?=To\s*Expert\s*\d+\s*:|\Z)",
+                re.IGNORECASE | re.DOTALL,
+            )
+            matches = pattern.findall(text)
 
         if not matches:
             return {"inquiries": [], "valid_format": False, "validation_error": "No valid inquiry format found"}
