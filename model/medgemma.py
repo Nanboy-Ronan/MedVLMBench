@@ -113,18 +113,19 @@ class MedGemma(ChatMetaModel):
         ).to(self.model.device, dtype=torch.bfloat16)
 
         input_len = inputs["input_ids"].shape[-1]
+        max_new_tokens = self._resolve_max_new_tokens(input_len, default_max_new_tokens=512)
 
         with torch.inference_mode():
             if temperature is None:
                 generation = self.model.generate(
                     **inputs,
-                    max_new_tokens=512,
+                    max_new_tokens=max_new_tokens,
                     do_sample=False,
                 )
             else:
                 generation = self.model.generate(
                     **inputs,
-                    max_new_tokens=512,
+                    max_new_tokens=max_new_tokens,
                     do_sample=True if temperature > 0 else False,
                     temperature=temperature,
                 )
@@ -134,6 +135,30 @@ class MedGemma(ChatMetaModel):
         decoded = self.processor.decode(generation, skip_special_tokens=True)
 
         return decoded.strip()
+
+    def _resolve_max_new_tokens(self, input_len, default_max_new_tokens):
+        text_config = getattr(self.model.config, "text_config", self.model.config)
+        sliding_window = getattr(text_config, "sliding_window", None)
+
+        if sliding_window is None:
+            return default_max_new_tokens
+
+        available_tokens = sliding_window - input_len
+        if available_tokens <= 0:
+            raise ValueError(
+                "MedGemma prompt exhausted the Gemma sliding-window budget: "
+                f"input_len={input_len}, sliding_window={sliding_window}."
+            )
+
+        if available_tokens < default_max_new_tokens:
+            warnings.warn(
+                "Reducing MedGemma max_new_tokens to fit Gemma sliding-window budget: "
+                f"input_len={input_len}, sliding_window={sliding_window}, "
+                f"requested={default_max_new_tokens}, using={available_tokens}.",
+                stacklevel=2,
+            )
+
+        return min(default_max_new_tokens, available_tokens)
 
     def save(self, output_folder, trainer=None):
         trainer.save_model()
