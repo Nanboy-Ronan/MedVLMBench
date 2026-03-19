@@ -32,6 +32,16 @@ class MDAgentWrapper(AgentMetaWrapper):
 
         question = qs.lower().strip()
         token_count = len(question.split())
+        multichoice_markers = [
+            "answer choices:",
+            "answer with the single letter",
+            "(a)",
+            "(b)",
+            "(c)",
+        ]
+        if any(marker in question for marker in multichoice_markers):
+            return "basic"
+
         yes_no_patterns = [
             r"^answer the following question about the image with yes or no",
             r"\byes or no\b",
@@ -69,7 +79,7 @@ class MDAgentWrapper(AgentMetaWrapper):
 
         prompt = "\n\n".join(prompt_parts).strip()
 
-        return super().infer_vision_language(image, prompt, image_size=image_size)
+        return self.backbone.infer_vision_language(image, prompt, image_size=image_size)
 
     def _run_basic(self, image, qs, image_size=None):
         answer = self._query_backbone(

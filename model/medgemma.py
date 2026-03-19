@@ -17,13 +17,15 @@ class MedGemma(ChatMetaModel):
 
         self.name = "MedGemma"
         self.model_type = "medical"
+        self.prefers_cpu_image_inputs = True
 
     def load_from_pretrained(self, model_path, **kwargs):
         self.model = AutoModelForImageTextToText.from_pretrained(
             model_path,
+            attn_implementation="eager",
             torch_dtype=torch.bfloat16,
             device_map="auto",
-        )
+        ).eval()
         self.processor = AutoProcessor.from_pretrained(model_path)
 
     def load_for_training(self, model_path):

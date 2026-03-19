@@ -279,7 +279,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
         return leader_final_report, extraction
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
 
         self.reset()
 
@@ -330,7 +330,7 @@ class UCAgentWrapper(AgentMetaWrapper):
                 self.last_trace["error"] = {"system_message": e}
             print(f"Trace history: {self.last_trace}\n" f"Error occurred: {e}\n" f"Switching to zero-shot mode.")
             # if any formatting error happens in any stage of the conversation, use zero-shot instead
-            return self._query_backbone(image, qs, image_size)
+            return self._query_backbone(image, qs, image_size=image_size, temperature=temperature)
 
     def _extract_option(self, response, question_type_pre=None):
         """

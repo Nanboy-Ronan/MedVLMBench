@@ -209,8 +209,6 @@ class HarvardFairVLMed10kVQA(VQADataset):
 
         prompt_template = self.prompt_templates[int(is_binary)]
 
-        image_path = "NA"
-
         if self.transform is not None:
             image = self.transform(image)
 
