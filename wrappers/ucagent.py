@@ -141,6 +141,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
     def _level3_diagnosis(self, question, image, latest_report, level1_dict):
         critics = {}
+        debate_history = {}
 
         # each option gets critic
         for option in level1_dict.keys():
@@ -154,13 +155,22 @@ class UCAgentWrapper(AgentMetaWrapper):
             [Output Format] #Flaws: <Describe the specific logical flaw, risk, or overlooked possibility in 3-5 CONCISE sentences.> Counter Evidence: <Cite specific evidence from the original case supporting your critique in 4 sentences.>.
             """
 
-            critic_response = self._query_backbone(prompt, image, temperature=0.5)
-            self.last_trace[f"level3_critic{option}"] = critic_response
+            critic_response = self._query_backbone(image, prompt, temperature=0.5)
+            self.last_trace[f"level3_critic_{option}"] = critic_response
             critics[option] = critic_response
+            debate_history[
+                option
+            ] = f"""
+            # Your initial task: 
+            {prompt}
+
+            # Your initial support report:
+            {critic_response}
+            """
 
         # leader adjudication
         critic_text = "(LEVEL-3 Expert Panel Critics)\n" + "\n".join(
-            [f"Critic Expert {i+1}: {critic[1]}" for i, critic in enumerate(critics)]
+            [f"Critic Expert {i+1}: {critic}" for i, critic in enumerate(critics)]
         )
 
         leader_prompt = f"""
@@ -170,8 +180,13 @@ class UCAgentWrapper(AgentMetaWrapper):
         
         [Inquiry Methodology] Strictly follow these steps in your thinking: 1.Synthesize Critiques: Comprehensively read and understand the report submitted by each Hypothesis Auditor. 2.Identify Core Conflict: What is the central point of disagreement or the most critical identified risk among the competing audits? 3.Formulate Targeted Questions: Based on this core conflict, design a challenging question for each auditor that forces them to defend their critique. 
         
-        [Output Format] Inquiries:@ To Expert <Expert No., e.g 1> who reviews <The answer it reviews, e.g A>: <The single, most pointed question for the Expert who reviews Answer, based on the risks they identified in their report.> @ To Expert <Expert No., e.g 2> who reviews <The answer it reviews, e.g B>: <The single, most pointed question for the Expert who reviews Answer>...(until each expert in [Critics on Assessments] is inquired, no other contents). 
+        [Output Format] Inquiries:@ To Expert <Expert No., e.g 1> who reviews Agent1: <The single, most pointed question for the Expert who reviews Answer, based on the risks they identified in their report.> @ To Expert <Expert No., e.g 2> who reviews Agent2: <The single, most pointed question for the Expert who reviews Answer>...(until each expert in [Critics on Assessments] is inquired, no other contents). 
         
+        Rules:
+        - Use EXACTLY the string "Agent1", "Agent2", etc. (NOT A/B).
+        - Each inquiry MUST start with "@ To Expert".
+        - Do NOT include any additional text before or after the inquiries.
+
         [Medical Case] {question}. 
         
         [Initial Independent Assessments] {latest_report}. 
@@ -183,7 +198,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
         retry_count = 0
         while retry_count < MAX_RETRY:
-            leader_consulations = self._query_backbone(leader_prompt, image, temperature=0.1)
+            leader_consulations = self._query_backbone(image, leader_prompt, temperature=0.1)
             self.last_trace[f"level3_leader"] = leader_consulations
 
             extraction = self._extract_inquiries(leader_consulations)
@@ -203,7 +218,9 @@ class UCAgentWrapper(AgentMetaWrapper):
 
             raise ValueError(f"Agent formatting error: {self.last_trace}")
 
-        consulations = [(x["reviewed_answer"], x["question"]) for x in leader_consulations["inquiries"]]
+        consulations = [
+            (list(level1_dict.keys())[int(x["expert_id"] - 1)], x["question"]) for x in extraction["inquiries"]
+        ]
 
         rebuttals = []
         for consul in consulations:
@@ -211,12 +228,12 @@ class UCAgentWrapper(AgentMetaWrapper):
             if answer not in critics.keys():
                 continue
 
-            rebuttal_query = f"""Please answer the question from the leader toward your support report in 1-3 sentences, do not change your stance:{inquiry}."""
-            rebuttal = self._query_backbone(rebuttal_query, image, temperature=0.1)
-            self.last_trace[f"level3_rebuttal{answer}"] = rebuttal
+            rebuttal_query = f"""{debate_history[answer]}\nPlease answer the question from the leader toward your support report in 1-3 sentences, do not change your stance:{inquiry}."""
+            rebuttal = self._query_backbone(image, rebuttal_query, temperature=0.1)
+            self.last_trace[f"level3_rebuttal_{answer}"] = rebuttal
             rebuttals.append(f"(Critic for {answer} - response)\n{rebuttal}")
 
-        rebuttals = "#Expert Panel Response\n" + "\n".join(rebuttals)
+        rebuttals = "(Expert Panel Response)\n" + "\n".join(rebuttals)
         level3_reports = critic_text + "[Leader Inquiries]" + leader_consulations + rebuttals
 
         leader_report_query = f"""
@@ -241,7 +258,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
         retry_count = 0
         while retry_count < MAX_RETRY:
-            leader_final_report = self._query_backbone(leader_report_query, image, temperature=0.1)
+            leader_final_report = self._query_backbone(image, leader_report_query, temperature=0.1)
             self.last_trace[f"level3_leader_final"] = leader_final_report
             extraction = self._extract_option(leader_final_report)
 
@@ -306,8 +323,12 @@ class UCAgentWrapper(AgentMetaWrapper):
 
             return level3_option
 
-        except:
-            print(f"Error happens!\nTrace history: {self.last_trace}\nSwithing to zero-shot mode.")
+        except Exception as e:
+            if "error" in self.last_trace.keys():
+                self.last_trace["error"]["system_message"] = e
+            else:
+                self.last_trace["error"] = {"system_message": e}
+            print(f"Trace history: {self.last_trace}\n" f"Error occurred: {e}\n" f"Switching to zero-shot mode.")
             # if any formatting error happens in any stage of the conversation, use zero-shot instead
             return self._query_backbone(image, qs, image_size)
 
@@ -448,38 +469,60 @@ class UCAgentWrapper(AgentMetaWrapper):
 
     def _extract_inquiries(self, response: str):
         """
-        Extract structured inquiries from Lead Adjudicator output.
+        Relaxed extractor for Lead Adjudicator output.
 
-        Expected format:
+        Accepts formats like:
+        @ To Expert 1: Question...
+        @ To Expert 2: Question...
 
-        Inquiries:
-        @ To Expert 1 who reviews A: Question...
-        @ To Expert 2 who reviews B: Question...
+        or
+        @ To Expert 1 who reviews Agent1: Question...
         """
 
         results = []
 
         if not response or not isinstance(response, str):
-            return {"inquiries": [], "valid_format": False, "validation_error": "Empty response"}
+            return {
+                "inquiries": [],
+                "valid_format": False,
+                "validation_error": "Empty response",
+            }
 
         text = response.strip()
 
-        # -------------------------------------------------------
-        # Regex to capture each inquiry block
-        # -------------------------------------------------------
+        # Relaxed pattern:
+        # - Start with @
+        # - Anything until first colon
+        # - Everything after colon until next @ or end
         pattern = re.compile(
-            r"@\s*To\s*Expert\s*(\d+)\s*who\s*reviews\s*([A-Z])\s*:\s*(.*?)(?=@\s*To\s*Expert|\Z)",
+            r"@\s*(.+?)\s*:\s*(.+?)(?=\s*@|\Z)",
             re.IGNORECASE | re.DOTALL,
         )
 
         matches = pattern.findall(text)
 
-        if not matches:
-            return {"inquiries": [], "valid_format": False, "validation_error": "No valid inquiry format found"}
+        if len(matches) < 2:
+            return {
+                "inquiries": [],
+                "valid_format": False,
+                "validation_error": "Less than two valid inquiries found",
+            }
 
-        for expert_no, option, question_text in matches:
+        for header, question_text in matches:
+            # Try extracting expert number if present
+            expert_match = re.search(r"Expert\s*(\d+)", header, re.IGNORECASE)
+            expert_id = int(expert_match.group(1)) if expert_match else None
+
             results.append(
-                {"expert_id": int(expert_no), "reviewed_answer": option.upper(), "question": question_text.strip()}
+                {
+                    "expert_id": expert_id,  # None if not found
+                    "header": header.strip(),
+                    "question": question_text.strip(),
+                }
             )
 
-        return {"inquiries": results, "valid_format": True, "validation_error": None}
+        return {
+            "inquiries": results,
+            "valid_format": True,
+            "validation_error": None,
+        }
