@@ -5,7 +5,7 @@ import re
 from wrappers.agent import AgentMetaWrapper
 from eval.utils import extract_choice_letter
 
-MAX_RETRY = 3
+MAX_RETRY = 1
 
 
 class UCAgentWrapper(AgentMetaWrapper):
