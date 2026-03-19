@@ -65,6 +65,4 @@ class AgentMetaWrapper(ChatMetaModel):
 
     def _query_backbone(self, image, prompt, image_size=None, temperature=None):
         """Run inference of backbone VLM to get response"""
-        if temperature is None:
-            temperature = 0
-        return self.backbone.infer_vision_language(image, prompt, image_size=image_size, temperature=temperature)
+        return self.backbone.infer_vision_language(image, prompt, image_size, temperature=temperature).strip()
