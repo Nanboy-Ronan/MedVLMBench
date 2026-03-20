@@ -19,6 +19,7 @@ class AgentMetaWrapper(ChatMetaModel):
 
         self.image_processor = getattr(self.backbone, "image_processor", None)
         self.image_processor_callable = getattr(self.backbone, "image_processor_callable", None)
+        self.prefers_cpu_image_inputs = getattr(self.backbone, "prefers_cpu_image_inputs", False)
 
     def load_from_pretrained(self, model_path, **kwargs):
         self.backbone.load_from_pretrained(model_path, **kwargs)
@@ -50,6 +51,17 @@ class AgentMetaWrapper(ChatMetaModel):
 
     def reset(self):
         self.last_trace = {}
+
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
+        """Delegate inference to the wrapped backbone and normalize empty outputs."""
+        if temperature is None:
+            temperature = 0
+        result = self.backbone.infer_vision_language(image, qs, image_size=image_size, temperature=temperature)
+        if result is None:
+            return ""
+        if not isinstance(result, str):
+            result = str(result)
+        return result.strip()
 
     def _query_backbone(self, image, prompt, image_size=None, temperature=None):
         """Run inference of backbone VLM to get response"""

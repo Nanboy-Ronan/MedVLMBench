@@ -45,13 +45,18 @@ class VQAEvalEngine(EvalEngine):
         qs_l, answer_l = qs.lower(), answer.lower()
 
         device = self.args.device
-        if type(image) is list:
-            image = [x.to(device, non_blocking=True) for x in image]
-        else:
-            image = image.to(device, non_blocking=True)
+        if not getattr(model, "prefers_cpu_image_inputs", False):
+            if type(image) is list:
+                image = [x.to(device, non_blocking=True) for x in image]
+            else:
+                image = image.to(device, non_blocking=True)
 
         prompt = prompt_template.format(qs)
         output = model.infer_vision_language(image, prompt, image_size=image_size)
+        if output is None:
+            output = ""
+        elif not isinstance(output, str):
+            output = str(output)
         output_l = output.lower()
 
         output_normed = normalize_word(output_l)

@@ -569,10 +569,14 @@ class LLaVA(ChatMetaModel):
         else:
             image_tensor = image
 
+        projector = self.model.get_model().mm_projector
+        projector_dtype = next(projector.parameters()).dtype
+        image_tensor = image_tensor.to(device=self.model.device, dtype=projector_dtype, non_blocking=True)
+
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids,
-                images=image_tensor.unsqueeze(0).half().cuda(),
+                images=image_tensor.unsqueeze(0),
                 image_sizes=[image_size],
                 do_sample=True if temperature > 0 else False,
                 temperature=temperature,

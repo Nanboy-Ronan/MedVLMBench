@@ -15,9 +15,15 @@ class Gemma3(ChatMetaModel):
 
         self.name = "Gemma3"
         self.model_type = "general"
+        self.prefers_cpu_image_inputs = True
 
     def load_from_pretrained(self, model_path, **kwargs):
-        self.model = Gemma3ForConditionalGeneration.from_pretrained(model_path, device_map="auto").eval()
+        self.model = Gemma3ForConditionalGeneration.from_pretrained(
+            model_path,
+            attn_implementation="eager",
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+        ).eval()
         self.processor = AutoProcessor.from_pretrained(model_path)
 
     def infer_vision_language(self, image, qs, image_size=None, temperature=None):
