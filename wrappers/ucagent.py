@@ -324,10 +324,9 @@ class UCAgentWrapper(AgentMetaWrapper):
             return level3_option
 
         except Exception as e:
-            if "error" in self.last_trace.keys():
-                self.last_trace["error"]["system_message"] = e
-            else:
-                self.last_trace["error"] = {"system_message": e}
+            if "error" not in self.last_trace.keys():
+                self.last_trace["error"] = {"system_message": str(e)}
+
             print(f"Trace history: {self.last_trace}\n" f"Error occurred: {e}\n" f"Switching to zero-shot mode.")
             # if any formatting error happens in any stage of the conversation, use zero-shot instead
             return self._query_backbone(image, qs, image_size=image_size, temperature=temperature)
