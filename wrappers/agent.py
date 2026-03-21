@@ -1,3 +1,5 @@
+import inspect
+
 from model.chat import ChatMetaModel
 
 
@@ -52,11 +54,40 @@ class AgentMetaWrapper(ChatMetaModel):
     def reset(self):
         self.last_trace = {}
 
+    def _call_backbone_infer(self, image, qs, image_size=None, temperature=None):
+        """Call the backbone with only the kwargs its inference method supports."""
+        infer_fn = self.backbone.infer_vision_language
+
+        try:
+            signature = inspect.signature(infer_fn)
+            parameters = signature.parameters.values()
+            accepts_var_kwargs = any(param.kind == inspect.Parameter.VAR_KEYWORD for param in parameters)
+            accepts_image_size = accepts_var_kwargs or "image_size" in signature.parameters
+            accepts_temperature = accepts_var_kwargs or "temperature" in signature.parameters
+        except (TypeError, ValueError):
+            accepts_image_size = image_size is not None
+            accepts_temperature = temperature is not None
+
+        kwargs = {}
+        if image_size is not None and accepts_image_size:
+            kwargs["image_size"] = image_size
+        if temperature is not None and accepts_temperature:
+            kwargs["temperature"] = temperature
+
+        try:
+            return infer_fn(image, qs, **kwargs)
+        except TypeError as exc:
+            if "unexpected keyword argument" not in str(exc):
+                raise
+
+            kwargs.pop("temperature", None)
+            return infer_fn(image, qs, **kwargs)
+
     def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         """Delegate inference to the wrapped backbone and normalize empty outputs."""
         if temperature is None:
             temperature = 0
-        result = self.backbone.infer_vision_language(image, qs, image_size=image_size, temperature=temperature)
+        result = self._call_backbone_infer(image, qs, image_size=image_size, temperature=temperature)
         if result is None:
             return ""
         if not isinstance(result, str):
@@ -65,4 +96,9 @@ class AgentMetaWrapper(ChatMetaModel):
 
     def _query_backbone(self, image, prompt, image_size=None, temperature=None):
         """Run inference of backbone VLM to get response"""
-        return self.backbone.infer_vision_language(image, prompt, image_size, temperature=temperature).strip()
+        result = self._call_backbone_infer(image, prompt, image_size=image_size, temperature=temperature)
+        if result is None:
+            return ""
+        if not isinstance(result, str):
+            result = str(result)
+        return result.strip()
