@@ -47,11 +47,11 @@ class InternVL3(ChatMetaModel):
         ).to(self.model.device, dtype=torch.bfloat16)
 
         if temperature is None:
-            generate_ids = self.model.generate(**inputs, max_new_tokens=200)
+            generate_ids = self.model.generate(**inputs, max_new_tokens=512)
         else:
             generate_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=200,
+                max_new_tokens=512,
                 do_sample=True if temperature > 0 else False,
                 temperature=temperature,
             )
