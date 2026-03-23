@@ -368,7 +368,15 @@ class LLaVAMed(LLaVA):
 
         return tokenizer, model, image_processor, context_len
 
-    def infer_vision_language(self, image, qs, temperature=0, image_size=None):
+    def infer_vision_language(
+        self,
+        image,
+        qs,
+        image_size=None,
+        temperature=0,
+    ):
+        if temperature is None:
+            temperature = 0
         if type(image) is list:
             assert len(image) == 1, f"LLaVA-1.5 only support single image input, while got {len(image)}."
             image = image[0]

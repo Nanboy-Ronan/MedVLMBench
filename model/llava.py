@@ -530,7 +530,15 @@ class LLaVA(ChatMetaModel):
         self.image_processor_callable = ImageProcessorCallable(image_processor, model.config)
         self.context_len = context_len
 
-    def infer_vision_language(self, image, qs, temperature=0, image_size=None):
+    def infer_vision_language(
+        self,
+        image,
+        qs,
+        image_size=None,
+        temperature=0,
+    ):
+        if temperature is None:
+            temperature = 0
         # Model inference for vision-language tasks
         # TODO: Make it work for a batch
         if type(image) is list:
@@ -563,7 +571,6 @@ class LLaVA(ChatMetaModel):
         )
 
         if type(image) is Image.Image:
-
             image_tensor = process_images([image], self.image_processor, self.model.config)[0]
             image_size = image.size
         else:

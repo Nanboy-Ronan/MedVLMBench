@@ -35,6 +35,10 @@ class VQAEvalEngine(EvalEngine):
         image_size = subject["image_size"]
         image_path = subject["image_path"]
 
+        # skip open questions
+        if question_type == "open":
+            return
+
         # model reload api solution for multi-image inputs
         # context = {}
         # if "image_paths" in subject:

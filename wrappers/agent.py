@@ -85,9 +85,7 @@ class AgentMetaWrapper(ChatMetaModel):
 
     def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         """Delegate inference to the wrapped backbone and normalize empty outputs."""
-        if temperature is None:
-            temperature = 0
-        result = self._call_backbone_infer(image, qs, image_size=image_size, temperature=temperature)
+        result = self.backbone.infer_vision_language(image, qs, image_size=image_size, temperature=temperature)
         if result is None:
             return ""
         if not isinstance(result, str):
