@@ -135,7 +135,7 @@ class Lingshu(ChatMetaModel):
         # 8) update context length
         self.context_len = getattr(self.model.model.config, "max_position_embeddings", self.context_len)
 
-    def infer_vision_language(self, image, qs, image_size=None):
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
         context_images = self._load_context_images()
         print(len(context_images))
         if context_images:
@@ -163,7 +163,19 @@ class Lingshu(ChatMetaModel):
 
         inputs = inputs.to(self.device)
 
-        generated_ids = self.model.generate(**inputs, max_new_tokens=128)
+        if temperature is None:
+            generated_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=512,
+            )
+        else:
+            generated_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=512,
+                do_sample=True if temperature > 0 else False,
+                temperature=temperature,
+            )
+
         generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
