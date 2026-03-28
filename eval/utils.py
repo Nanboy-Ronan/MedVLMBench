@@ -234,57 +234,64 @@ def split_sentence(sentence, n):
 
 
 def extract_choice_letter(response: str, choices: Iterable[str] = tuple("ABCDE")) -> Optional[str]:
-    """
-    Extract a single-letter multi-choice answer (e.g., A/B/C/D/E) from a model response.
-    Supports both uppercase and lowercase letters.
-    """
-    if response is None:
+
+    if not response:
         return None
 
     text = response.strip()
-    if not text:
-        return None
-
-    # normalize whitespace
-    t = re.sub(r"\s+", " ", text)
-
     choices_set = set(c.upper() for c in choices)
-    if not choices_set:
-        return None
 
-    # Helper: validate and normalize
     def ok(letter: str) -> Optional[str]:
         u = letter.upper()
         return u if u in choices_set else None
 
-    # 1) Explicit cues: "answer: c", "final answer is (b)"
+    # ✅ 1) Improved explicit answer cues (MORE ROBUST)
     cue_patterns = [
-        r"(?:final\s+answer|answer\s+is|answer|ans|choice|option)\s*[:\-]?\s*[\(\[]?\s*([A-Za-z])\s*[\)\]]?",
-        r"(?:correct\s+answer\s+is|the\s+correct\s+answer\s+is)\s*[\(\[]?\s*([A-Za-z])\s*[\)\]]?",
+        # **Answer:** B
+        r"\*\*\s*answer\s*[:\-]?\s*\*\*\s*([A-Za-z])",
+        # #Answer: A
+        r"#?\s*answer\s*[:\-]\s*[\(\[]?\s*([A-Za-z])",
+        # The answer is C
+        r"(?:the\s+)?answer\s+is\s+[\(\[]?\s*([A-Za-z])",
+        # Final answer: D
+        r"(?:the\s+)?final\s+answer\s*[:\-]?\s*[\(\[]?\s*([A-Za-z])",
+        # The correct answer is B
+        r"(?:the\s+)?correct\s+answer\s+is\s+[\(\[]?\s*([A-Za-z])",
     ]
+
     for pat in cue_patterns:
-        m = re.search(pat, t, flags=re.IGNORECASE)
+        m = re.search(pat, text, flags=re.IGNORECASE)
         if m:
             letter = ok(m.group(1))
             if letter:
                 return letter
 
-    # 2) Parenthesized choices: "(b)"
-    m = re.search(r"[\(\[]\s*([A-Za-z])\s*[\)\]]", t)
+    # ✅ 2) If first non-space token is standalone letter
+    m = re.match(r"\s*([A-Za-z])\b", text)
     if m:
         letter = ok(m.group(1))
         if letter:
             return letter
 
-    # 3) Markdown bold: "**c**"
-    m = re.search(r"\*\*\s*([A-Za-z])\s*\*\*", t)
+    # ✅ 3) Markdown bold like **C**
+    m = re.search(r"\*\*\s*([A-Za-z])\s*\*\*", text)
     if m:
         letter = ok(m.group(1))
         if letter:
             return letter
 
-    # 4) Fallback: standalone letter token
-    m = re.search(r"\b([A-Za-z])\b", t)
+    # ✅ 4) Truncate explanation-like sections
+    split_markers = ["explanation:", "analysis:"]
+    lower_text = text.lower()
+    for marker in split_markers:
+        idx = lower_text.find(marker)
+        if idx != -1:
+            text = text[:idx]
+            break
+
+    # ✅ 5) Parenthesized letter near beginning only
+    early_text = text[:100]
+    m = re.search(r"[\(\[]\s*([A-Za-z])\s*[\)\]]", early_text)
     if m:
         letter = ok(m.group(1))
         if letter:
