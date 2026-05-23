@@ -49,7 +49,7 @@ class UCAgentWrapper(AgentMetaWrapper):
 
         [Strict Output Format]
         #Question Type: <open / yes/no / multi-choice>
-        #Reasoning: <3–5 sentences of clear medical reasoning>
+        #Reasoning: <1-2 concise sentences grounded in visible image evidence>
         #Answer: <final answer strictly following the format constraint>
         """
 
@@ -107,7 +107,7 @@ class UCAgentWrapper(AgentMetaWrapper):
         
         [Strict Output Format] 
         #Question Type: <open / yes/no / multi-choice>
-        #Reasoning: <Write a rigorous 3-5 sentence paragraph explaining (1) the observed image evidence, (2) the logic of the prior judgments, (3) potential flaws or confirmations, (4) your diagnostic reasoning, and (5) your conclusion.> 
+        #Reasoning: <Write 1-2 concise sentences covering the key evidence and your conclusion.> 
         #Answer: <final answer strictly following the format constraint>
         """
 
@@ -152,7 +152,7 @@ class UCAgentWrapper(AgentMetaWrapper):
             
             [Historical Reports] {latest_report}. 
             
-            [Output Format] #Flaws: <Describe the specific logical flaw, risk, or overlooked possibility in 3-5 CONCISE sentences.> Counter Evidence: <Cite specific evidence from the original case supporting your critique in 4 sentences.>.
+            [Output Format] #Flaws: <Describe the main flaw or risk in 1-2 concise sentences.> Counter Evidence: <Cite supporting evidence from the case in 1-2 concise sentences.>.
             """
 
             critic_response = self._query_backbone(image, prompt, temperature=0.5)
@@ -252,7 +252,7 @@ class UCAgentWrapper(AgentMetaWrapper):
         
         [Strict Output Format] 
         #Question Type: <open / yes/no / multi-choice>
-        #Reasoning: <A report, within 6-8 sentences, summarizing the comparative impact of the critiques. This must explain the rationale for your final verdict.> 
+        #Reasoning: <A concise 2-4 sentence report comparing the critiques and justifying the final verdict.> 
         #Answer: <final answer strictly following the format constraint>
         """
 

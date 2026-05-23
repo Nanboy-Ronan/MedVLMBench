@@ -1,5 +1,14 @@
 # MedVLMBench: A Unified Benchmark for Generalist and Specialist Medical Vision-Language Models
 
+> [!IMPORTANT]
+> This is the **development version** of MedVLMBench, actively under development and may be unstable. For the stable, fully-documented release with the latest models, datasets, and tutorials, please visit [**ubc-tea/MedVLMBench**](https://github.com/ubc-tea/MedVLMBench).
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2506.17337"><img src="https://img.shields.io/badge/arXiv-2506.17337-b31b1b.svg" alt="arXiv"></a>
+  <a href="https://github.com/ubc-tea/MedVLMBench"><img src="https://img.shields.io/badge/Stable%20Release-ubc--tea%2FMedVLMBench-blue.svg" alt="Stable Release"></a>
+  <a href="https://github.com/FairMedFM/FairMedFM"><img src="https://img.shields.io/badge/Companion-FairMedFM-orange.svg" alt="FairMedFM"></a>
+</p>
+
 MedVLMBench is the first unified benchmark for systematically evaluating generalist and medical-specialist Vision-Language Models (VLMs). This repository provides the code and resources to reproduce the experiments and extend the benchmark.
 
 ## Table of Contents
@@ -28,6 +37,23 @@ MedVLMBench is the first unified benchmark for systematically evaluating general
 
 >**Conclusions:** This study highlights the complementary strengths of medical-specialist and generalist VLMs. Specialists remain valuable in modality-aligned use cases, but we find that efficiently fine-tuned generalist VLMs can achieve comparable or even superior performance in most tasks, particularly when transferring to unseen or rare OOD medical modalities. These results suggest that generalist VLMs, rather than being constrained by their lack of medical-specific pretraining, may offer a scalable and cost-effective pathway for advancing clinical AI development.
 
+
+## Companion Benchmark: FairMedFM
+
+> **Evaluating fairness of medical FMs?** See our companion benchmark [**FairMedFM**](https://github.com/FairMedFM/FairMedFM) — the first fairness benchmark covering 20 medical imaging FMs across 17 datasets with bias metrics over sex, race, and age.
+
+MedVLMBench and FairMedFM form a **two-part evaluation suite** for medical foundation models — capability and fairness, measured on the same models and datasets.
+
+| | [MedVLMBench](https://github.com/ubc-tea/MedVLMBench) | FairMedFM |
+|---|---|---|
+| **Focus** | Capability: accuracy, AUROC, VQA scores | Fairness across sex, race, age |
+| **Model paradigm** | Generative VLMs + discriminative models | Discriminative FMs (CLIP, SAM variants) |
+| **Tasks** | VQA, Diagnosis, Captioning | Classification, Segmentation |
+| **Scale** | 30+ VLMs · 14 datasets | 20 FMs · 17 datasets |
+
+**Models evaluated in both**: BioMedCLIP · MedCLIP · PLIP · SigLIP · MedSigLIP · CLIP · BLIP · BLIP2 · PubMedCLIP
+
+**Datasets in both**: HAM10000 · CheXpert · MIMIC-CXR · FairVLMed10k · GF3300 · PAPILA
 
 ## Getting Started
 
@@ -321,11 +347,22 @@ deepspeed run_train.py \
 
 If you find this repository useful, please consider citing our paper:
 
-```
+```bibtex
 @article{zhong2025can,
   title={Can Common VLMs Rival Medical VLMs? Evaluation and Strategic Insights},
   author={Zhong, Yuan and Jin, Ruinan and Li, Xiaoxiao and Dou, Qi},
   journal={arXiv preprint arXiv:2506.17337},
   year={2025}
+}
+```
+
+If you also use our companion benchmark **FairMedFM** for fairness evaluation, please cite:
+
+```bibtex
+@article{jin2024fairmedfm,
+  title={FairMedFM: Fairness Benchmarking for Medical Imaging Foundation Models},
+  author={Jin, Ruinan and Xu, Zikang and Zhong, Yuan and Yao, Qiongsong and Dou, Qi and Zhou, S Kevin and Li, Xiaoxiao},
+  journal={arXiv preprint arXiv:2407.00983},
+  year={2024}
 }
 ```
