@@ -112,3 +112,60 @@ class DeerAPIModel(ChatMetaModel):
         print(result)
 
         return result.strip()
+
+
+class PoeAPIModel(ChatMetaModel):
+    def __init__(self, args):
+        super().__init__(args)
+
+        os.environ["HTTP_PROXY"] = ""
+        os.environ["HTTPS_PROXY"] = ""
+
+        self.client = OpenAI(
+            api_key="sk-poe-UGfEkWcOcMT72kemMayFZwDXVa8_46M8UDrUIJ9gF0w",  # or os.getenv("POE_API_KEY")
+            base_url="https://api.poe.com/v1",
+        )
+
+        self.api_model_name = "o3"
+
+        self.max_try_num = 5
+
+    def load_from_pretrained(self, model_path, **kwargs):
+        pass
+
+    def infer_vision_language(self, image, qs, image_size=None, temperature=None):
+        if not type(image) == list:
+            image = [image]
+
+        # image = to_pil_image(image)
+        # img_base64 = image_to_base64(image)
+        # if "yes or no" not in qs:
+        qs = qs + "\n\nPlease answer the question concisely in no more than 2 sentences."
+
+        image_contents = [
+            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_to_base64(to_pil_image(x))}"}}
+            for x in image
+        ]
+
+        messages = [
+            {"type": "text", "text": qs},
+        ] + image_contents
+
+        for _ in range(self.max_try_num):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.api_model_name, messages=[{"role": "user", "content": messages}]
+                )
+
+                result = response.choices[0].message.content
+                break
+            except Exception as e:
+                result = "invalid response"
+
+        if result == "invalid response":
+            if hasattr(e, "message"):
+                print(e.message)
+            raise Exception
+        print(result)
+
+        return result.strip()
