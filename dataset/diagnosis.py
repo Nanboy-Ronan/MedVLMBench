@@ -1023,7 +1023,8 @@ class DrishtiDataset(torch.utils.data.Dataset):
         self.name = 'DrishtiDataset'
         self.CLASSES = 2
         self.class_dict = {'Normal': 0, 'Glaucomatous': 1}
-        self.transform = transforms.Compose([
+        # honor the transform from get_dataset (like the other datasets); fall back to the raw-tensor default
+        self.transform = transform if transform is not None else transforms.Compose([
             transforms.PILToTensor(),  # Convert PIL Image to Tensor
             transforms.Resize((224, 224))  # Resize the Tensor to 128x128
         ])

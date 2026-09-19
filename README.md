@@ -161,6 +161,9 @@ git clone https://huggingface.co/datasets/foreverbeliever/OmniMedVQA
 | MedSigLIP | Diagnosis | Done | Done |
 | PubMedCLIP | Diagnosis | Done | Done |
 | SigLIP | Diagnosis | Done | Done |
+| DermLIP | Diagnosis | Done | Done |
+| EyeCLIP | Diagnosis | Done | Done |
+| CONCH | Diagnosis | Done | Done |
 
 </details>
 

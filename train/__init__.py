@@ -180,6 +180,9 @@ def get_trainer(args, model_wrapped, dataset):
         "BLIP2-2.7b",
         "PubMedCLIP",
         "SigLIP",
+        "DermLIP",
+        "EyeCLIP",
+        "CONCH",
     ]:
         if args.usage in ["lp", "img-lora-lp", "clip-img-lora"]:
             data_module = make_diagnosis_data_module(

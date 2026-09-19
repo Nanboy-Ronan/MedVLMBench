@@ -137,8 +137,12 @@ class CLIPImgLPModel(CLIPBase):
 
 
     def forward(self, images):
-        with torch.no_grad():
+        if self.args.usage == "img-lora-lp":
+            # the LoRA adapters live in the image encoder, so it must stay in the autograd graph
             image_features = self.encode_image(images)
+        else:
+            with torch.no_grad():
+                image_features = self.encode_image(images)
         return self.head(image_features)
 
     def get_parameters_info(self):

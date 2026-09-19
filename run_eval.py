@@ -127,9 +127,7 @@ def _eval_worker(rank, world_size, args_dict):
     if args.model_path != "original_pretrained":
         model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
 
-    dataset_image_processor = getattr(
-        model_wrapped, "image_processor_callable", getattr(model_wrapped, "image_processor", None)
-    )
+    dataset_image_processor = getattr(model_wrapped, "image_processor_callable", None) or getattr(model_wrapped, "image_processor", None)
     dataset = get_dataset(args, dataset_image_processor)
     shard_indices = list(range(rank, len(dataset), world_size))
     args.eval_header = f"GPU {rank} [{len(shard_indices)} samples]:"
@@ -237,9 +235,7 @@ if __name__ == "__main__":
     if args.model_path != "original_pretrained":
         model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
 
-    dataset_image_processor = getattr(
-        model_wrapped, "image_processor_callable", getattr(model_wrapped, "image_processor", None)
-    )
+    dataset_image_processor = getattr(model_wrapped, "image_processor_callable", None) or getattr(model_wrapped, "image_processor", None)
     dataset = get_dataset(args, dataset_image_processor)
 
     eval_engine = get_eval_engine(args=args, dataset=dataset)

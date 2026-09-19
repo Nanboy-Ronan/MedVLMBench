@@ -36,7 +36,7 @@ datasets = {
     "DermaMNIST-diagnosis": DermaMNIST,
     "Camelyon17-diagnosis": Camelyon17,
     "HAM10000-diagnosis": HAM10000Dataset,
-    "Drishti": DrishtiDataset,
+    "Drishti-diagnosis": DrishtiDataset,
     "ChestXray-diagnosis": ChestXrayDataset,
     "GF3300-diagnosis": GF3300Dataset,
     "HarvardFairVLMed10k-caption": HarvardFairVLMed10kCaption,

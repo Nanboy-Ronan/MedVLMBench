@@ -210,9 +210,7 @@ if __name__ == "__main__":
     # args.logger.info(f"Trainable parameters: {trainable_params/1e6:.2f}M")
     # args.logger.info(f"Trainable parameters percentage: {trainable_percentage:.2f}%")
 
-    dataset_image_processor = getattr(
-        model_wrapped, "image_processor_callable", getattr(model_wrapped, "image_processor", None)
-    )
+    dataset_image_processor = getattr(model_wrapped, "image_processor_callable", None) or getattr(model_wrapped, "image_processor", None)
     dataset = get_dataset(args, image_processor_callable=dataset_image_processor)
     train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
     train_engine.train()
