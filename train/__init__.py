@@ -9,7 +9,7 @@ task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine, "cap
 
 
 def get_trainer(args, model_wrapped, dataset):
-    if args.model in ["LLaVA-1.5", "LLaVA-Med"]:
+    if args.model in ["LLaVA-1.5", "LLaVA-Med", "Quilt-LLaVA"]:
         from model.release.llava.train.llava_trainer import LLaVATrainer
         from train.llava_trainer import make_supervised_data_module
 
@@ -148,6 +148,10 @@ def get_trainer(args, model_wrapped, dataset):
         trainer = LLaVATrainer(model=model_wrapped.model, args=args, tokenizer=model_wrapped.tokenizer, **data_module)
 
         return trainer
+    elif args.model == "Patho-R1":
+        from train.patho_r1_trainer import make_patho_r1_trainer
+
+        return make_patho_r1_trainer(args, model_wrapped, dataset)
     elif args.model in ["Lingshu"]:
         from transformers import Trainer
         from model.lingshu import LingshuDataset, LingshuCollator

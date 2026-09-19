@@ -2,6 +2,7 @@ import json
 import os, sys
 import random
 import argparse
+import traceback
 from utils import constants
 
 import numpy as np
@@ -18,6 +19,7 @@ from model import get_model
 from dataset import get_dataset
 
 from train import get_train_engine
+from utils.experiment_tracking import ExperimentTracker
 
 
 @dataclass
@@ -41,6 +43,14 @@ class Arguments(transformers.TrainingArguments):
     lora_bias: str = "none"
     num_train_epochs: int = None
     learning_rate: float = 3e-5
+    train_fraction: float = field(
+        default=1.0,
+        metadata={"help": "Fraction of the official training split to use (0 < fraction <= 1)."},
+    )
+    fraction_seed: int = field(
+        default=42,
+        metadata={"help": "Seed used only for deterministic training-set subsampling."},
+    )
 
     # evaluation
     eval_print_freq: int = 100
@@ -69,6 +79,7 @@ class Arguments(transformers.TrainingArguments):
     context_length: int = field(default=77)
     model_path: str = field(default=None, metadata={"help": "explicitly indentify checkpoint path to resume."})
     model_base: str = field(default=None)
+    patho_r1_training_authorized: bool = field(default=False, metadata={"help": "Confirm written permission from Patho-R1 rights holders before fine-tuning its restricted checkpoint."})
     freeze_backbone: bool = field(default=False)
     usage: str = field(default=None)
 
@@ -124,6 +135,9 @@ def setup_args(args):
 
     save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
+    if not 0 < args.train_fraction <= 1:
+        raise ValueError("train_fraction must satisfy 0 < train_fraction <= 1")
+
     if "LLaVA" in args.model and args.tune_modules == "M":
         args.peft = ""
         print(args.peft)
@@ -147,6 +161,8 @@ def setup_args(args):
             save_folder_name += "_llava"
         if args.model == "LLaVA-Med":
             save_folder_name += "_llava_mistral"
+        if args.model == "Quilt-LLaVA":
+            save_folder_name += "_quilt_llava"
     elif args.model == "NVILA":
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_nvila"
     elif args.model == "VILA1.5":
@@ -155,8 +171,14 @@ def setup_args(args):
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_vila_m3"
     elif args.model == "Lingshu":
         save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_lingshu"
+    elif args.model == "Patho-R1":
+        save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}_patho_r1"
     elif args.task == "diagnosis":
         save_folder_name = f"train_{args.usage}_seed{args.seed}"
+
+    if args.train_fraction < 1:
+        fraction_label = f"{args.train_fraction:.4f}".rstrip("0").rstrip(".").replace(".", "p")
+        save_folder_name += f"_frac{fraction_label}_fseed{args.fraction_seed}"
 
     args.output_dir = os.path.join(
         args.output_dir,
@@ -214,7 +236,22 @@ if __name__ == "__main__":
         model_wrapped, "image_processor_callable", getattr(model_wrapped, "image_processor", None)
     )
     dataset = get_dataset(args, image_processor_callable=dataset_image_processor)
-    train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
-    train_engine.train()
+    tracker = ExperimentTracker(
+        output_dir=args.output_dir,
+        phase="train",
+        args=args,
+        model=model_wrapped,
+        dataset=dataset,
+    )
+    tracker.start()
+    try:
+        train_engine = get_train_engine(args, model_wrapped=model_wrapped, dataset=dataset)
+        tracker.attach_trainer(train_engine.hf_trainer)
+        train_engine.train()
+    except BaseException as exc:
+        tracker.finish(status="failed", error="".join(traceback.format_exception_only(type(exc), exc)).strip())
+        raise
+    else:
+        tracker.finish(status="completed")
 
     logger.info("End of the training")

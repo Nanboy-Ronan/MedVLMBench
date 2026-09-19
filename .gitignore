@@ -169,6 +169,19 @@ pretrained_models/
 log/
 pretrained/
 script/
+!script/
+script/*
+!script/yuan/
+script/yuan/*
+!script/yuan/NEW_PATHOLOGY_MODELS.md
+!script/yuan/batch_run/
+script/yuan/batch_run/*
+!script/yuan/batch_run/quilt-llava.ipynb
+!script/yuan/batch_run/patho-r1.ipynb
+!script/yuan/train_infer_bash/
+script/yuan/train_infer_bash/*
+!script/yuan/train_infer_bash/quilt_llava/
+!script/yuan/train_infer_bash/patho_r1/
 # notebooks/
 wandb/
 cache/

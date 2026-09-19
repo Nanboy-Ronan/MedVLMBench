@@ -1,0 +1,49 @@
+task,model,dataset,exposure_status,evidence_basis,exclude_from_no_direct_overlap,include_in_certain_cross_domain
+diagnosis,MedCLIP,CheXpert,documented_direct,CheXpert is explicitly listed in the checkpoint training data,yes,no
+diagnosis,MedCLIP,Camelyon17,no_reported,not listed in disclosed training data,no,yes
+diagnosis,MedCLIP,HAM10000,no_reported,not listed in disclosed training data,no,yes
+diagnosis,MedCLIP,PAPILA,no_reported,not listed in disclosed training data,no,yes
+diagnosis,MedCLIP,GF3300,no_reported,not listed in disclosed training data,no,yes
+diagnosis,MedCLIP,HarvardFairVLMed10k,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PubMedCLIP,CheXpert,modality_level,radiology modality represented by ROCO pretraining,no,no
+diagnosis,PubMedCLIP,Camelyon17,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PubMedCLIP,HAM10000,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PubMedCLIP,PAPILA,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PubMedCLIP,GF3300,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PubMedCLIP,HarvardFairVLMed10k,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PLIP,CheXpert,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PLIP,Camelyon17,modality_level,pathology modality represented by OpenPath pretraining,no,no
+diagnosis,PLIP,HAM10000,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PLIP,PAPILA,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PLIP,GF3300,no_reported,not listed in disclosed training data,no,yes
+diagnosis,PLIP,HarvardFairVLMed10k,no_reported,not listed in disclosed training data,no,yes
+diagnosis,BioMedCLIP,CheXpert,uncertain,broad PMC-15M corpus prevents dataset-level determination,no,no
+diagnosis,BioMedCLIP,Camelyon17,uncertain,broad PMC-15M corpus prevents dataset-level determination,no,no
+diagnosis,BioMedCLIP,HAM10000,uncertain,broad PMC-15M corpus prevents dataset-level determination,no,no
+diagnosis,BioMedCLIP,PAPILA,uncertain,broad PMC-15M corpus prevents dataset-level determination,no,no
+diagnosis,BioMedCLIP,GF3300,uncertain,broad PMC-15M corpus prevents dataset-level determination,no,no
+diagnosis,BioMedCLIP,HarvardFairVLMed10k,uncertain,broad PMC-15M corpus prevents dataset-level determination,no,no
+diagnosis,MedSigLIP,CheXpert,uncertain,Med-Gemini corpus is incompletely disclosed,no,no
+diagnosis,MedSigLIP,Camelyon17,uncertain,Med-Gemini corpus is incompletely disclosed,no,no
+diagnosis,MedSigLIP,HAM10000,uncertain,Med-Gemini corpus is incompletely disclosed,no,no
+diagnosis,MedSigLIP,PAPILA,uncertain,Med-Gemini corpus is incompletely disclosed,no,no
+diagnosis,MedSigLIP,GF3300,uncertain,Med-Gemini corpus is incompletely disclosed,no,no
+diagnosis,MedSigLIP,HarvardFairVLMed10k,uncertain,Med-Gemini corpus is incompletely disclosed,no,no
+vqa,LLaVA-Med,SLAKE,uncertain,PMC-derived biomedical corpus prevents dataset-level determination,no,no
+vqa,LLaVA-Med,PathVQA,uncertain,PMC-derived biomedical corpus prevents dataset-level determination,no,no
+vqa,LLaVA-Med,VQA-RAD,uncertain,PMC-derived biomedical corpus prevents dataset-level determination,no,no
+vqa,LLaVA-Med,Harvard-FairVLMed10k,uncertain,PMC-derived biomedical corpus prevents dataset-level determination,no,no
+vqa,LLaVA-Med,MedXpertQA,uncertain,PMC-derived biomedical corpus prevents dataset-level determination,no,no
+vqa,LLaVA-Med,OmniMedVQA,uncertain,PMC-derived biomedical corpus prevents dataset-level determination,no,no
+vqa,MedGemma,SLAKE,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,MedGemma,PathVQA,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,MedGemma,VQA-RAD,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,MedGemma,Harvard-FairVLMed10k,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,MedGemma,MedXpertQA,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,MedGemma,OmniMedVQA,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,Lingshu,SLAKE,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,Lingshu,PathVQA,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,Lingshu,VQA-RAD,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,Lingshu,Harvard-FairVLMed10k,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,Lingshu,MedXpertQA,uncertain,medical multimodal corpora are incompletely disclosed,no,no
+vqa,Lingshu,OmniMedVQA,uncertain,medical multimodal corpora are incompletely disclosed,no,no
