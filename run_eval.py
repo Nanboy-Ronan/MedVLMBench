@@ -123,7 +123,9 @@ def _eval_worker(rank, world_size, args_dict):
     if args.model_path != "original_pretrained":
         model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
 
-    dataset_image_processor = getattr(
+    # LLaVA-family models preprocess raw uint8 images at inference time.  The
+    # dataset's default PILToTensor transform preserves the original pixels.
+    dataset_image_processor = None if args.model in {"LLaVA-1.5", "LLaVA-Med", "Quilt-LLaVA"} else getattr(
         model_wrapped, "image_processor_callable", getattr(model_wrapped, "image_processor", None)
     )
     dataset = get_dataset(args, dataset_image_processor)
@@ -247,7 +249,7 @@ if __name__ == "__main__":
     if args.model_path != "original_pretrained":
         model_wrapped.load_from_pretrained(model_path=args.model_path, device=args.device)
 
-    dataset_image_processor = getattr(
+    dataset_image_processor = None if args.model in {"LLaVA-1.5", "LLaVA-Med", "Quilt-LLaVA"} else getattr(
         model_wrapped, "image_processor_callable", getattr(model_wrapped, "image_processor", None)
     )
     dataset = get_dataset(args, dataset_image_processor)
