@@ -66,6 +66,12 @@ def collect_args():
     parser.add_argument("--eval_print_freq", type=int, default=100, help="logging frequency (step)")
     parser.add_argument("--max_samples", type=int, default=None, help="optionally limit evaluation to the first N samples")
     parser.add_argument(
+        "--flops_profile_batches",
+        type=int,
+        default=1,
+        help="number of inference batches to profile for FLOPs/sample; set 0 to disable",
+    )
+    parser.add_argument(
         "--gen_max_new_tokens",
         type=int,
         default=None,
@@ -138,6 +144,7 @@ def _eval_worker(rank, world_size, args_dict):
     tracker.start()
     try:
         eval_engine = get_eval_engine(args=args, dataset=dataset)
+        eval_engine.flop_tracker = tracker
         eval_engine.evaluate(args=args, model=model_wrapped, indices=shard_indices, save_outputs=False)
     except BaseException as exc:
         tracker.finish(status="failed", error="".join(traceback.format_exception_only(type(exc), exc)).strip())
@@ -264,6 +271,7 @@ if __name__ == "__main__":
     tracker.start()
     try:
         eval_engine = get_eval_engine(args=args, dataset=dataset)
+        eval_engine.flop_tracker = tracker
         eval_engine.evaluate(args=args, model=model_wrapped)
     except BaseException as exc:
         tracker.finish(status="failed", error="".join(traceback.format_exception_only(type(exc), exc)).strip())

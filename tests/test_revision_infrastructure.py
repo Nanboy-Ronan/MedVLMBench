@@ -5,14 +5,20 @@ from argparse import Namespace
 
 try:
     import torch
-    from dataset import FractionalDataset, _apply_train_fraction
     from utils.experiment_tracking import ExperimentTracker
 except ModuleNotFoundError:
     torch = None
 
+try:
+    from dataset import FractionalDataset, _apply_train_fraction
+except ModuleNotFoundError:
+    FractionalDataset = None
+    _apply_train_fraction = None
+
 
 @unittest.skipIf(torch is None, "project PyTorch environment is not available")
 class RevisionInfrastructureTests(unittest.TestCase):
+    @unittest.skipIf(FractionalDataset is None, "project dataset dependencies are not available")
     def test_fraction_is_deterministic_and_manifested(self):
         class DummyDataset(torch.utils.data.Dataset):
             name = "dummy"
@@ -125,5 +131,69 @@ class RevisionInfrastructureTests(unittest.TestCase):
             self.assertEqual(manifest["training"]["observed"]["supervised_tokens"], 1)
             self.assertEqual(manifest["training"]["observed"]["images_seen"], 2)
             self.assertEqual(manifest["training"]["token_count_scope"], "full_run")
+
+    def test_tracker_records_training_and_inference_flops_per_sample(self):
+        class DummyDataset(torch.utils.data.Dataset):
+            name = "dummy"
+            modality = "test"
+            split = "train"
+
+            def __len__(self):
+                return 4
+
+            def __getitem__(self, index):
+                return index
+
+        class DummyTrainer:
+            def __init__(self):
+                self.model = torch.nn.Linear(4, 2)
+                self.train_dataset = DummyDataset()
+                self.state = Namespace(global_step=1, epoch=1.0, total_flos=0.0)
+
+            def training_step(self, model, inputs):
+                output = model(inputs["pixel_values"])
+                loss = output.square().mean()
+                loss.backward()
+                return loss.detach()
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            args = Namespace(
+                model="dummy", model_path="checkpoint", dataset="dummy", split="train",
+                world_size=1, num_train_epochs=1, per_device_train_batch_size=2,
+                gradient_accumulation_steps=1, flops_profile_batches=1,
+            )
+            trainer = DummyTrainer()
+            tracker = ExperimentTracker(output_dir, "train", args, trainer.model, DummyDataset())
+            tracker.start()
+            tracker.attach_trainer(trainer)
+            trainer.training_step(trainer.model, {
+                "pixel_values": torch.ones(2, 4),
+                "labels": torch.zeros(2, dtype=torch.long),
+            })
+            tracker.finish("completed")
+            with open(f"{output_dir}/experiment_manifest.json") as stream:
+                manifest = json.load(stream)
+            flops = manifest["training"]["flops"]
+            self.assertEqual(flops["status"], "measured")
+            self.assertEqual(flops["profiled_samples"], 2)
+            self.assertGreater(flops["flops_per_sample"], 0)
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            args = Namespace(
+                model="dummy", model_path="checkpoint", dataset="dummy", split="test",
+                flops_profile_batches=1,
+            )
+            model = torch.nn.Linear(4, 2)
+            tracker = ExperimentTracker(output_dir, "evaluation", args, model, DummyDataset())
+            tracker.start()
+            with tracker.profile_inference(sample_count=2):
+                model(torch.ones(2, 4))
+            tracker.finish("completed")
+            with open(f"{output_dir}/experiment_manifest.json") as stream:
+                manifest = json.load(stream)
+            flops = manifest["inference"]["flops"]
+            self.assertEqual(flops["status"], "measured")
+            self.assertEqual(flops["profiled_samples"], 2)
+            self.assertGreater(flops["flops_per_sample"], 0)
 if __name__ == "__main__":
     unittest.main()

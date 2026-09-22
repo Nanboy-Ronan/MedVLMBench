@@ -51,6 +51,10 @@ class Arguments(transformers.TrainingArguments):
         default=42,
         metadata={"help": "Seed used only for deterministic training-set subsampling."},
     )
+    flops_profile_batches: int = field(
+        default=1,
+        metadata={"help": "Number of training batches to profile for FLOPs/sample; set 0 to disable."},
+    )
 
     # evaluation
     eval_print_freq: int = 100

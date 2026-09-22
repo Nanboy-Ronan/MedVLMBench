@@ -331,13 +331,20 @@ python analysis/run_learning_curve.py \
 
 Every training and single-process evaluation run writes `experiment_manifest.json`. It records the exact
 arguments and checkpoint, dataset size, total and trainable parameter counts, hardware, wall-clock time,
-and peak GPU memory. During training it also records the final Trainer dataset size and model parameter
+peak GPU memory, and operator-profiled FLOPs per sample for both training and inference. By default, the
+first batch is profiled; use `--flops_profile_batches N` to increase coverage or `0` to disable profiling.
+The manifest records the profiled batch/sample counts and reports an unavailable value instead of zero when
+PyTorch cannot count the relevant operators (for example, a remote API model). Training FLOPs cover forward
+and backward inside `Trainer.training_step` but exclude the optimizer step. Profiler overhead is included in
+the recorded wall-clock time whenever FLOP profiling is enabled. During training it also records
+the final Trainer dataset size and model parameter
 counts, actual microbatches/examples processed, non-padding input tokens, padded token slots, supervised
 tokens, images, optimizer steps, and a per-epoch dataset token estimate. Multi-GPU token counts are
 aggregated when distributed training completes; a failed run may contain only local, partial counts.
 LLaVA token counts include the image placeholder but not the visual patch embeddings, so they alone are
 insufficient for an exact multimodal FLOP calculation. Any Hugging Face Trainer FLOP figure is labeled
-as an estimate. These manifests can be combined into the resource and reproducibility tables used
+as an estimate. The profiler-based FLOP count covers only operators supported by `torch.profiler`, so its
+method and coverage must be reported with the value. These manifests can be combined into the resource and reproducibility tables used
 in a manuscript supplement.
 
 The major-revision sensitivity analyses are available as a standalone script rather than notebook-only

@@ -7,12 +7,88 @@ import os
 import platform
 import socket
 import time
+from contextlib import contextmanager, nullcontext
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import torch
+
+
+class TorchProfilerFlopCounter:
+    """Measure FLOPs for a bounded number of batches with ``torch.profiler``.
+
+    PyTorch reports FLOPs only for operators for which it has a FLOP formula.
+    The result is therefore an operator-profiled count, not an analytical claim
+    about unsupported kernels or remote API models.
+    """
+
+    def __init__(self, max_batches=1, phase="inference"):
+        self.max_batches = max(0, int(max_batches or 0))
+        self.phase = phase
+        self.profiled_batches = 0
+        self.profiled_samples = 0
+        self.total_flops = 0
+
+    @property
+    def enabled(self):
+        return self.max_batches > 0
+
+    @contextmanager
+    def measure(self, sample_count):
+        if not self.enabled or self.profiled_batches >= self.max_batches:
+            yield
+            return
+
+        activities = [torch.profiler.ProfilerActivity.CPU]
+        if torch.cuda.is_available():
+            activities.append(torch.profiler.ProfilerActivity.CUDA)
+        profiler = torch.profiler.profile(activities=activities, with_flops=True)
+        try:
+            with profiler:
+                yield
+        except BaseException:
+            # Do not include a partial/failed model call in the denominator.
+            raise
+        else:
+            measured_flops = sum(int(event.flops or 0) for event in profiler.key_averages())
+            self.profiled_batches += 1
+            self.profiled_samples += max(1, int(sample_count))
+            self.total_flops += measured_flops
+
+    def result(self):
+        if not self.enabled:
+            status = "disabled"
+        elif self.profiled_batches == 0:
+            status = "not_run"
+        elif self.total_flops == 0:
+            status = "unsupported_or_no_profiled_ops"
+        else:
+            status = "measured"
+        scope_note = (
+            "A training profile covers forward and backward in Trainer.training_step but excludes "
+            "the optimizer step."
+            if self.phase == "training"
+            else "An inference profile covers the model call but excludes metrics and file I/O."
+        )
+        return {
+            "status": status,
+            "method": "torch_profiler_with_flops_supported_operators",
+            "profile_batch_limit": self.max_batches,
+            "profiled_batches": self.profiled_batches,
+            "profiled_samples": self.profiled_samples,
+            "total_profiled_flops": self.total_flops if self.total_flops else None,
+            "flops_per_sample": (
+                self.total_flops / self.profiled_samples
+                if self.total_flops and self.profiled_samples else None
+            ),
+            "coverage_note": (
+                f"Counts operators supported by torch.profiler only. {scope_note} "
+                "The per-sample value is total profiled batch FLOPs divided by profiled samples."
+            ),
+            "runtime_note": "Profiler overhead is included in wall_time_seconds when profiling is enabled.",
+        }
 
 
 def _json_safe(value: Any):
@@ -36,6 +112,30 @@ def _args_dict(args):
         raw = vars(args).copy()
     raw.pop("logger", None)
     return _json_safe(raw)
+
+
+def _batch_sample_count(inputs):
+    if not isinstance(inputs, dict):
+        return 1
+    for key in ("input_ids", "pixel_values", "images", "image_grid_thw", "labels"):
+        value = inputs.get(key)
+        if isinstance(value, torch.Tensor) and value.ndim:
+            if key == "input_ids" and value.ndim == 1:
+                return 1
+            if key == "images" and value.ndim < 4:
+                return 1
+            return int(value.shape[0])
+        if isinstance(value, (list, tuple)):
+            return len(value)
+    return 1
+
+
+def inference_flop_context(owner, sample_count=1):
+    """Return a profiler context when an ExperimentTracker is active."""
+    tracker = getattr(owner, "flop_tracker", None)
+    if tracker is None:
+        return nullcontext()
+    return tracker.profile_inference(sample_count)
 
 
 def _underlying_module(model):
@@ -166,6 +266,9 @@ class ExperimentTracker:
         self.payload = {}
         self.training_counter = None
         self.trainer = None
+        profile_batches = getattr(args, "flops_profile_batches", 1)
+        self.training_flops = TorchProfilerFlopCounter(profile_batches, phase="training")
+        self.inference_flops = TorchProfilerFlopCounter(profile_batches, phase="inference")
 
     def start(self):
         os.makedirs(self.output_dir, exist_ok=True)
@@ -208,7 +311,9 @@ class ExperimentTracker:
 
         def measured_training_step(model, inputs, *args, **kwargs):
             self.training_counter.observe(inputs)
-            return original_training_step(model, inputs, *args, **kwargs)
+            sample_count = _batch_sample_count(inputs)
+            with self.training_flops.measure(sample_count):
+                return original_training_step(model, inputs, *args, **kwargs)
 
         trainer.training_step = measured_training_step
         self.payload["training"] = {
@@ -287,6 +392,7 @@ class ExperimentTracker:
                     "Hugging Face Trainer estimate; may omit multimodal vision compute "
                     "and should not be treated as measured hardware FLOPs."
                 ),
+                "flops": self.training_flops.result(),
             })
             train_size = self.payload["dataset"].get("trainer_n_samples")
             seen = counts["examples_seen"]
@@ -302,9 +408,17 @@ class ExperimentTracker:
                 self.payload["dataset"]["estimated_supervised_tokens_per_epoch"] = round(
                     counts["supervised_tokens"] * train_size / seen
                 )
+        if self.phase == "evaluation":
+            self.payload["inference"] = {"flops": self.inference_flops.result()}
         if error:
             self.payload["error"] = error
         self._write()
+
+    @contextmanager
+    def profile_inference(self, sample_count=1):
+        """Profile one local model inference call without metric/postprocess work."""
+        with self.inference_flops.measure(sample_count):
+            yield
 
     def _write(self):
         if self.phase == "train":
@@ -328,6 +442,33 @@ def merge_worker_manifests(output_dir, worker_dirs, args):
         path = os.path.join(worker_dir, "experiment_manifest.json")
         with open(path) as stream:
             manifests.append(json.load(stream))
+    flop_results = [item.get("inference", {}).get("flops", {}) for item in manifests]
+    profiled_batches = sum(int(item.get("profiled_batches", 0)) for item in flop_results)
+    profiled_samples = sum(int(item.get("profiled_samples", 0)) for item in flop_results)
+    total_flops = sum(int(item.get("total_profiled_flops") or 0) for item in flop_results)
+    statuses = [item.get("status") for item in flop_results]
+    if total_flops:
+        merged_status = "measured"
+    elif statuses and all(status == "disabled" for status in statuses):
+        merged_status = "disabled"
+    elif statuses and all(status == "not_run" for status in statuses):
+        merged_status = "not_run"
+    else:
+        merged_status = "unsupported_or_no_profiled_ops"
+    merged_flops = {
+        "status": merged_status,
+        "method": "torch_profiler_with_flops_supported_operators",
+        "profile_batch_limit_per_worker": getattr(args, "flops_profile_batches", 1),
+        "profiled_batches": profiled_batches,
+        "profiled_samples": profiled_samples,
+        "total_profiled_flops": total_flops or None,
+        "flops_per_sample": total_flops / profiled_samples if total_flops and profiled_samples else None,
+        "coverage_note": (
+            "Merged across workers; counts operators supported by torch.profiler only. "
+            "The per-sample value is total profiled FLOPs divided by profiled samples."
+        ),
+        "runtime_note": "Profiler overhead is included in wall_time_seconds when profiling is enabled.",
+    }
     payload = {
         "schema_version": 1,
         "status": "completed" if all(item["status"] == "completed" for item in manifests) else "failed",
@@ -344,6 +485,7 @@ def merge_worker_manifests(output_dir, worker_dirs, args):
             "wall_time_seconds": max(item["resources"]["wall_time_seconds"] for item in manifests),
             "workers": [item["resources"] for item in manifests],
         },
+        "inference": {"flops": merged_flops},
     }
     path = os.path.join(output_dir, "experiment_manifest.json")
     temporary = path + ".tmp"

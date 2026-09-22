@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms.functional import to_pil_image
 from eval.base import EvalEngine
 from dataset.utils import DiagnosisDataCollator
+from utils.experiment_tracking import inference_flop_context
 
 Metrics = namedtuple("Metrics", ["AUC", "ACC"])
 
@@ -77,7 +78,8 @@ class DiagnosisEvalEngine(EvalEngine):
 
         model.to(self.device)
 
-        out = model(image)
+        with inference_flop_context(self, sample_count=image.shape[0]):
+            out = model(image)
         
         # Convert logits → probabilities
         if out.size(-1) == 1:
