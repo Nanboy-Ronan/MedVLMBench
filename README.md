@@ -309,6 +309,51 @@ When `--save_pred` is enabled, the prediction file also stores the MDAgent reaso
 
 This script is used for training or fine-tuning a model on a given dataset.
 
+Learning-curve experiments can use a deterministic fraction of the official training split. The selected
+indices are saved in `train_subset_manifest.json`, and the fraction is included in the output directory so
+runs do not overwrite one another.
+
+```bash
+python run_train.py \
+  --task diagnosis --dataset CheXpert --model CLIP --usage lp \
+  --train_fraction 0.1 --fraction_seed 42 \
+  --image_path ./data --output_dir ./log
+```
+
+To run a full learning curve with the same trainer arguments:
+
+```bash
+python analysis/run_learning_curve.py \
+  --fractions 0.01 0.05 0.1 0.25 0.5 1.0 --fraction-seeds 42 43 44 -- \
+  --task diagnosis --dataset CheXpert --model CLIP --usage lp \
+  --image_path ./data --output_dir ./log
+```
+
+Every training and single-process evaluation run writes `experiment_manifest.json`. It records the exact
+arguments and checkpoint, dataset size, total and trainable parameter counts, hardware, wall-clock time,
+and peak GPU memory. During training it also records the final Trainer dataset size and model parameter
+counts, actual microbatches/examples processed, non-padding input tokens, padded token slots, supervised
+tokens, images, optimizer steps, and a per-epoch dataset token estimate. Multi-GPU token counts are
+aggregated when distributed training completes; a failed run may contain only local, partial counts.
+LLaVA token counts include the image placeholder but not the visual patch embeddings, so they alone are
+insufficient for an exact multimodal FLOP calculation. Any Hugging Face Trainer FLOP figure is labeled
+as an estimate. These manifests can be combined into the resource and reproducibility tables used
+in a manuscript supplement.
+
+The major-revision sensitivity analyses are available as a standalone script rather than notebook-only
+cells:
+
+```bash
+python analysis/revision_sensitivity.py
+```
+
+The script excludes proprietary descriptive baselines from inference, estimates model type and adaptation
+status jointly, reruns the off-the-shelf analysis on strictly matched model pairs, and excludes documented
+direct benchmark exposure. Results and model diagnostics are written to `analysis/revision_outputs/`.
+
+<details>
+<summary><b>Diagnosis Example</b></summary>
+
 **Usage:**
 
 ```bash

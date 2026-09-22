@@ -1,0 +1,9 @@
+task,pair_id,general_model,medical_model,general_parameters,medical_parameters,architecture_match,backbone_generation_match,strict_match,major_difference
+diagnosis,clip_pubmedclip,CLIP,PubMedCLIP,151280000,151280000,yes,yes,yes,medical continued pretraining on ROCO
+diagnosis,clip_plip,CLIP,PLIP,151280000,151280000,yes,yes,yes,medical continued pretraining on OpenPath pathology pairs
+diagnosis,clip_medclip,CLIP,MedCLIP,151280000,136620000,no,no,no,different vision and text encoders despite similar total size
+diagnosis,clip_biomedclip,CLIP,BioMedCLIP,151280000,195900000,partial,no,no,different scale and PMC-15M training
+diagnosis,siglip_medsiglip,SigLIP,MedSigLIP,203160000,878300000,no,no,no,medical model is substantially larger
+vqa,llava_llavamed,LLaVA-1.5,LLaVA-Med,7000000000,7000000000,yes,yes,yes,biomedical alignment and instruction tuning
+vqa,qwen25_lingshu,Qwen25-VL,Lingshu,8000000000,8000000000,yes,yes,yes,multi-stage medical alignment and instruction tuning
+vqa,gemma_medgemma,Gemma3,MedGemma,4300000000,4970000000,partial,yes,no,medical vision encoder and parameter count differ

@@ -1,0 +1,209 @@
+[
+  {
+    "analysis": "symmetric_model_type_and_adaptation",
+    "task": "diagnosis",
+    "formula": "outcome ~ C(model_type, Treatment('medical')) * C(adaptation, Treatment('off_the_shelf'))",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.004204206559871867,
+      2.9363934329944293e-12,
+      0.0004996524046289335
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space."
+    ],
+    "failed_attempts": []
+  },
+  {
+    "analysis": "rq2_symmetric_adapted_models",
+    "task": "diagnosis",
+    "formula": "outcome ~ C(model_type, Treatment('medical'))",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.008372769122541344,
+      1.3289897944870307e-12,
+      0.000723965159687855
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space."
+    ],
+    "failed_attempts": []
+  },
+  {
+    "analysis": "rq1_all_available_models",
+    "task": "diagnosis",
+    "formula": "outcome ~ C(model_type, Treatment('medical'))",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "powell",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.0020057104519867358,
+      1.3390357372793109e-12,
+      0.0007558108047195399
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space.",
+      "The Hessian matrix at the estimated parameter values is not positive definite."
+    ],
+    "failed_attempts": [
+      "dataset + family + model nested in family/lbfgs: did not converge"
+    ]
+  },
+  {
+    "analysis": "rq1_strict_pair_general_minus_medical",
+    "task": "diagnosis",
+    "formula": "outcome ~ 1",
+    "random_effects": "dataset + model",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.0007534089285338089,
+      0.00025190272055390444
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space.",
+      "The Hessian matrix at the estimated parameter values is not positive definite."
+    ],
+    "failed_attempts": [
+      "dataset + family + model nested in family/lbfgs: LinAlgError: Singular matrix",
+      "dataset + family + model nested in family/powell: LinAlgError: Singular matrix",
+      "dataset + family + model nested in family/cg: did not converge"
+    ]
+  },
+  {
+    "analysis": "rq1_excluding_documented_direct_exposure",
+    "task": "diagnosis",
+    "formula": "outcome ~ C(model_type, Treatment('medical'))",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.0014433470801952749,
+      0.0005735955275610986,
+      0.001197348034021234
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space.",
+      "The Hessian matrix at the estimated parameter values is not positive definite."
+    ],
+    "failed_attempts": []
+  },
+  {
+    "analysis": "symmetric_model_type_and_adaptation",
+    "task": "vqa",
+    "formula": "outcome ~ C(model_type, Treatment('medical')) * C(adaptation, Treatment('off_the_shelf'))",
+    "random_effects": "dataset + model",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.04298664682585787,
+      0.0008916120229654814
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space."
+    ],
+    "failed_attempts": [
+      "dataset + family + model nested in family/lbfgs: did not converge",
+      "dataset + family + model nested in family/powell: LinAlgError: Singular matrix",
+      "dataset + family + model nested in family/cg: did not converge"
+    ]
+  },
+  {
+    "analysis": "rq2_symmetric_adapted_models",
+    "task": "vqa",
+    "formula": "outcome ~ C(model_type, Treatment('medical'))",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.035905660049425275,
+      3.475544489907853e-05,
+      0.0008827856543681751
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space.",
+      "The Hessian matrix at the estimated parameter values is not positive definite."
+    ],
+    "failed_attempts": []
+  },
+  {
+    "analysis": "rq1_all_available_models",
+    "task": "vqa",
+    "formula": "outcome ~ C(model_type, Treatment('medical'))",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.02883959333885554,
+      0.003982556960073203,
+      2.2342571012471987e-05
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space.",
+      "The Hessian matrix at the estimated parameter values is not positive definite."
+    ],
+    "failed_attempts": []
+  },
+  {
+    "analysis": "rq1_strict_pair_general_minus_medical",
+    "task": "vqa",
+    "formula": "outcome ~ 1",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "powell",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      2.6477524811808883e-12,
+      2.0847111643591827e-12,
+      1.870624992560455e-12
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space.",
+      "The Hessian matrix at the estimated parameter values is not positive definite."
+    ],
+    "failed_attempts": [
+      "dataset + family + model nested in family/lbfgs: did not converge"
+    ]
+  },
+  {
+    "analysis": "rq1_excluding_documented_direct_exposure",
+    "task": "vqa",
+    "formula": "outcome ~ C(model_type, Treatment('medical'))",
+    "random_effects": "dataset + family + model nested in family",
+    "optimizer": "lbfgs",
+    "converged": true,
+    "reml": true,
+    "wald_intervals_and_p_values": true,
+    "variance_components": [
+      0.02883959333885554,
+      0.003982556960073203,
+      2.2342571012471987e-05
+    ],
+    "fit_warnings": [
+      "The MLE may be on the boundary of the parameter space.",
+      "The Hessian matrix at the estimated parameter values is not positive definite."
+    ],
+    "failed_attempts": []
+  }
+]

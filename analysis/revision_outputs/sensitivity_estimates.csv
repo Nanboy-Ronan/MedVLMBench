@@ -1,0 +1,23 @@
+analysis,task,term,estimate,ci_low,ci_high,p_value,n_observations,n_datasets,n_families,n_models
+symmetric_model_type_and_adaptation,diagnosis,Intercept,0.5403870721169386,0.4687003841529738,0.6120737600809033,2.137517781072631e-49,96,6,2,8
+symmetric_model_type_and_adaptation,diagnosis,"C(model_type, Treatment('medical'))[T.generalist]",-0.0376447690012489,-0.10352230783495042,0.028232769832452626,0.2627166862143058,96,6,2,8
+symmetric_model_type_and_adaptation,diagnosis,"C(adaptation, Treatment('off_the_shelf'))[T.adapted]",0.2630813300775715,0.21454311573222637,0.31161954442291667,2.325161633249483e-26,96,6,2,8
+symmetric_model_type_and_adaptation,diagnosis,"C(model_type, Treatment('medical'))[T.generalist]:C(adaptation, Treatment('off_the_shelf'))[T.adapted]",0.06042576182965702,-0.01883681028496581,0.13968833394427985,0.1351293469641082,96,6,2,8
+rq2_symmetric_adapted_models,diagnosis,Intercept,0.8034684021661153,0.7191208359083796,0.8878159684238509,8.68514469545898e-78,48,6,2,8
+rq2_symmetric_adapted_models,diagnosis,"C(model_type, Treatment('medical'))[T.generalist]",0.022780992841035252,-0.028942310049972882,0.07450429573204338,0.3880023209543695,48,6,2,8
+rq1_all_available_models,diagnosis,Intercept,0.5403870720736623,0.492920350802552,0.5878537933447726,2.7447928122959895e-110,48,6,2,8
+rq1_all_available_models,diagnosis,"C(model_type, Treatment('medical'))[T.generalist]",-0.03764476898201445,-0.11397707487781522,0.03868753691378632,0.33374675659257336,48,6,2,8
+rq1_strict_pair_general_minus_medical,diagnosis,Intercept,0.02762747595830837,-0.07091589656533323,0.12617084848194995,0.5826674145292103,12,6,2,2
+rq1_excluding_documented_direct_exposure,diagnosis,Intercept,0.5320455308845209,0.47285249396272816,0.5912385678063137,1.8317119261939331e-69,47,6,2,8
+rq1_excluding_documented_direct_exposure,diagnosis,"C(model_type, Treatment('medical'))[T.generalist]",-0.027249822428687707,-0.10495181970367794,0.05045217484630253,0.4918605540430462,47,6,2,8
+symmetric_model_type_and_adaptation,vqa,Intercept,0.6214296804778363,0.44764999138161765,0.795209369574055,2.4044285247931984e-12,92,6,4,8
+symmetric_model_type_and_adaptation,vqa,"C(model_type, Treatment('medical'))[T.generalist]",-0.04146160611970664,-0.10663475265949626,0.023711540420082992,0.21244059082673838,92,6,4,8
+symmetric_model_type_and_adaptation,vqa,"C(adaptation, Treatment('off_the_shelf'))[T.adapted]",0.08316821741292957,0.027987829079478284,0.13834860574638086,0.0031361321068916754,92,6,4,8
+symmetric_model_type_and_adaptation,vqa,"C(model_type, Treatment('medical'))[T.generalist]:C(adaptation, Treatment('off_the_shelf'))[T.adapted]",0.08887566882709923,0.019378890979439414,0.15837244667475903,0.012193585518771661,92,6,4,8
+rq2_symmetric_adapted_models,vqa,Intercept,0.7028144503898891,0.5449752405263893,0.8606536602533889,2.6110404621419224e-18,46,6,4,8
+rq2_symmetric_adapted_models,vqa,"C(model_type, Treatment('medical'))[T.generalist]",0.04861863449785091,-0.006484453874231272,0.10372172286993309,0.08375216431363777,46,6,4,8
+rq1_all_available_models,vqa,Intercept,0.635840340626947,0.4824295869814929,0.7892510942724011,4.53125670422391e-16,46,6,4,8
+rq1_all_available_models,vqa,"C(model_type, Treatment('medical'))[T.generalist]",-0.06309130501506524,-0.10613559427706454,-0.020047015753065937,0.004068799709848773,46,6,4,8
+rq1_strict_pair_general_minus_medical,vqa,Intercept,-0.08388488220182373,-0.15698232815764013,-0.01078743624600735,0.024499276401716775,11,6,2,2
+rq1_excluding_documented_direct_exposure,vqa,Intercept,0.635840340626947,0.4824295869814929,0.7892510942724011,4.53125670422391e-16,46,6,4,8
+rq1_excluding_documented_direct_exposure,vqa,"C(model_type, Treatment('medical'))[T.generalist]",-0.06309130501506524,-0.10613559427706454,-0.020047015753065937,0.004068799709848773,46,6,4,8

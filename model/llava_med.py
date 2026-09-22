@@ -378,9 +378,8 @@ class LLaVAMed(LLaVA):
         if temperature is None:
             temperature = 0
         if type(image) is list:
-            assert len(image) == 1, f"LLaVA-1.5 only support single image input, while got {len(image)}."
+            assert len(image) == 1, f"LLaVA-Med only supports single image input, while got {len(image)}."
             image = image[0]
-        image = to_pil_image(image)
         # Model inference for vision-language tasks
         warnings.filterwarnings("ignore")
 
@@ -407,16 +406,31 @@ class LLaVAMed(LLaVA):
             .to(self.model.device)
         )
 
-        if type(image) is Image.Image:
+        if isinstance(image, torch.Tensor):
+            if image.ndim == 4 and image.shape[0] == 1:
+                image = image[0]
+            if image.ndim != 3:
+                raise ValueError(f"Expected a single CHW image tensor, got shape {tuple(image.shape)}")
+            if image.dtype == torch.uint8:
+                image = to_pil_image(image.cpu())
+            else:
+                image_tensor = image
+        if isinstance(image, Image.Image):
+            image = image.convert("RGB")
             image_tensor = process_images([image], self.image_processor, self.model.config)[0]
             image_size = image.size
         else:
-            image_tensor = image
+            if not isinstance(image, torch.Tensor):
+                raise TypeError(f"Unsupported LLaVA-Med image type: {type(image).__name__}")
+
+        projector = self.model.get_model().mm_projector
+        projector_dtype = next(projector.parameters()).dtype
+        image_tensor = image_tensor.to(device=self.model.device, dtype=projector_dtype, non_blocking=True)
 
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids,
-                images=image_tensor.unsqueeze(0).half().cuda(),
+                images=image_tensor.unsqueeze(0),
                 image_sizes=[image_size],
                 do_sample=True if temperature > 0 else False,
                 temperature=temperature,

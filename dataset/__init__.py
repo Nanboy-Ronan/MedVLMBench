@@ -3,6 +3,7 @@ import random
 import numpy as np
 import pandas as pd
 import torch
+import json
 from easydict import EasyDict as edict
 from collections import Counter
 
@@ -46,6 +47,60 @@ datasets = {
 }
 
 
+class FractionalDataset(torch.utils.data.Dataset):
+    """A deterministic subset that preserves benchmark dataset metadata."""
+
+    def __init__(self, dataset, indices):
+        self.dataset = dataset
+        self.indices = list(indices)
+        for attr in ("name", "modality", "split"):
+            if hasattr(dataset, attr):
+                setattr(self, attr, getattr(dataset, attr))
+
+    def __len__(self):
+        return len(self.indices)
+
+    def __getitem__(self, index):
+        return self.dataset[self.indices[index]]
+
+    def __getattr__(self, name):
+        if name in {"dataset", "indices"}:
+            raise AttributeError(name)
+        return getattr(self.dataset, name)
+
+
+def _apply_train_fraction(dataset, args, split):
+    fraction = float(getattr(args, "train_fraction", 1.0))
+    if fraction == 1.0:
+        return dataset
+    if split != "train":
+        raise ValueError("train_fraction can only be used with the official training split")
+    if not 0 < fraction <= 1:
+        raise ValueError("train_fraction must satisfy 0 < train_fraction <= 1")
+
+    generator = torch.Generator().manual_seed(int(getattr(args, "fraction_seed", 42)))
+    subset_size = max(1, int(round(len(dataset) * fraction)))
+    indices = torch.randperm(len(dataset), generator=generator)[:subset_size].sort().values.tolist()
+    subset = FractionalDataset(dataset, indices)
+
+    output_dir = getattr(args, "output_dir", None)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        payload = {
+            "dataset": getattr(dataset, "name", getattr(args, "dataset", None)),
+            "split": split,
+            "source_size": len(dataset),
+            "selected_size": len(subset),
+            "fraction_requested": fraction,
+            "fraction_realized": len(subset) / len(dataset),
+            "fraction_seed": int(getattr(args, "fraction_seed", 42)),
+            "indices": indices,
+        }
+        with open(os.path.join(output_dir, "train_subset_manifest.json"), "w") as fp:
+            json.dump(payload, fp, indent=2)
+    return subset
+
+
 def get_dataset(args, image_processor_callable=None, split=None):
 
     g = torch.Generator()
@@ -65,7 +120,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
 
     assert image_processor_callable is not None or args.task != "diagnosis"
 
-    llava_train_models = {"LLaVA-1.5", "LLaVA-Med"}
+    llava_train_models = {"LLaVA-1.5", "LLaVA-Med", "Quilt-LLaVA"}
 
     # LLaVA training performs its own image padding and preprocessing in the
     # trainer dataset wrapper. Passing a transform here causes double-processing
@@ -78,6 +133,7 @@ def get_dataset(args, image_processor_callable=None, split=None):
         transform = get_transform(args)
 
     dataset = dataset_name(data_args=edict(image_path=args.image_path, size=224), split=split, transform=transform)
+    dataset = _apply_train_fraction(dataset, args, split)
 
     try:
         args.logger.info("Loaded dataset: " + dataset.name)

@@ -22,10 +22,12 @@ CLIP_MODELS = [
 LANGUAGE_MODELS = [
     "LLaVA-1.5",
     "LLaVA-Med",
+    "Quilt-LLaVA",
     "Gemma3",
     "MedGemma",
     "Qwen2-VL",
     "Qwen25-VL",
+    "Patho-R1",
     "InternVL3",
     "XGenMiniV1",
     "XrayGPT",
