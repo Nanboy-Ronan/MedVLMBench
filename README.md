@@ -1,5 +1,14 @@
 # MedVLMBench: A Unified Benchmark for Generalist and Specialist Medical Vision-Language Models
 
+> [!IMPORTANT]
+> This is the **development version** of MedVLMBench, actively under development and may be unstable. For the stable, fully-documented release with the latest models, datasets, and tutorials, please visit [**ubc-tea/MedVLMBench**](https://github.com/ubc-tea/MedVLMBench).
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2506.17337"><img src="https://img.shields.io/badge/arXiv-2506.17337-b31b1b.svg" alt="arXiv"></a>
+  <a href="https://github.com/ubc-tea/MedVLMBench"><img src="https://img.shields.io/badge/Stable%20Release-ubc--tea%2FMedVLMBench-blue.svg" alt="Stable Release"></a>
+  <a href="https://github.com/FairMedFM/FairMedFM"><img src="https://img.shields.io/badge/Companion-FairMedFM-orange.svg" alt="FairMedFM"></a>
+</p>
+
 MedVLMBench is the first unified benchmark for systematically evaluating generalist and medical-specialist Vision-Language Models (VLMs). This repository provides the code and resources to reproduce the experiments and extend the benchmark.
 
 ## Table of Contents
@@ -29,6 +38,23 @@ MedVLMBench is the first unified benchmark for systematically evaluating general
 
 >**Conclusions:** This study highlights the complementary strengths of medical-specialist and generalist VLMs. Specialists remain valuable in modality-aligned use cases, but we find that efficiently fine-tuned generalist VLMs can achieve comparable or even superior performance in most tasks, particularly when transferring to unseen or rare OOD medical modalities. These results suggest that generalist VLMs, rather than being constrained by their lack of medical-specific pretraining, may offer a scalable and cost-effective pathway for advancing clinical AI development.
 
+
+## Companion Benchmark: FairMedFM
+
+> **Evaluating fairness of medical FMs?** See our companion benchmark [**FairMedFM**](https://github.com/FairMedFM/FairMedFM) — the first fairness benchmark covering 20 medical imaging FMs across 17 datasets with bias metrics over sex, race, and age.
+
+MedVLMBench and FairMedFM form a **two-part evaluation suite** for medical foundation models — capability and fairness, measured on the same models and datasets.
+
+| | [MedVLMBench](https://github.com/ubc-tea/MedVLMBench) | FairMedFM |
+|---|---|---|
+| **Focus** | Capability: accuracy, AUROC, VQA scores | Fairness across sex, race, age |
+| **Model paradigm** | Generative VLMs + discriminative models | Discriminative FMs (CLIP, SAM variants) |
+| **Tasks** | VQA, Diagnosis, Captioning | Classification, Segmentation |
+| **Scale** | 30+ VLMs · 14 datasets | 20 FMs · 17 datasets |
+
+**Models evaluated in both**: BioMedCLIP · MedCLIP · PLIP · SigLIP · MedSigLIP · CLIP · BLIP · BLIP2 · PubMedCLIP
+
+**Datasets in both**: HAM10000 · CheXpert · MIMIC-CXR · FairVLMed10k · GF3300 · PAPILA
 
 ## Getting Started
 
@@ -93,6 +119,21 @@ This code base mainly supports the image diagnostics and the VQA tasks. It also 
 
 </details>
 
+
+For MedXpertQA.
+
+```bash
+cd data
+git clone https://huggingface.co/datasets/TsinghuaC3I/MedXpertQA
+```
+
+For OminiMedVQA.
+
+```bash
+cd data
+git clone https://huggingface.co/datasets/foreverbeliever/OmniMedVQA
+```
+
 <details>
 <summary><b>Supported Models</b></summary>
 
@@ -122,6 +163,9 @@ This code base mainly supports the image diagnostics and the VQA tasks. It also 
 | MedSigLIP | Diagnosis | Done | Done |
 | PubMedCLIP | Diagnosis | Done | Done |
 | SigLIP | Diagnosis | Done | Done |
+| DermLIP | Diagnosis | Done | Done |
+| EyeCLIP | Diagnosis | Done | Done |
+| CONCH | Diagnosis | Done | Done |
 
 </details>
 
@@ -129,6 +173,30 @@ This code base mainly supports the image diagnostics and the VQA tasks. It also 
 
 `run_train.py` is the major entry for training all models (including the lightweight adaptation).
 `run_eval.py` is the major entry for off the shelf evaluation of all models.
+
+### MDAgent Wrapper
+
+This repository now includes a local `MDAgent` wrapper in `wrappers/mdagent.py`, inspired by the orchestration pattern in the [MDAgents reference implementation](https://github.com/mitmedialab/MDAgents/blob/main/main.py) and its [utility module](https://github.com/mitmedialab/MDAgents/blob/main/utils.py).
+
+The implementation here is intentionally backbone-agnostic:
+
+- It wraps any MedVLMBench VLM that already implements `infer_vision_language(...)`.
+- It keeps checkpoint loading and image preprocessing in the original backbone.
+- It adds a multi-step medical reasoning layer on top of the backbone instead of introducing a separate API-only stack.
+- It works through the existing `run_eval.py` entrypoint via `--usage mdagent`.
+
+The wrapper supports three execution modes:
+
+- `basic`: one clinician-style answer.
+- `intermediate`: visual examiner -> medical specialist -> skeptical reviewer -> moderator.
+- `advanced`: triage lead -> visual examiner -> differential diagnostician -> quality reviewer -> chief moderator.
+- `adaptive`: automatically selects one of the above from the question form.
+
+This design is useful when you want to compare:
+
+- plain backbone inference vs. multi-agent inference,
+- generalist vs. medical-specialist backbones under the same orchestration pattern,
+- different VLMs without rewriting the MDAgent logic for each model.
 
 ### Notebook Tutorials
 
@@ -194,7 +262,50 @@ python run_eval.py \
 
 ---
 
-#### `run_train.py`
+<details>
+<summary><b>MDAgent VQA Example</b></summary>
+
+Use any supported VLM backbone and add `--usage mdagent`.
+
+```bash
+python run_eval.py \
+--task vqa --dataset VQA-RAD --split test \
+--image_path ./data \
+--model Qwen2-VL \
+--model_path ./pretrained_models/Qwen2-VL-2B-Instruct \
+--usage mdagent \
+--mdagent_mode adaptive \
+--exp_path ./log \
+--cache_dir ./cache \
+--save_pred
+```
+
+You can switch the backbone without changing the MDAgent logic. For example:
+
+```bash
+python run_eval.py \
+--task vqa --dataset SLAKE --split test \
+--image_path ./data/SLAKE/imgs \
+--model MedGemma \
+--model_path ./pretrained_models/medgemma-4b-it \
+--usage mdagent \
+--mdagent_mode advanced \
+--exp_path ./log \
+--cache_dir ./cache \
+--save_pred
+```
+
+When `--save_pred` is enabled, the prediction file also stores the MDAgent reasoning trace for each sample.
+
+</details>
+
+#### MDAgent Notes
+
+- `MDAgent` is currently intended for generative vision-language tasks such as VQA and captioning.
+- The wrapper reuses the same backbone for every agent role, so stronger reasoning usually costs more inference calls per sample.
+- `basic` is the cheapest mode, `advanced` is the most expensive, and `adaptive` is the default recommended mode.
+
+#### Training
 
 This script is used for training or fine-tuning a model on a given dataset.
 
@@ -308,12 +419,23 @@ deepspeed run_train.py \
 
 If you find this repository useful, please consider citing our paper:
 
-```
+```bibtex
 @article{zhong2025can,
   title={Can Common VLMs Rival Medical VLMs? Evaluation and Strategic Insights},
   author={Zhong, Yuan and Jin, Ruinan and Li, Xiaoxiao and Dou, Qi},
   journal={arXiv preprint arXiv:2506.17337},
   year={2025}
+}
+```
+
+If you also use our companion benchmark **FairMedFM** for fairness evaluation, please cite:
+
+```bibtex
+@article{jin2024fairmedfm,
+  title={FairMedFM: Fairness Benchmarking for Medical Imaging Foundation Models},
+  author={Jin, Ruinan and Xu, Zikang and Zhong, Yuan and Yao, Qiongsong and Dou, Qi and Zhou, S Kevin and Li, Xiaoxiao},
+  journal={arXiv preprint arXiv:2407.00983},
+  year={2024}
 }
 ```
 

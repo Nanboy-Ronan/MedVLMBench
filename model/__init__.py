@@ -1,6 +1,18 @@
 from dataset.utils import get_prototype
 
 
+def _maybe_wrap_vlm_agent(args, model):
+    if getattr(args, "usage", None) == "mdagent":
+        from wrappers import MDAgentWrapper
+
+        return MDAgentWrapper(backbone=model, args=args)
+    elif getattr(args, "usage", None) == "ucagent":
+        from wrappers import UCAgentWrapper
+
+        return UCAgentWrapper(backbone=model, args=args)
+    return model
+
+
 def get_model(args, **kwargs):
     if args.task == "vqa" or args.task == "caption":
         if args.model == "BLIP":
@@ -65,7 +77,8 @@ def get_model(args, **kwargs):
             model = Gemini25Pro(args=args)
         else:
             raise NotImplementedError()
-    
+        model = _maybe_wrap_vlm_agent(args, model)
+
     elif args.task == "caption":
         if args.model == "BLIP":
             model = BLIPForQA(args=args)
@@ -83,9 +96,11 @@ def get_model(args, **kwargs):
             model = XrayGPT(args=args)
         else:
             raise NotImplementedError()
+        model = _maybe_wrap_vlm_agent(args, model)
 
     elif args.task == "diagnosis":
         from dataset.diagnosis import INFO
+
         text = get_prototype(args)
         text = ["a photo of {}".format(txt) for txt in text]
         num_classes = len(INFO[args.dataset.lower()]["label"])
@@ -129,15 +144,27 @@ def get_model(args, **kwargs):
                 model = MedSigLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "PubMedCLIP":
                 from model.pubmedclip import PubMedCLIPLPForDiagnosis
-                
+
                 model = PubMedCLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             elif args.model == "SigLIP":
                 from model.siglip import SiglipLPForDiagnosis
 
                 model = SiglipLPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "DermLIP":
+                from model.dermlip import DermLIPLPForDiagnosis
+
+                model = DermLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "EyeCLIP":
+                from model.eyeclip import EyeCLIPLPForDiagnosis
+
+                model = EyeCLIPLPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "CONCH":
+                from model.conch import CONCHLPForDiagnosis
+
+                model = CONCHLPForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
-            
+
         elif args.usage == "lora_lp":
             raise NotImplementedError("LoRA-LP is not supported for diagnosis task.")
             if args.model == "BLIP":
@@ -162,7 +189,7 @@ def get_model(args, **kwargs):
                 model = BLIP2LPLoRAForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
-            
+
         elif args.usage in ["clip-zs", "clip-img-lora"]:
             if args.model == "BLIP":
                 from model.blip import BLIPForDiagnosis
@@ -202,6 +229,18 @@ def get_model(args, **kwargs):
                 from model.pubmedclip import PubMedCLIPForDiagnosis
 
                 model = PubMedCLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "DermLIP":
+                from model.dermlip import DermLIPForDiagnosis
+
+                model = DermLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "EyeCLIP":
+                from model.eyeclip import EyeCLIPForDiagnosis
+
+                model = EyeCLIPForDiagnosis(args=args, text=text, num_classes=num_classes)
+            elif args.model == "CONCH":
+                from model.conch import CONCHForDiagnosis
+
+                model = CONCHForDiagnosis(args=args, text=text, num_classes=num_classes)
             else:
                 raise NotImplementedError()
         elif args.usage in ["clip-adapter"]:

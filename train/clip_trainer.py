@@ -186,7 +186,8 @@ class CLIPLPTrainer(Trainer):
         # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
         # print(f"🔹 Backward FLOPS per batch: {flops_backward / 1e9:.2f} GFLOPS")
 
-        return loss
+        # detach: otherwise Trainer's `tr_loss += loss` keeps every step's autograd graph alive (host memory grows ~2MB/step)
+        return loss.detach()
     
     def get_labels(self, eval_preds):
         logits, labels = eval_preds

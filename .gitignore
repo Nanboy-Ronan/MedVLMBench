@@ -169,7 +169,7 @@ pretrained_models/
 log/
 pretrained/
 script/
-notebooks/
+# notebooks/
 wandb/
 cache/
 *.out
