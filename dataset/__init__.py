@@ -70,34 +70,31 @@ class FractionalDataset(torch.utils.data.Dataset):
 
 
 def _apply_train_fraction(dataset, args, split):
+    from utils.train_subset import make_manifest, validate_manifest, validate_selection, write_manifest
+
     fraction = float(getattr(args, "train_fraction", 1.0))
-    if fraction == 1.0:
+    maximum = getattr(args, "max_train_samples", None)
+    manifest_path = getattr(args, "train_subset_manifest", None)
+    validate_selection(fraction, maximum, manifest_path)
+    if fraction == 1.0 and maximum is None and not manifest_path:
         return dataset
     if split != "train":
-        raise ValueError("train_fraction can only be used with the official training split")
-    if not 0 < fraction <= 1:
-        raise ValueError("train_fraction must satisfy 0 < train_fraction <= 1")
-
-    generator = torch.Generator().manual_seed(int(getattr(args, "fraction_seed", 42)))
-    subset_size = max(1, int(round(len(dataset) * fraction)))
-    indices = torch.randperm(len(dataset), generator=generator)[:subset_size].sort().values.tolist()
+        raise ValueError("Training subsets can only be applied to the training split")
+    dataset_name = getattr(args, "dataset", dataset.name)
+    task = getattr(args, "task", "vqa")
+    if manifest_path:
+        with open(manifest_path) as stream:
+            payload = json.load(stream)
+        indices = validate_manifest(payload, dataset, dataset_name, task)
+    else:
+        payload = make_manifest(dataset, dataset_name, task, fraction, maximum,
+                                int(getattr(args, "fraction_seed", 42)))
+        indices = payload["indices"]
     subset = FractionalDataset(dataset, indices)
-
+    subset.subset_manifest = payload
     output_dir = getattr(args, "output_dir", None)
     if output_dir:
-        os.makedirs(output_dir, exist_ok=True)
-        payload = {
-            "dataset": getattr(dataset, "name", getattr(args, "dataset", None)),
-            "split": split,
-            "source_size": len(dataset),
-            "selected_size": len(subset),
-            "fraction_requested": fraction,
-            "fraction_realized": len(subset) / len(dataset),
-            "fraction_seed": int(getattr(args, "fraction_seed", 42)),
-            "indices": indices,
-        }
-        with open(os.path.join(output_dir, "train_subset_manifest.json"), "w") as fp:
-            json.dump(payload, fp, indent=2)
+        write_manifest(os.path.join(output_dir, "train_subset_manifest.json"), payload)
     return subset
 
 

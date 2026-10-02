@@ -174,6 +174,7 @@ script/*
 !script/yuan/
 script/yuan/*
 !script/yuan/NEW_PATHOLOGY_MODELS.md
+!script/yuan/export_llamafactory.py
 !script/yuan/batch_run/
 script/yuan/batch_run/*
 !script/yuan/batch_run/quilt-llava.ipynb
@@ -182,7 +183,9 @@ script/yuan/batch_run/*
 script/yuan/train_infer_bash/*
 !script/yuan/train_infer_bash/quilt_llava/
 !script/yuan/train_infer_bash/patho_r1/
-# notebooks/
+notebooks/yuan
 wandb/
 cache/
 *.out
+!script/yuan/prepare_train_subset.py
+!script/yuan/PARTIAL_DATA_TRAINING.md

@@ -257,9 +257,13 @@ When `--save_pred` is enabled, the prediction file also stores the MDAgent reaso
 
 #### Training
 
-Learning-curve experiments can use a deterministic fraction of the official training split. The selected
-indices are saved in `train_subset_manifest.json`, and the fraction is included in the output directory so
-runs do not overwrite one another.
+Training accepts `--train_fraction 0.1`, `--max_train_samples 1000`, or a shared
+`--train_subset_manifest` (mutually exclusive). Partial runs are saved under
+`TASK/DATASET/partial-data-exp/10pct/MODEL/RUN` (or `1000samples`); the model/run
+structure is unchanged. Samples remain fixed across epochs. Non-default subset
+seeds add `-fseed<seed>` to the subset folder. See
+[fixed subsets and matched LLaMA-Factory training](script/yuan/PARTIAL_DATA_TRAINING.md)
+for preparing the same VQA examples for both frameworks.
 
 ```bash
 python run_train.py \

@@ -18,6 +18,7 @@ from model import get_model
 from dataset import get_dataset
 from eval import get_eval_engine
 from utils.experiment_tracking import ExperimentTracker, merge_worker_manifests
+from utils.train_subset import partial_output_dir, checkpoint_subset_label
 
 
 def collect_args():
@@ -76,7 +77,9 @@ def collect_args():
     ), f"dataset {args.dataset} is not supported for task {args.task}"
 
     args.output_dir = os.path.join(
-        args.exp_path, args.task, args.dataset, args.model, f"eval_seed{args.seed}", os.path.basename(args.model_path)
+        partial_output_dir(args.exp_path, args.task, args.dataset, args.model,
+                           f"eval_seed{args.seed}", checkpoint_subset_label(args.model_path)),
+        os.path.basename(os.path.normpath(args.model_path)),
     )
 
     if args.usage is not None:

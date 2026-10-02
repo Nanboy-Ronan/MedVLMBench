@@ -17,6 +17,11 @@ SPLIT="${SPLIT:-test}"
 SEED="${SEED:-42}"
 
 if [[ "$MODE" == train ]]; then
+  subset_args=()
+  if [[ -n "${TRAIN_FRACTION:-}" ]]; then subset_args+=(--train_fraction "$TRAIN_FRACTION"); fi
+  if [[ -n "${MAX_TRAIN_SAMPLES:-}" ]]; then subset_args+=(--max_train_samples "$MAX_TRAIN_SAMPLES"); fi
+  if [[ -n "${TRAIN_SUBSET_MANIFEST:-}" ]]; then subset_args+=(--train_subset_manifest "$TRAIN_SUBSET_MANIFEST"); fi
+  if [[ -n "${FRACTION_SEED:-}" ]]; then subset_args+=(--fraction_seed "$FRACTION_SEED"); fi
   if [[ "${PATHO_R1_USE_CUSTOM_SFT:-}" != yes ]]; then
     echo "This is a custom HF Trainer/PEFT LoRA adaptation, not the official or matched LLaMA-Factory training workflow. Set PATHO_R1_USE_CUSTOM_SFT=yes only if that is the intended experiment." >&2
     exit 2
@@ -34,7 +39,7 @@ if [[ "$MODE" == train ]]; then
     --bf16 True --bits 16 --num_train_epochs 1 \
     --per_device_train_batch_size 1 --gradient_accumulation_steps 8 \
     --learning_rate 2e-5 --save_strategy epoch \
-    --gradient_checkpointing True
+    --gradient_checkpointing True "${subset_args[@]}"
 elif [[ "$MODE" == eval || "$MODE" == mdagent || "$MODE" == ucagent ]]; then
   args=(--task vqa --dataset "$DATASET" --split "$SPLIT"
         --image_path "$IMAGE_PATH" --model Patho-R1

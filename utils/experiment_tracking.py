@@ -182,6 +182,7 @@ class ExperimentTracker:
                 "split": getattr(self.dataset, "split", getattr(self.args, "split", None)),
                 "n_samples": len(self.dataset),
                 "source_n_samples": len(getattr(self.dataset, "dataset", self.dataset)),
+                "train_subset": getattr(self.dataset, "subset_manifest", None),
             },
             "model": {
                 "name": getattr(self.model, "name", getattr(self.args, "model", None)),

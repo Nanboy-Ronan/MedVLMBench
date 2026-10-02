@@ -13,6 +13,11 @@ SPLIT="${SPLIT:-test}"
 SEED="${SEED:-42}"
 
 if [[ "$MODE" == train ]]; then
+  subset_args=()
+  if [[ -n "${TRAIN_FRACTION:-}" ]]; then subset_args+=(--train_fraction "$TRAIN_FRACTION"); fi
+  if [[ -n "${MAX_TRAIN_SAMPLES:-}" ]]; then subset_args+=(--max_train_samples "$MAX_TRAIN_SAMPLES"); fi
+  if [[ -n "${TRAIN_SUBSET_MANIFEST:-}" ]]; then subset_args+=(--train_subset_manifest "$TRAIN_SUBSET_MANIFEST"); fi
+  if [[ -n "${FRACTION_SEED:-}" ]]; then subset_args+=(--fraction_seed "$FRACTION_SEED"); fi
   # Match the LLaVA-1.5 LoRA protocol: 2 samples/GPU x 8 accumulation
   # gives an effective batch of 16 per GPU (times the number of GPUs).
   DEEPSPEED_CONFIG="${DEEPSPEED_CONFIG:-./script/zero3.json}"
@@ -37,7 +42,7 @@ if [[ "$MODE" == train ]]; then
     --learning_rate 2e-5 --weight_decay 0. --warmup_ratio 0.03 \
     --lr_scheduler_type cosine --logging_steps 1 --tf32 True \
     --model_max_length 2048 --gradient_checkpointing False \
-    --dataloader_num_workers 4 --tune_modules ML --seed "$SEED"
+    --dataloader_num_workers 4 --tune_modules ML --seed "$SEED" "${subset_args[@]}"
 elif [[ "$MODE" == eval || "$MODE" == mdagent || "$MODE" == ucagent ]]; then
   args=(--task vqa --dataset "$DATASET" --split "$SPLIT"
         --image_path "$IMAGE_PATH" --model Quilt-LLaVA

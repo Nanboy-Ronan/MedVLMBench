@@ -20,6 +20,7 @@ from dataset import get_dataset
 
 from train import get_train_engine
 from utils.experiment_tracking import ExperimentTracker
+from utils.train_subset import subset_label, partial_output_dir
 
 
 @dataclass
@@ -46,6 +47,12 @@ class Arguments(transformers.TrainingArguments):
     train_fraction: float = field(
         default=1.0,
         metadata={"help": "Fraction of the official training split to use (0 < fraction <= 1)."},
+    )
+    max_train_samples: Optional[int] = field(
+        default=None, metadata={"help": "Maximum number of fixed training samples (randomly selected once)."},
+    )
+    train_subset_manifest: Optional[str] = field(
+        default=None, metadata={"help": "Reuse exact training indices from a shared subset manifest."},
     )
     fraction_seed: int = field(
         default=42,
@@ -135,8 +142,7 @@ def setup_args(args):
 
     save_folder_name = f"train_{args.peft}_{args.tune_modules}_seed{args.seed}"
 
-    if not 0 < args.train_fraction <= 1:
-        raise ValueError("train_fraction must satisfy 0 < train_fraction <= 1")
+    selection_label = subset_label(args.train_fraction, args.max_train_samples, args.train_subset_manifest, args.fraction_seed)
 
     if "LLaVA" in args.model and args.tune_modules == "M":
         args.peft = ""
@@ -176,16 +182,8 @@ def setup_args(args):
     elif args.task == "diagnosis":
         save_folder_name = f"train_{args.usage}_seed{args.seed}"
 
-    if args.train_fraction < 1:
-        fraction_label = f"{args.train_fraction:.4f}".rstrip("0").rstrip(".").replace(".", "p")
-        save_folder_name += f"_frac{fraction_label}_fseed{args.fraction_seed}"
-
-    args.output_dir = os.path.join(
-        args.output_dir,
-        args.task,
-        args.dataset,
-        args.model,
-        save_folder_name,
+    args.output_dir = partial_output_dir(
+        args.output_dir, args.task, args.dataset, args.model, save_folder_name, selection_label
     )
     args.split = "train"
     args.tune_mm_mlp_adapter = "M" in args.tune_modules
