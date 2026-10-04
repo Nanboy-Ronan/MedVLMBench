@@ -1,12 +1,7 @@
-from train.caption import CaptionTrainEngine
-from train.vqa import VQATrainEngine
 from train.lp import DiagnosisLPTrainEngine
 
 from train.clip_trainer import CLIPLPTrainer, make_diagnosis_data_module
 from train.clip_trainer import make_diagnosis_data_module
-
-task_engines = {"vqa": VQATrainEngine, "diagnosis": DiagnosisLPTrainEngine, "caption": CaptionTrainEngine}
-
 
 def get_trainer(args, model_wrapped, dataset):
     if args.model in ["LLaVA-1.5", "LLaVA-Med", "Quilt-LLaVA"]:
@@ -205,7 +200,17 @@ def get_trainer(args, model_wrapped, dataset):
 
 
 def get_train_engine(args, model_wrapped, dataset):
-    engine = task_engines[args.task](
+    if args.task == "diagnosis":
+        engine_class = DiagnosisLPTrainEngine
+    elif args.task == "vqa":
+        from train.vqa import VQATrainEngine
+        engine_class = VQATrainEngine
+    elif args.task == "caption":
+        from train.caption import CaptionTrainEngine
+        engine_class = CaptionTrainEngine
+    else:
+        raise ValueError(f"Unsupported training task: {args.task}")
+    engine = engine_class(
         args=args,
         dataset=dataset,
         model_wrapped=model_wrapped,

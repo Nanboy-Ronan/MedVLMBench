@@ -71,10 +71,8 @@ class FractionalDataset(torch.utils.data.Dataset):
 
 def _apply_train_fraction(dataset, args, split):
     fraction = float(getattr(args, "train_fraction", 1.0))
-    if fraction == 1.0:
+    if split != "train" or fraction == 1.0:
         return dataset
-    if split != "train":
-        raise ValueError("train_fraction can only be used with the official training split")
     if not 0 < fraction <= 1:
         raise ValueError("train_fraction must satisfy 0 < train_fraction <= 1")
 
@@ -96,6 +94,12 @@ def _apply_train_fraction(dataset, args, split):
             "fraction_seed": int(getattr(args, "fraction_seed", 42)),
             "indices": indices,
         }
+        labels = getattr(dataset, "Y", None)
+        if labels is None and getattr(dataset, "name", None) == "Camelyon17":
+            labels = dataset.data["tumor"].to_numpy()
+        if labels is not None:
+            payload["selected_class_counts"] = dict(Counter(str(int(labels[i])) for i in indices))
+            payload["single_class_subset"] = len(payload["selected_class_counts"]) == 1
         with open(os.path.join(output_dir, "train_subset_manifest.json"), "w") as fp:
             json.dump(payload, fp, indent=2)
     return subset
@@ -148,10 +152,16 @@ def get_dataset(args, image_processor_callable=None, split=None):
 
 
 def report_label_distribution(dataset, args):
-    label_counts = Counter()
-    for i in range(len(dataset)):
-        label = dataset[i]["label"].item()
-        label_counts[label] += 1
+    source = getattr(dataset, "dataset", dataset)
+    indices = getattr(dataset, "indices", None)
+    labels = getattr(source, "Y", None)
+    if labels is None and getattr(source, "name", None) == "Camelyon17":
+        labels = source.data["tumor"].to_numpy()
+    if labels is not None:
+        selected = labels if indices is None else labels[indices]
+        label_counts = Counter(int(label) for label in selected)
+    else:
+        label_counts = Counter(int(dataset[i]["label"].item()) for i in range(len(dataset)))
 
     total = sum(label_counts.values())
     distribution = {label: count / total for label, count in label_counts.items()}
@@ -160,7 +170,10 @@ def report_label_distribution(dataset, args):
     for label, freq in distribution.items():
         args.logger.info(f"Label {label}: {freq:.2%} ({label_counts[label]} samples)")
 
-    num_classes = max(label_counts.keys()) + 1
+    # Tiny fractions may contain only class 0. The loss still has one logit
+    # per benchmark class, so its weight vector must retain that dimension.
+    source_classes = max(int(label) for label in labels) + 1 if labels is not None else max(label_counts.keys()) + 1
+    num_classes = int(getattr(source, "CLASSES", source_classes))
     weights = [0.0] * num_classes
     for lbl, cnt in label_counts.items():
         weights[lbl] = total / (cnt * num_classes)

@@ -882,7 +882,8 @@ class GF3300Dataset(torch.utils.data.Dataset):
 
 
 class CXPDataset(torch.utils.data.Dataset):
-    # Uses the original CheXpert dataset split. https://github.com/FairMedFM/FairMedFM/blob/main/pre-processing/classification/CXP.ipynb
+    # Match the paper's FairMedFM-DNE CXP split. The source config uses
+    # data/CXP/split/new_train.csv and new_test.csv, both copied into this repo.
 
     def __init__(
         self,
@@ -890,15 +891,13 @@ class CXPDataset(torch.utils.data.Dataset):
         transform=None,
         split: str = "train",
     ):
-        split = "valid" if split == "test" else "train"
+        split_file = "new_test.csv" if split == "test" else "new_train.csv"
         self.CLASSES = 2
-        self.class_dict = {f"no finding": 0, "has findings": 1}
+        self.class_dict = {"has findings": 0, "no finding": 1}
         self.transform = transform
 
         # --- metadata ---
-        self.meta_path = os.path.join(
-            data_args.image_path, "CheXpert-v1.0-small", f"{split}.csv"
-        )
+        self.meta_path = os.path.join(data_args.image_path, "CXP", "split", split_file)
         self.df = pd.read_csv(self.meta_path)
 
         # Treat uncertain (-1) or NaN as negative (0)

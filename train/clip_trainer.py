@@ -1,4 +1,5 @@
 import os
+import json
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -21,10 +22,6 @@ class CustomCallback(TrainerCallback):
         """
         This method is called at the end of each epoch.
         """
-        if self.trainer.current_epoch % 10 == 0:
-            print(f"Running evaluation at epoch {self.trainer.current_epoch}...")
-            metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
-            print(f"Evaluation metrics at epoch {self.trainer.current_epoch}: {metrics}")
         self.trainer.current_epoch += 1
         if self.trainer.profile:
             total_epoch_forward = self.trainer.epoch_forward_flops
@@ -64,6 +61,10 @@ class CustomCallback(TrainerCallback):
         """
         print("Training complete. Running final evaluation...")
         metrics = self.trainer.eval_engine.evaluate(args=self.trainer.args, model=self.trainer.model)
+        if getattr(self.trainer.args, "save_pred", False) and self.trainer.is_world_process_zero():
+            prediction_path = os.path.join(self.trainer.args.output_dir, "predictions.json")
+            with open(prediction_path, "w") as stream:
+                json.dump(self.trainer.eval_engine.records, stream)
         print(f"Final evaluation metrics: {metrics}")
 
 
@@ -156,38 +157,10 @@ class CLIPLPTrainer(Trainer):
         return (loss, logits) if return_outputs else loss
     
     
-    def training_step(self, model, inputs, *_args):
-        """
-        Runs a single training step, tracking FLOPS for both forward and backward passes.
-        Hugging Face's Trainer calls this with (model, inputs, num_items_in_batch),
-        so we use *_args to ignore additional parameters.
-        """
-        loss = self.compute_loss(model, inputs, num_items_in_batch=len(inputs))
-
-        # Profile Backward Pass Separately
-        if self.profile:
-            with profile(
-                activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                record_shapes=True,
-                with_flops=True,
-                profile_memory=True
-            ) as prof:
-                with record_function("backward_pass"):
-                    loss.backward()  # Backward happens here, so we track FLOPS here
-
-            # Extract Backward FLOPS
-            flops_backward = sum(evt.flops for evt in prof.key_averages() if evt.flops is not None)
-            self.epoch_backward_flops += flops_backward
-
-        else:
-            loss.backward()
-        self.batch_count += 1
-
-        # print(prof.key_averages().table(sort_by="self_cpu_time_total", row_limit=5))
-        # print(f"🔹 Backward FLOPS per batch: {flops_backward / 1e9:.2f} GFLOPS")
-
-        # detach: otherwise Trainer's `tr_loss += loss` keeps every step's autograd graph alive (host memory grows ~2MB/step)
-        return loss.detach()
+    def training_step(self, model, inputs, *args, **kwargs):
+        # Let Trainer handle gradient accumulation, mixed precision and distributed
+        # backward. ExperimentTracker wraps this method to profile the whole step.
+        return super().training_step(model, inputs, *args, **kwargs)
     
     def get_labels(self, eval_preds):
         logits, labels = eval_preds
@@ -199,7 +172,7 @@ class CLIPLPTrainer(Trainer):
 
         os.makedirs(output_dir, exist_ok=True)
         
-        model_to_save = self.model.model
+        model_to_save = self.model if hasattr(self.model, "head") else self.model.model
 
         if hasattr(model_to_save, 'module'):
             model_to_save = model_to_save.module

@@ -139,11 +139,13 @@ def inference_flop_context(owner, sample_count=1):
 
 
 def _underlying_module(model):
+    if isinstance(model, torch.nn.Module):
+        return model
     for name in ("model", "encoder"):
         candidate = getattr(model, name, None)
         if isinstance(candidate, torch.nn.Module):
             return candidate
-    return model if isinstance(model, torch.nn.Module) else None
+    return None
 
 
 def _parameter_counts(model):
@@ -285,6 +287,11 @@ class ExperimentTracker:
                 "split": getattr(self.dataset, "split", getattr(self.args, "split", None)),
                 "n_samples": len(self.dataset),
                 "source_n_samples": len(getattr(self.dataset, "dataset", self.dataset)),
+                "fraction_requested": getattr(self.args, "train_fraction", None) if self.phase == "train" else None,
+                "fraction_realized": (
+                    len(self.dataset) / len(getattr(self.dataset, "dataset", self.dataset))
+                    if self.phase == "train" and len(getattr(self.dataset, "dataset", self.dataset)) else None
+                ),
             },
             "model": {
                 "name": getattr(self.model, "name", getattr(self.args, "model", None)),
@@ -394,6 +401,15 @@ class ExperimentTracker:
                 ),
                 "flops": self.training_flops.result(),
             })
+            per_sample_flops = self.payload["training"]["flops"]["flops_per_sample"]
+            self.payload["training"]["estimated_profiled_operator_flops_full_run"] = (
+                per_sample_flops * counts["examples_seen"]
+                if per_sample_flops is not None and counts["examples_seen"] else None
+            )
+            self.payload["training"]["full_run_flops_note"] = (
+                "Estimate: profiled-batch FLOPs per sample multiplied by observed examples seen; "
+                "counts only torch.profiler-supported operators and excludes optimizer steps."
+            )
             train_size = self.payload["dataset"].get("trainer_n_samples")
             seen = counts["examples_seen"]
             if train_size and seen and counts["input_tokens"] is not None:
@@ -408,11 +424,29 @@ class ExperimentTracker:
                 self.payload["dataset"]["estimated_supervised_tokens_per_epoch"] = round(
                     counts["supervised_tokens"] * train_size / seen
                 )
-        if self.phase == "evaluation":
+        if self.phase == "evaluation" or self.inference_flops.profiled_batches:
             self.payload["inference"] = {"flops": self.inference_flops.result()}
         if error:
             self.payload["error"] = error
         self._write()
+        logger = getattr(self.args, "logger", None)
+        if logger is not None:
+            dataset_info = self.payload["dataset"]
+            phase_info = self.payload.get("training" if self.phase == "train" else "inference", {})
+            flops = phase_info.get("flops", {})
+            logger.info(
+                "Experiment summary: status=%s phase=%s samples=%s source_samples=%s "
+                "examples_seen=%s FLOPs_per_sample=%s estimated_run_FLOPs=%s "
+                "FLOPs_status=%s inference_FLOPs_per_sample=%s manifest=%s",
+                status, self.phase, dataset_info.get("n_samples"),
+                dataset_info.get("source_n_samples"),
+                phase_info.get("observed", {}).get("examples_seen"),
+                flops.get("flops_per_sample"),
+                phase_info.get("estimated_profiled_operator_flops_full_run"),
+                flops.get("status"),
+                self.payload.get("inference", {}).get("flops", {}).get("flops_per_sample"),
+                self.path,
+            )
 
     @contextmanager
     def profile_inference(self, sample_count=1):

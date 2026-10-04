@@ -1,5 +1,14 @@
 import os
-from conch.open_clip_custom import create_model_from_pretrained, get_tokenizer, tokenize
+import sys
+
+try:
+    from conch.open_clip_custom import create_model_from_pretrained, get_tokenizer, tokenize
+except ModuleNotFoundError as exc:
+    if exc.name != "conch":
+        raise
+    # Use the pinned official source vendored for reproducible offline runs.
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "third_party", "CONCH"))
+    from conch.open_clip_custom import create_model_from_pretrained, get_tokenizer, tokenize
 from model.openclip_base import OpenCLIPForDiagnosis, OpenCLIPLPForDiagnosis
 
 # CONCH (Lu et al., Nature Medicine 2024). The weights are gated on Hugging Face: accept the license at
